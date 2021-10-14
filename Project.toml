@@ -1,0 +1,13 @@
+name = "FasterHeaps"
+uuid = "30b38841-0f52-47f8-a5f8-18d5d4064379"
+authors = ["Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
