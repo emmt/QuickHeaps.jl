@@ -122,7 +122,7 @@ Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by
 the worst case, with `n = length(h)` the number of elements in the heap
 
 """
-mutable struct Heap{T,O} <: AbstractHeap{T,O}
+struct Heap{T,O} <: AbstractHeap{T,O}
     o::O            # ordering
     vals::Vector{T} # storage
     Heap{T}(o::O=FastMin) where {T,O<:Ordering} =
