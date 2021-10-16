@@ -1,7 +1,7 @@
-module TestingFasterHeaps
+module TestingQuickHeaps
 
-using Test, FasterHeaps
-using FasterHeaps:
+using Test, QuickHeaps
+using QuickHeaps:
     AbstractHeap, FastMinOrdering,
     FastMin, FastMax, SafeMin, SafeMax,
     isheap, ordering

@@ -1,6 +1,7 @@
 """
 
-The `FasterHeaps` module implements faster binary heaps for Julia.
+The `QuickHeaps` module implements versatile binary heaps and priority queues
+for Julia.
 
 Wikipedia page https://en.wikipedia.org/wiki/Binary_heap has very clear
 explanations about binary heaps.
@@ -17,7 +18,7 @@ improvements:
   their name are in tended to be as fast as possible).
 
 """
-module FasterHeaps
+module QuickHeaps
 
 export
     #FastMin, FastMax,

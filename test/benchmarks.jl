@@ -1,7 +1,7 @@
-module BenchmarkingFasterHeaps
+module BenchmarkingQuickHeaps
 
 using BenchmarkTools
-using FasterHeaps
+using QuickHeaps
 using DataStructures
 
 using Base.Order: Forward, Reverse, Ordering
@@ -20,14 +20,14 @@ function runtests(T::Type = Float64, n::Int = 1000)
     width=70
     for pass in 1:2
         for version in (:DataStructures,
-                        :FasterHeaps)
+                        :QuickHeaps)
             println("\nTimings for \"$version\" methods (T=$T, n=$n):")
             for order in (:(Base.Forward),
                           :(Base.Reverse),
                           :(DataStructures.FasterForward()),
                           :(DataStructures.FasterReverse()),
-                          :(FasterHeaps.FastMin),
-                          :(FasterHeaps.FastMax),)
+                          :(QuickHeaps.FastMin),
+                          :(QuickHeaps.FastMax),)
                 if pass == 1
                     print_with_arrow(" - $version.heapify!(..., $order)"; width=width)
                     @btime $version.heapify!(copyto!($w, $x), $order); print();

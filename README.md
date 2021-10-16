@@ -1,7 +1,8 @@
-# Faster binary heaps for Julia
+# Versatile binary heaps and priority queues for Julia
 
-`FasterHeaps` is a small Julia package providing binary heaps.  These data
-structures are faster than those provided by
+`QuickHeaps` is a small Julia package providing versatile binary heaps and
+priority queues.  These data structures may be faster and more flexible than
+those provided by
 [`DataStructures`](https://github.com/JuliaCollections/DataStructures.j).
 
 Binary heaps can be used to implement simple priority queues.  Indeed,
@@ -9,7 +10,7 @@ implementing a priority queue with keys of type `K` and values of type `V`, may
 be as simple as:
 
 ```julia
-using FasterHeaps
+using QuickHeaps
 struct Node{K,V}
    key::K
    val::V
@@ -27,9 +28,9 @@ implements no means to requeue a node nor to ensure that keys are unique.  A
 dictionary or a set can be used for that, but this would slow down the priority
 queue.
 
-A `FasterHeaps.FastHeap` does not reduce the size of the array backing the
+A `QuickHeaps.FastHeap` does not reduce the size of the array backing the
 storage of the binary heap.  This is fine when the binary heap is used as a
-workspace in another algorithm.  Use `FasterHeaps.Heap` to automatically resize
+workspace in another algorithm.  Use `QuickHeaps.Heap` to automatically resize
 the storage array so that its length is always that of the heap.
 
 
@@ -147,38 +148,38 @@ Timings for "DataStructures" methods (T=Float64, n=1000):
  - DataStructures.heapify!(..., Base.Reverse) ---------------------->   7.152 μs (0 allocations: 0 bytes)
  - DataStructures.heapify!(..., DataStructures.FasterForward()) ---->   3.183 μs (0 allocations: 0 bytes)
  - DataStructures.heapify!(..., DataStructures.FasterReverse()) ---->   3.231 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., FasterHeaps.FastMin) --------------->   3.208 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., FasterHeaps.FastMax) --------------->   3.232 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., QuickHeaps.FastMin) --------------->   3.208 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., QuickHeaps.FastMax) --------------->   3.232 μs (0 allocations: 0 bytes)
 
-Timings for "FasterHeaps" methods (T=Float64, n=1000):
- - FasterHeaps.heapify!(..., Base.Forward) ------------------------->   5.540 μs (0 allocations: 0 bytes)
- - FasterHeaps.heapify!(..., Base.Reverse) ------------------------->   5.162 μs (0 allocations: 0 bytes)
- - FasterHeaps.heapify!(..., DataStructures.FasterForward()) ------->   1.652 μs (0 allocations: 0 bytes)
- - FasterHeaps.heapify!(..., DataStructures.FasterReverse()) ------->   1.697 μs (0 allocations: 0 bytes)
- - FasterHeaps.heapify!(..., FasterHeaps.FastMin) ------------------>   1.695 μs (0 allocations: 0 bytes)
- - FasterHeaps.heapify!(..., FasterHeaps.FastMax) ------------------>   1.729 μs (0 allocations: 0 bytes)
+Timings for "QuickHeaps" methods (T=Float64, n=1000):
+ - QuickHeaps.heapify!(..., Base.Forward) ------------------------->   5.540 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., Base.Reverse) ------------------------->   5.162 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., DataStructures.FasterForward()) ------->   1.652 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., DataStructures.FasterReverse()) ------->   1.697 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., QuickHeaps.FastMin) ------------------>   1.695 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., QuickHeaps.FastMax) ------------------>   1.729 μs (0 allocations: 0 bytes)
 
 Timings for "DataStructures" methods (T=Float64, n=1000):
  - DataStructures.isheap(..., Base.Forward) ------------------------>   1.924 μs (0 allocations: 0 bytes)
  - DataStructures.isheap(..., Base.Reverse) ------------------------>   1.939 μs (0 allocations: 0 bytes)
  - DataStructures.isheap(..., DataStructures.FasterForward()) ------>   574.049 ns (0 allocations: 0 bytes)
  - DataStructures.isheap(..., DataStructures.FasterReverse()) ------>   563.701 ns (0 allocations: 0 bytes)
- - DataStructures.isheap(..., FasterHeaps.FastMin) ----------------->   566.147 ns (0 allocations: 0 bytes)
- - DataStructures.isheap(..., FasterHeaps.FastMax) ----------------->   577.088 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., QuickHeaps.FastMin) ----------------->   566.147 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., QuickHeaps.FastMax) ----------------->   577.088 ns (0 allocations: 0 bytes)
 
-Timings for "FasterHeaps" methods (T=Float64, n=1000):
- - FasterHeaps.isheap(..., Base.Forward) --------------------------->   1.845 μs (0 allocations: 0 bytes)
- - FasterHeaps.isheap(..., Base.Reverse) --------------------------->   1.847 μs (0 allocations: 0 bytes)
- - FasterHeaps.isheap(..., DataStructures.FasterForward()) --------->   386.634 ns (0 allocations: 0 bytes)
- - FasterHeaps.isheap(..., DataStructures.FasterReverse()) --------->   399.600 ns (0 allocations: 0 bytes)
- - FasterHeaps.isheap(..., FasterHeaps.FastMin) -------------------->   388.861 ns (0 allocations: 0 bytes)
- - FasterHeaps.isheap(..., FasterHeaps.FastMax) -------------------->   392.095 ns (0 allocations: 0 bytes)
+Timings for "QuickHeaps" methods (T=Float64, n=1000):
+ - QuickHeaps.isheap(..., Base.Forward) --------------------------->   1.845 μs (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., Base.Reverse) --------------------------->   1.847 μs (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., DataStructures.FasterForward()) --------->   386.634 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., DataStructures.FasterReverse()) --------->   399.600 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., QuickHeaps.FastMin) -------------------->   388.861 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., QuickHeaps.FastMax) -------------------->   392.095 ns (0 allocations: 0 bytes)
 ```
 
 These timings show the gain in speed for `heapify!` by using `<` instead of
 `isless` by a factor of 2.3 for the binary heap implemented by `DataStructures`
-and by a factor of 3.2 for the binary heap implemented by `FasterHeaps`.
+and by a factor of 3.2 for the binary heap implemented by `QuickHeaps`.
 
-These timings also show that `heapify!` in `FasterHeaps` is faster than in
+These timings also show that `heapify!` in `QuickHeaps` is faster than in
 `DataStructures` by a factor 1.3 with standard orderings and by a factor 1.9
 with faster orderings.

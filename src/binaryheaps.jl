@@ -205,7 +205,7 @@ check its arguments and because it breaks the binary heap structure of the
 array of nodes.
 
 This method is called by `push!` to grow the size of the heap and shall be
-specialized for any concrete sub-types of `FasterHeaps.AbstractHeap`.
+specialized for any concrete sub-types of `QuickHeaps.AbstractHeap`.
 
 """
 unsafe_grow!(heap::Heap, n::Int) = resize!(nodes(heap), n)
@@ -224,7 +224,7 @@ because it does not check its arguments.
 
 This method is called by `delete!` to eventually reduce the size of the heap
 and shall be specialized for any concrete sub-type of
-`FasterHeaps.AbstractHeap`.
+`QuickHeaps.AbstractHeap`.
 
 """
 unsafe_shrink!(heap::Heap, n::Int) = resize!(nodes(heap), n)

@@ -1,5 +1,5 @@
 """
-    FasterHeaps.AbstractNode{K,V}
+    QuickHeaps.AbstractNode{K,V}
 
 is the super-type of nodes with a key of type `K` and a value of type `V`.
 Nodes can be used in binary heaps and priority queues where they are used to
@@ -10,7 +10,7 @@ how the nodes are ordered.
 abstract type AbstractNode{K,V} end
 
 """
-    FasterHeaps.AbstractPriorityQueue{K,V,T,O}
+    QuickHeaps.AbstractPriorityQueue{K,V,T,O}
 
 is the super type of priority queues with nodes consisting in pairs of keys of
 type `K` and priority values of type `V`.  Priority queues implement an API
@@ -27,10 +27,10 @@ method with the following signature:
 
 which shall yield whether node `a` has (strictly) higher priority than node `b`
 in the queue and where `CustomOrderingType<:Base.Ordering` and
-`CustomNodeType<:FasterHeaps.AbstractNode` are the respective types of the
+`CustomNodeType<:QuickHeaps.AbstractNode` are the respective types of the
 ordering and of the node of the priority queue.
 
-For the default node type, `FasterHeaps.Node{K,V}`, the implementation is:
+For the default node type, `QuickHeaps.Node{K,V}`, the implementation is:
 
     lt(o::Ordering, a::T, b::T) where {T<:Node} = lt(o, a.val, b.val)
 
@@ -41,7 +41,7 @@ abstract type AbstractPriorityQueue{
     K,V,T<:AbstractNode{K,V},O<:Ordering} <: AbstractDict{K,V} end
 
 """
-    FasterHeaps.Node{K,V}(k,v)
+    QuickHeaps.Node{K,V}(k,v)
 
 yields a node storing key `k` and value `v`.  Type parameters `K` and `V` are
 the respective types of the key and of the value.  If omitted the defaults are
