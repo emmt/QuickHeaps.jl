@@ -77,25 +77,23 @@ for type in (:FastHeap, :Heap)
     @eval begin
         $type{T}(vals::AbstractVector) where {T} = $type{T}(FastMin, vals)
         $type(vals::AbstractVector{T}) where {T} = $type{T}(vals)
-        $type(o::Ordering, vals::AbstractVector{T}) where {T} = $type{T}(o, vals)
+        $type(o::Ordering, vals::AbstractVector{T}) where {T} =
+            $type{T}(o, vals)
     end
 end
 
-ordering(A::AbstractHeap) = getfield(A, :order)
-nodes(A::AbstractHeap) = getfield(A, :nodes)
-length(A::FastHeap) = getfield(A, :count)
-length(A::Heap) = length(nodes(A))
-size(A::AbstractHeap) = (length(A),)
+ordering(h::AbstractHeap) = getfield(h, :order)
+nodes(h::AbstractHeap) = getfield(h, :nodes)
+length(h::FastHeap) = getfield(h, :count)
+length(h::Heap) = length(nodes(h))
+size(h::AbstractHeap) = (length(h),)
 IndexStyle(::Type{<:AbstractHeap}) = IndexLinear()
-sizehint!(A::AbstractHeap, n::Integer) = sizehint!(nodes(A), n)
-isempty(A::AbstractHeap) = length(A) < 1
-
-empty!(A::FastHeap) = (setfield!(A, :count, 0); A)
-empty!(A::Heap) = empty!(nodes(A))
+sizehint!(h::AbstractHeap, n::Integer) = sizehint!(nodes(h), n)
+isempty(h::AbstractHeap) = length(h) < 1
 
 # Call `resize!(h)` with no other arguments to reduce the storage size.
 resize!(h::FastHeap) = (resize!(nodes(h), length(h)); h)
-resize!(h::Heap) = heap
+resize!(h::Heap) = h
 
 # Heap indexing.  Note that linear 1-based indexing is assumed for the
 # array storing the heap.
@@ -116,56 +114,47 @@ end
                            x::T, i::Int) where {T}
     @boundscheck checkbounds(heap, i)
     A = nodes(heap)
-    @inbounds y = A[i] # old value of i-th node
+    @inbounds y = A[i] # replaced node
     o = ordering(heap)
     if lt(o, y, x)
-        # New value of i-th node can be the child of the old one.  Heap
-        # structure above i-th node is valid, down-heapify to fix the heap
-        # structure at and below i-th node.
+        # Heap structure _above_ replaced node will remain valid, down-heapify
+        # to fix the heap structure at and _below_ the node.
         unsafe_heapify_down!(o, A, i, x, length(heap))
-    elseif lt(o, x, y)
-        # New value of i-th node can be the parent of the old one.  Heap
-        # structure below i-th node is valid, up-heapify to fix the head
-        # structure at and above i-th node.
+    else
+        # Heap structure _below_ replaced node will remain valid, up-heapify to
+        # fix the heap structure at and _above_ the node.
         unsafe_heapify_up!(o, A, i, x)
     end
     return heap
 end
 
 first(heap::AbstractHeap) = peek(heap)
-peek(heap::AbstractHeap) = begin
-    length(heap) ≥ 1 || throw(ArgumentError("heap is empty"))
+
+function peek(heap::AbstractHeap)
+    isempty(heap) && throw(ArgumentError("heap is empty"))
     @inbounds r = getindex(nodes(heap), 1)
     return r
 end
 
-function pop!(heap::FastHeap)
+empty!(h::FastHeap) = (setfield!(h, :count, 0); h)
+empty!(h::Heap) = (empty!(nodes(h)); h)
+
+function pop!(heap::AbstractHeap)
     n = length(heap)
     n ≥ 1 || throw(ArgumentError("heap is empty"))
     A = nodes(heap)
-    @inbounds begin
-        val = A[1]
-        if n > 1
-            unsafe_heapify_down!(ordering(heap), A, 1, A[n], n - 1)
-        end
-        setfield!(heap, :count, n - 1)
-        return val
+    @inbounds x = A[1]
+    if n > 1
+        # Peek the last node and down-heapify starting at the root of the
+        # binary heap to insert it.
+        @inbounds y = A[n]
+        unsafe_heapify_down!(ordering(heap), A, 1, y, n - 1)
     end
+    unsafe_shrink!(heap, n - 1)
+    return x
 end
 
-function pop!(heap::Heap)
-    A = nodes(heap)
-    n = length(A)
-    n ≥ 1 || throw(ArgumentError("heap is empty"))
-    @inbounds begin
-        val = A[1]
-        if n > 1
-            unsafe_heapify_down!(ordering(heap), A, 1, A[n], n - 1)
-        end
-        resize!(A, n - 1)
-        return val
-    end
-end
+push!(heap::AbstractHeap, ::Tuple{}) = heap
 
 function push!(heap::AbstractHeap, args...)
     for x in args
@@ -176,76 +165,70 @@ end
 
 push!(heap::AbstractHeap, x) = push!(heap, to_eltype(heap, x))
 
-function push!(heap::FastHeap{T}, x::T) where {T}
+function push!(heap::AbstractHeap{T}, x::T) where {T}
     n = length(heap) + 1
-    A = nodes(heap)
-    length(A) < n && resize!(A, n)
-    unsafe_heapify_up!(ordering(heap), A, n, x)
-    setfield!(heap, :count, n)
-    return heap
-end
-
-function push!(heap::Heap{T}, x::T) where {T}
-    A = nodes(heap)
-    n = length(A) + 1
-    resize!(A, n)
-    unsafe_heapify_up!(ordering(heap), A, n, x)
+    unsafe_heapify_up!(ordering(heap), unsafe_grow!(heap, n), n, x)
     return heap
 end
 
 delete!(heap::AbstractHeap, i::Integer) = delete!(heap, to_int(i))
 
-function delete!(heap::FastHeap, i::Int)
+function delete!(heap::AbstractHeap, i::Int)
     n = length(heap)
     in_range(i, n) || throw_argument_error("out of range index")
     if i < n
-        @inbounds begin
-            A = nodes(heap)
-            o = ordering(heap)
-            x = A[n] # new value to insert at i-th node
-            y = A[i] # old value of i-th node
-            if lt(o, y, x)
-                # New value of i-th node can be the child of the old one.  Heap
-                # structure above i-th node is valid, down-heapify to fix the
-                # heap structure at and below i-th node.
-                unsafe_heapify_down!(o, A, i, x, n - 1)
-            elseif lt(o, x, y)
-                # New value of i-th node can be the parent of the old one.
-                # Heap structure below i-th node is valid, up-heapify to fix
-                # the head structure at and above i-th node.
-                unsafe_heapify_up!(o, A, i, x)
-            end
+        A = nodes(heap)
+        o = ordering(heap)
+        @inbounds x = A[n] # node to replace deleted node
+        @inbounds y = A[i] # deleted node
+        if lt(o, y, x)
+            # Heap structure _above_ deleted node will remain valid,
+            # down-heapify to fix the heap structure at and _below_ the
+            # node.
+            unsafe_heapify_down!(o, A, i, x, n - 1)
+        else
+            # Heap structure _below_ deleted node will remain valid,
+            # up-heapify to fix the heap structure at and _above_ the node.
+            unsafe_heapify_up!(o, A, i, x)
         end
     end
-    setfield!(heap, :count, n - 1)
+    unsafe_shrink!(heap, n - 1)
     return heap
 end
 
-function delete!(heap::Heap, i::Int)
+"""
+    unsafe_grow!(h, n) -> A
+
+grows the size of the binary heap `h` to be `n` and returns the array `A`
+backing the storage of the nodes.  This method is *unsafe* because it does not
+check its arguments and because it breaks the binary heap structure of the
+array of nodes.
+
+This method is called by `push!` to grow the size of the heap and shall be
+specialized for any concrete sub-types of `FasterHeaps.AbstractHeap`.
+
+"""
+unsafe_grow!(heap::Heap, n::Int) = resize!(nodes(heap), n)
+unsafe_grow!(heap::FastHeap, n::Int) = begin
     A = nodes(heap)
-    n = length(A)
-    in_range(i, n) || throw_argument_error("out of range index")
-    if i < n
-        @inbounds begin
-            o = ordering(heap)
-            x = A[n] # new value to insert at i-th node
-            y = A[i] # old value of i-th node
-            if lt(o, y, x)
-                # New value of i-th node can be the child of the old one.  Heap
-                # structure above i-th node is valid, down-heapify to fix the
-                # heap structure at and below i-th node.
-                unsafe_heapify_down!(o, A, i, x, n - 1)
-            elseif lt(o, x, y)
-                # New value of i-th node can be the parent of the old one.
-                # Heap structure below i-th node is valid, up-heapify to fix
-                # the head structure at and above i-th node.
-                unsafe_heapify_up!(o, A, i, x)
-            end
-        end
-    end
-    resize!(A, n - 1)
-    return heap
+    length(A) < n && resize!(A, n)
+    setfield!(heap, :count, n)
+    return A
 end
+
+"""
+    unsafe_shrink!(h, n)
+
+shrinks the size of the binary heap `h` to be `n`.  This method is *unsafe*
+because it does not check its arguments.
+
+This method is called by `delete!` to eventually reduce the size of the heap
+and shall be specialized for any concrete sub-type of
+`FasterHeaps.AbstractHeap`.
+
+"""
+unsafe_shrink!(heap::Heap, n::Int) = resize!(nodes(heap), n)
+unsafe_shrink!(heap::FastHeap, n::Int) = setfield!(heap, :count, n)
 
 """
     heapify!(h) -> h
@@ -429,8 +412,8 @@ end
 """
     check_heap_storage(A)
 
-throws an exception if array `A` is not suitable for storing a binary heap, that is
-if `A` does not have 1-based linear indexing.
+throws an exception if array `A` is not suitable for storing a binary heap,
+that is if `A` does not have 1-based linear indexing.
 
     check_heap_storage(A, n)
 
