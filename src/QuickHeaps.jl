@@ -33,6 +33,8 @@ export
 
 import Base:
     IndexStyle,
+    Pair,
+    Tuple,
     delete!,
     empty!,
     first,

@@ -61,6 +61,9 @@ import Base: getkey
 getkey(x::Node) = getfield(x, :key)
 getval(x::Node) = getfield(x, :val)
 
+Pair(x::AbstractNode) = getkey(x) => getval(x)
+Tuple(x::AbstractNode) = (getkey(x), getval(x))
+
 # Nodes are sorted according to their values.
 for O in (:Ordering, :FastMinOrdering)
     @eval begin
@@ -248,7 +251,7 @@ first(pq::AbstractPriorityQueue) = peek(pq)
 function peek(pq::AbstractPriorityQueue)
     isempty(pq) && throw_argument_error("priority queue is empty")
     @inbounds x = getindex(nodes(pq), 1)
-    return (getkey(x), getval(x))
+    return Tuple(x)
 end
 
 function empty!(pq::AbstractPriorityQueue; slow::Bool=false)
@@ -284,7 +287,7 @@ function dequeue!(pq::AbstractPriorityQueue)
     end
     unsafe_delete_key!(pq, getkey(x))
     unsafe_shrink!(pq, n - 1)
-    return (getkey(x), getval(x))
+    return Tuple(x)
 end
 
 # FIXME: Same code as for a binary heap.
