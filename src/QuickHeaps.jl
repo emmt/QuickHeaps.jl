@@ -23,8 +23,8 @@ module QuickHeaps
 export
     #FastMin, FastMax,
     #SafeMin, SafeMax,
-    FastHeap,
-    Heap,
+    FastBinaryHeap,
+    BinaryHeap,
     FastPriorityQueue,
     PriorityQueue,
     peek,

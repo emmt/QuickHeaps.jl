@@ -1,14 +1,14 @@
-abstract type AbstractHeap{T,O<:Ordering} <: AbstractVector{T} end
+abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
 
 """
-    Heap{T}(o = FastMin)
+    BinaryHeap{T}(o = FastMin)
 
 yields an empty binary heap whose nodes are of type `T` and with ordering
 specified by `o`.
 
 A vector `vals` storing the nodes of the binary heap can be specified:
 
-    Heap([o = FastMin,] vals)
+    BinaryHeap([o = FastMin,] vals)
 
 Standard methods that can be applied to a binary heap `h`:
 
@@ -45,35 +45,36 @@ Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by
 the worst case, with `n = length(h)` the number of nodes in the heap
 
 """
-struct Heap{T,O} <: AbstractHeap{T,O}
+struct BinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
     order::O         # ordering
     nodes::Vector{T} # storage for the nodes
-    Heap{T}(o::O=FastMin) where {T,O<:Ordering} =
+    BinaryHeap{T}(o::O=FastMin) where {T,O<:Ordering} =
         new{T,O}(o, Vector{T}(undef, 0))
-    Heap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
+    BinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
         heapify!(new{T,O}(o, vals))
 end
 
 """
-    h = FastHeap{T}(...)
+    h = FastBinaryHeap{T}(...)
 
-yields a fast binary heap `h`.  Compared to `Heap{T}(...)`, the array backing
-the storage of the heap values is never reduced to improve performances in some
-cases.  Call `resize!(h)` to explicitly reduce the storage ot its minimum.
+yields a fast binary heap `h`.  Compared to `BinaryHeap{T}(...)`, the array
+backing the storage of the heap values is never reduced to improve performances
+in some cases.  You may call `resize!(h)` to explicitly reduce the storage to
+its minimum.
 
 """
-mutable struct FastHeap{T,O} <: AbstractHeap{T,O}
+mutable struct FastBinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
     order::O         # ordering
     nodes::Vector{T} # storage for the nodes
     count::Int       # current number of nodes
-    FastHeap{T}(o::O=FastMin) where {T,O<:Ordering} =
+    FastBinaryHeap{T}(o::O=FastMin) where {T,O<:Ordering} =
         new{T,O}(o, Vector{T}(undef, 0), 0)
-    FastHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
+    FastBinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
         heapify!(new{T,O}(o, vals, length(vals)))
 end
 
 # Outer constructors.
-for type in (:FastHeap, :Heap)
+for type in (:FastBinaryHeap, :BinaryHeap)
     @eval begin
         $type{T}(vals::AbstractVector) where {T} = $type{T}(FastMin, vals)
         $type(vals::AbstractVector{T}) where {T} = $type{T}(vals)
@@ -82,18 +83,18 @@ for type in (:FastHeap, :Heap)
     end
 end
 
-ordering(h::AbstractHeap) = getfield(h, :order)
-nodes(h::AbstractHeap) = getfield(h, :nodes)
-length(h::FastHeap) = getfield(h, :count)
-length(h::Heap) = length(nodes(h))
-size(h::AbstractHeap) = (length(h),)
-IndexStyle(::Type{<:AbstractHeap}) = IndexLinear()
-sizehint!(h::AbstractHeap, n::Integer) = sizehint!(nodes(h), n)
-isempty(h::AbstractHeap) = length(h) < 1
+ordering(h::AbstractBinaryHeap) = getfield(h, :order)
+nodes(h::AbstractBinaryHeap) = getfield(h, :nodes)
+length(h::FastBinaryHeap) = getfield(h, :count)
+length(h::BinaryHeap) = length(nodes(h))
+size(h::AbstractBinaryHeap) = (length(h),)
+IndexStyle(::Type{<:AbstractBinaryHeap}) = IndexLinear()
+sizehint!(h::AbstractBinaryHeap, n::Integer) = sizehint!(nodes(h), n)
+isempty(h::AbstractBinaryHeap) = length(h) < 1
 
 # Call `resize!(h)` with no other arguments to reduce the storage size.
-resize!(h::FastHeap) = (resize!(nodes(h), length(h)); h)
-resize!(h::Heap) = h
+resize!(h::FastBinaryHeap) = (resize!(nodes(h), length(h)); h)
+resize!(h::BinaryHeap) = h
 
 # Heap indexing.  Note that linear 1-based indexing is assumed for the
 # array storing the heap.
@@ -101,16 +102,16 @@ heap_left(i::Int) = 2*i
 heap_right(i::Int) = 2*i + 1
 heap_parent(i::Int) = div(i, 2)
 
-@inline function getindex(heap::AbstractHeap, i::Int)
+@inline function getindex(heap::AbstractBinaryHeap, i::Int)
     @boundscheck checkbounds(heap, i)
     @inbounds r = getindex(nodes(heap), i)
     return r
 end
 
-@inline @propagate_inbounds setindex!(heap::AbstractHeap, x, i::Int) =
+@inline @propagate_inbounds setindex!(heap::AbstractBinaryHeap, x, i::Int) =
     setindex!(heap, to_eltype(heap, x), i)
 
-@inline function setindex!(heap::AbstractHeap{T},
+@inline function setindex!(heap::AbstractBinaryHeap{T},
                            x::T, i::Int) where {T}
     @boundscheck checkbounds(heap, i)
     A = nodes(heap)
@@ -128,18 +129,18 @@ end
     return heap
 end
 
-first(heap::AbstractHeap) = peek(heap)
+first(heap::AbstractBinaryHeap) = peek(heap)
 
-function peek(heap::AbstractHeap)
+function peek(heap::AbstractBinaryHeap)
     isempty(heap) && throw(ArgumentError("heap is empty"))
     @inbounds r = getindex(nodes(heap), 1)
     return r
 end
 
-empty!(h::FastHeap) = (setfield!(h, :count, 0); h)
-empty!(h::Heap) = (empty!(nodes(h)); h)
+empty!(h::FastBinaryHeap) = (setfield!(h, :count, 0); h)
+empty!(h::BinaryHeap) = (empty!(nodes(h)); h)
 
-function pop!(heap::AbstractHeap)
+function pop!(heap::AbstractBinaryHeap)
     n = length(heap)
     n ≥ 1 || throw(ArgumentError("heap is empty"))
     A = nodes(heap)
@@ -154,26 +155,26 @@ function pop!(heap::AbstractHeap)
     return x
 end
 
-push!(heap::AbstractHeap, ::Tuple{}) = heap
+push!(heap::AbstractBinaryHeap, ::Tuple{}) = heap
 
-function push!(heap::AbstractHeap, args...)
+function push!(heap::AbstractBinaryHeap, args...)
     for x in args
         push!(heap, x)
     end
     return heap
 end
 
-push!(heap::AbstractHeap, x) = push!(heap, to_eltype(heap, x))
+push!(heap::AbstractBinaryHeap, x) = push!(heap, to_eltype(heap, x))
 
-function push!(heap::AbstractHeap{T}, x::T) where {T}
+function push!(heap::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(heap) + 1
     unsafe_heapify_up!(ordering(heap), unsafe_grow!(heap, n), n, x)
     return heap
 end
 
-delete!(heap::AbstractHeap, i::Integer) = delete!(heap, to_int(i))
+delete!(heap::AbstractBinaryHeap, i::Integer) = delete!(heap, to_int(i))
 
-function delete!(heap::AbstractHeap, i::Int)
+function delete!(heap::AbstractBinaryHeap, i::Int)
     n = length(heap)
     in_range(i, n) || throw_argument_error("out of range index")
     if i < n
@@ -205,11 +206,11 @@ check its arguments and because it breaks the binary heap structure of the
 array of nodes.
 
 This method is called by `push!` to grow the size of the heap and shall be
-specialized for any concrete sub-types of `QuickHeaps.AbstractHeap`.
+specialized for any concrete sub-types of `QuickHeaps.AbstractBinaryHeap`.
 
 """
-unsafe_grow!(heap::Heap, n::Int) = resize!(nodes(heap), n)
-unsafe_grow!(heap::FastHeap, n::Int) = begin
+unsafe_grow!(heap::BinaryHeap, n::Int) = resize!(nodes(heap), n)
+unsafe_grow!(heap::FastBinaryHeap, n::Int) = begin
     A = nodes(heap)
     length(A) < n && resize!(A, n)
     setfield!(heap, :count, n)
@@ -224,11 +225,11 @@ because it does not check its arguments.
 
 This method is called by `delete!` to eventually reduce the size of the heap
 and shall be specialized for any concrete sub-type of
-`QuickHeaps.AbstractHeap`.
+[`QuickHeaps.AbstractBinaryHeap`](@ref).
 
 """
-unsafe_shrink!(heap::Heap, n::Int) = resize!(nodes(heap), n)
-unsafe_shrink!(heap::FastHeap, n::Int) = setfield!(heap, :count, n)
+unsafe_shrink!(heap::BinaryHeap, n::Int) = resize!(nodes(heap), n)
+unsafe_shrink!(heap::FastBinaryHeap, n::Int) = setfield!(heap, :count, n)
 
 """
     heapify!(h) -> h
@@ -248,7 +249,7 @@ linear indexing.
 
 """ heapify!
 
-function heapify!(heap::AbstractHeap)
+function heapify!(heap::AbstractBinaryHeap)
     heapify!(ordering(heap), nodes(heap), length(heap))
     return heap
 end
@@ -302,7 +303,7 @@ function isheap(o::Ordering, A::AbstractArray, n::Int = length(A))
     return true
 end
 
-isheap(heap::AbstractHeap; check::Bool = false) =
+isheap(heap::AbstractBinaryHeap; check::Bool = false) =
     if check
         isheap(ordering(heap), nodes(heap), length(heap))
     else
@@ -348,9 +349,10 @@ end
 """
     unsafe_heapify_down!(o, A, i, x=A[i], n=lengh(A))
 
-This method is a fast but *unsafe* version of [`heapify_down!`](@ref)
-which assumes that all arguments are correct, that is `A` implements
-1-based linear indexing, `0 ≤ n ≤ lengh(A)`, and `1 ≤ i ≤ n ≤`.
+This method is a fast but *unsafe* version of
+[`QuickHeaps.heapify_down!`](@ref) which assumes that all arguments are
+correct, that is `A` implements 1-based linear indexing, `0 ≤ n ≤ lengh(A)`,
+and `1 ≤ i ≤ n`.
 
 """
 @inline function unsafe_heapify_down!(o::Ordering,
@@ -391,9 +393,9 @@ end
 """
     unsafe_heapify_up!(o, A, i, x=A[i])
 
-This methods is a fast but *unsafe* version of [`heapify_up!`](@ref) which
-assumes that all arguments are correct, that is `A` implements 1-based linear
-indexing and `1 ≤ i ≤ length(A)`.
+This methods is a fast but *unsafe* version of [`QuickHeaps.heapify_up!`](@ref)
+which assumes that all arguments are correct, that is `A` implements 1-based
+linear indexing and `1 ≤ i ≤ length(A)`.
 
 """
 @inline function unsafe_heapify_up!(o::Ordering,
