@@ -10,28 +10,33 @@ implementing a priority queue with keys of type `K` and values of type `V`, may
 be as simple as:
 
 ```julia
-using QuickHeaps
 struct Node{K,V}
    key::K
    val::V
 end
 Base.lt(o::Base.Ordering, a::Node, b::Node) = lt(o, a.val, b.val)
-pq = FastHeap{Node}()
+pq = FastBinaryHeap{Node}()
 ```
 
 In words, such a priority queue is a binary heap (a min-heap in that case) of
 nodes that store their value and their key and which as sorted according to
-their values.
+their values.  The same `Node` structure with the same specialization of
+`Base.lt` is provided by `QuickHeaps`, and a simpler version of the example is:
+
+```julia
+using QuickHeaps: Node
+pq = FastBinaryHeap{Node}()
+```
 
 Such a priority queue is faster than `DataStructures.PriorityQueue` but it
 implements no means to requeue a node nor to ensure that keys are unique.  A
 dictionary or a set can be used for that, but this would slow down the priority
 queue.
 
-A `QuickHeaps.FastHeap` does not reduce the size of the array backing the
+A `QuickHeaps.FastBinaryHeap` does not reduce the size of the array backing the
 storage of the binary heap.  This is fine when the binary heap is used as a
-workspace in another algorithm.  Use `QuickHeaps.Heap` to automatically resize
-the storage array so that its length is always that of the heap.
+workspace in another algorithm.  Use `QuickHeaps.BinaryHeap` to automatically
+resize the storage array so that its length is always that of the heap.
 
 
 ## Speed up and strengthen sorting algorithms
