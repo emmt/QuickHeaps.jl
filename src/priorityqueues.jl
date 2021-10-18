@@ -65,7 +65,7 @@ Pair(x::AbstractNode) = getkey(x) => getval(x)
 Tuple(x::AbstractNode) = (getkey(x), getval(x))
 
 # Nodes are sorted according to their values.
-for O in (:Ordering, :FastMinOrdering)
+for O in (:Ordering, :FastForwardOrdering)
     @eval begin
         lt(o::$O, a::T, b::T) where {T<:AbstractNode} =
             lt(o, getval(a), getval(b))

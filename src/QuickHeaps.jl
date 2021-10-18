@@ -66,17 +66,20 @@ using Base.Order: Ordering, ReverseOrdering, Forward, Reverse
 import Base.Order: lt
 
 """
-    FastMinOrdering
+    FastForwardOrdering
 
 is the singleton type for fast *forward* ordering without considering NaN's.
 
 """
-struct FastMinOrdering <: Ordering end
+struct FastForwardOrdering <: Ordering end
 
-lt(::FastMinOrdering, a, b) = a < b
+lt(::FastForwardOrdering, a, b) = a < b
 
-const FastMin = FastMinOrdering()
-const FastMax = ReverseOrdering(FastMin)
+const FastForward = FastForwardOrdering()
+const FastReverse = ReverseOrdering(FastForward)
+
+const FastMin = FastForward
+const FastMax = FastReverse
 
 const SafeMin = Forward
 const SafeMax = Reverse
