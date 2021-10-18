@@ -102,84 +102,84 @@ heap_left(i::Int) = 2*i
 heap_right(i::Int) = 2*i + 1
 heap_parent(i::Int) = div(i, 2)
 
-@inline function getindex(heap::AbstractBinaryHeap, i::Int)
-    @boundscheck checkbounds(heap, i)
-    @inbounds r = getindex(nodes(heap), i)
+@inline function getindex(h::AbstractBinaryHeap, i::Int)
+    @boundscheck checkbounds(h, i)
+    @inbounds r = getindex(nodes(h), i)
     return r
 end
 
-@inline @propagate_inbounds setindex!(heap::AbstractBinaryHeap, x, i::Int) =
-    setindex!(heap, to_eltype(heap, x), i)
+@inline @propagate_inbounds setindex!(h::AbstractBinaryHeap, x, i::Int) =
+    setindex!(h, to_eltype(h, x), i)
 
-@inline function setindex!(heap::AbstractBinaryHeap{T},
+@inline function setindex!(h::AbstractBinaryHeap{T},
                            x::T, i::Int) where {T}
-    @boundscheck checkbounds(heap, i)
-    A = nodes(heap)
+    @boundscheck checkbounds(h, i)
+    A = nodes(h)
     @inbounds y = A[i] # replaced node
-    o = ordering(heap)
+    o = ordering(h)
     if lt(o, y, x)
         # Heap structure _above_ replaced node will remain valid, down-heapify
         # to fix the heap structure at and _below_ the node.
-        unsafe_heapify_down!(o, A, i, x, length(heap))
+        unsafe_heapify_down!(o, A, i, x, length(h))
     else
         # Heap structure _below_ replaced node will remain valid, up-heapify to
         # fix the heap structure at and _above_ the node.
         unsafe_heapify_up!(o, A, i, x)
     end
-    return heap
+    return h
 end
 
-first(heap::AbstractBinaryHeap) = peek(heap)
+first(h::AbstractBinaryHeap) = peek(h)
 
-function peek(heap::AbstractBinaryHeap)
-    isempty(heap) && throw(ArgumentError("heap is empty"))
-    @inbounds r = getindex(nodes(heap), 1)
+function peek(h::AbstractBinaryHeap)
+    isempty(h) && throw(ArgumentError("heap is empty"))
+    @inbounds r = getindex(nodes(h), 1)
     return r
 end
 
 empty!(h::FastBinaryHeap) = (setfield!(h, :count, 0); h)
 empty!(h::BinaryHeap) = (empty!(nodes(h)); h)
 
-function pop!(heap::AbstractBinaryHeap)
-    n = length(heap)
+function pop!(h::AbstractBinaryHeap)
+    n = length(h)
     n ≥ 1 || throw(ArgumentError("heap is empty"))
-    A = nodes(heap)
+    A = nodes(h)
     @inbounds x = A[1]
     if n > 1
         # Peek the last node and down-heapify starting at the root of the
         # binary heap to insert it.
         @inbounds y = A[n]
-        unsafe_heapify_down!(ordering(heap), A, 1, y, n - 1)
+        unsafe_heapify_down!(ordering(h), A, 1, y, n - 1)
     end
-    unsafe_shrink!(heap, n - 1)
+    unsafe_shrink!(h, n - 1)
     return x
 end
 
-push!(heap::AbstractBinaryHeap, ::Tuple{}) = heap
+push!(h::AbstractBinaryHeap, ::Tuple{}) = h
 
-function push!(heap::AbstractBinaryHeap, args...)
+function push!(h::AbstractBinaryHeap, args...)
     for x in args
-        push!(heap, x)
+        push!(h, x)
     end
-    return heap
+    return h
 end
 
-push!(heap::AbstractBinaryHeap, x) = push!(heap, to_eltype(heap, x))
+push!(h::AbstractBinaryHeap, x) = push!(h, to_eltype(h, x))
 
-function push!(heap::AbstractBinaryHeap{T}, x::T) where {T}
-    n = length(heap) + 1
-    unsafe_heapify_up!(ordering(heap), unsafe_grow!(heap, n), n, x)
-    return heap
+function push!(h::AbstractBinaryHeap{T}, x::T) where {T}
+    n = length(h) + 1
+    unsafe_heapify_up!(ordering(h), unsafe_grow!(h, n), n, x)
+    return h
 end
 
-delete!(heap::AbstractBinaryHeap, i::Integer) = delete!(heap, to_int(i))
+delete!(h::AbstractBinaryHeap, i::Integer) = delete!(h, to_int(i))
 
-function delete!(heap::AbstractBinaryHeap, i::Int)
-    n = length(heap)
+function delete!(h::AbstractBinaryHeap, i::Int)
+    n = length(h)
     in_range(i, n) || throw_argument_error("out of range index")
     if i < n
-        A = nodes(heap)
-        o = ordering(heap)
+        A = nodes(h)
+        o = ordering(h)
         @inbounds x = A[n] # node to replace deleted node
         @inbounds y = A[i] # deleted node
         if lt(o, y, x)
@@ -193,8 +193,8 @@ function delete!(heap::AbstractBinaryHeap, i::Int)
             unsafe_heapify_up!(o, A, i, x)
         end
     end
-    unsafe_shrink!(heap, n - 1)
-    return heap
+    unsafe_shrink!(h, n - 1)
+    return h
 end
 
 """
@@ -209,11 +209,11 @@ This method is called by `push!` to grow the size of the heap and shall be
 specialized for any concrete sub-types of `QuickHeaps.AbstractBinaryHeap`.
 
 """
-unsafe_grow!(heap::BinaryHeap, n::Int) = resize!(nodes(heap), n)
-unsafe_grow!(heap::FastBinaryHeap, n::Int) = begin
-    A = nodes(heap)
+unsafe_grow!(h::BinaryHeap, n::Int) = resize!(nodes(h), n)
+unsafe_grow!(h::FastBinaryHeap, n::Int) = begin
+    A = nodes(h)
     length(A) < n && resize!(A, n)
-    setfield!(heap, :count, n)
+    setfield!(h, :count, n)
     return A
 end
 
@@ -228,8 +228,8 @@ and shall be specialized for any concrete sub-type of
 [`QuickHeaps.AbstractBinaryHeap`](@ref).
 
 """
-unsafe_shrink!(heap::BinaryHeap, n::Int) = resize!(nodes(heap), n)
-unsafe_shrink!(heap::FastBinaryHeap, n::Int) = setfield!(heap, :count, n)
+unsafe_shrink!(h::BinaryHeap, n::Int) = resize!(nodes(h), n)
+unsafe_shrink!(h::FastBinaryHeap, n::Int) = setfield!(h, :count, n)
 
 """
     heapify!(h) -> h
@@ -241,17 +241,16 @@ modified by other methods than `pop!` or `push!`.
 The method can be called at a lower level to heapify (part of) an array storing
 the heap values:
 
-    heapify!(o, A, n=length(A)) -> A
+    heapify!([o=Base.Forward,] A, n=length(A)) -> A
 
 reorders the `n` first elements of array `A` in-place to form a binary heap
 according to the ordering specified by `o`.  The array `A` must have 1-based
-linear indexing.
+linear indexing.  Arguments may be specified in any order.
 
-""" heapify!
-
-function heapify!(heap::AbstractBinaryHeap)
-    heapify!(ordering(heap), nodes(heap), length(heap))
-    return heap
+"""
+function heapify!(h::AbstractBinaryHeap)
+    heapify!(ordering(h), nodes(h), length(h))
+    return h
 end
 
 heapify!(o::Ordering, A::AbstractArray, n::Integer) = heapify!(o, A, to_int(n))
@@ -266,21 +265,23 @@ function heapify!(o::Ordering, A::AbstractArray, n::Int = length(A))
 end
 
 """
-    heapify(o, A, n=length(A))
+    heapify([o=Base.Forward,] A, n=length(A))
 
 yields an array with the `n` first values of array `A` stored in a binary heap
 structure of ordering specified by `o`.  The storage of the returned heap is
-a different array than `A`.
+a different array than `A`.  Arguments may be specified in any order.
 
 """
-heapify(o::Ordering, A::AbstractArray{T}, n::Integer = length(A)) where {T} =
+heapify(o::Ordering, A::AbstractArray, n::Integer) = heapify(o, A, to_int(n))
+
+heapify(o::Ordering, A::AbstractArray{T}, n::Int = length(A)) where {T} =
     heapify!(o, copyto!(Vector{T}(undef, n), 1, A, 1, n))
 
 """
-    isheap(o, A, n=length(A))
+    isheap([o=Base.Forward,], A, n=length(A))
 
 yields whether the `n` first elements of array `A` have a binary heap structure
-ordered as specified by `o`.
+ordered as specified by `o`.  Arguments may be specified in any order.
 
     isheap(obj; check=false)
 
@@ -303,9 +304,9 @@ function isheap(o::Ordering, A::AbstractArray, n::Int = length(A))
     return true
 end
 
-isheap(heap::AbstractBinaryHeap; check::Bool = false) =
+isheap(h::AbstractBinaryHeap; check::Bool = false) =
     if check
-        isheap(ordering(heap), nodes(heap), length(heap))
+        isheap(ordering(h), nodes(h), length(h))
     else
         true
     end
@@ -314,11 +315,14 @@ isheap(heap::AbstractBinaryHeap; check::Bool = false) =
 # as in base Julia and DataStructures.
 for func in (:heapify, :heapify!, :isheap)
     @eval begin
-        $func(A::AbstractArray) = $func(DefaultOrdering, A)
-        $func(A::AbstractArray, n::Integer) = $func(DefaultOrdering, A, n)
-        $func(A::AbstractArray, o::Ordering) = $func(o, A)
-        $func(A::AbstractArray, o::Ordering, n::Integer) = $func(o, A, n)
-        $func(A::AbstractArray, n::Integer, o::Ordering) = $func(o, A, n)
+        function $func(A::AbstractArray, o::Ordering = DefaultOrdering,
+                       n::Integer = length(A))
+            return $func(o, A, n)
+        end
+        function $func(A::AbstractArray, n::Integer,
+                       o::Ordering = DefaultOrdering)
+            return $func(o, A, n)
+        end
     end
 end
 
