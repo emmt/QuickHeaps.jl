@@ -40,6 +40,7 @@ import Base:
     first,
     getindex,
     isempty,
+    iterate,
     length,
     peek,
     pop!,
@@ -62,7 +63,7 @@ using Base: @propagate_inbounds, OneTo, has_offset_axes
 # extend `Base.Order.lt` method for specialized ordering types.  The
 # ordering can be an instance or its type.
 
-using Base.Order: Ordering, ReverseOrdering, Forward, Reverse
+using Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 import Base.Order: lt
 
 """
@@ -86,6 +87,17 @@ const SafeMax = Reverse
 
 # Same default ordering as algorithms in base Julia and in DataStructures.
 const DefaultOrdering = Forward
+
+"""
+    reverseordering(o)
+
+yields the reverse of ordering `o`.
+
+""" reverseordering
+# FIXME: This should be done by default by the `reverse` method.
+reverseordering(o::ForwardOrdering) = ReverseOrdering(o)
+reverseordering(o::FastForwardOrdering) = ReverseOrdering(o)
+reverseordering(o::ReverseOrdering) = o.fwd
 
 #------------------------------------------------------------------------------
 

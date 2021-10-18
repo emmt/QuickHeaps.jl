@@ -6,6 +6,28 @@ Nodes can be used in binary heaps and priority queues where they are used to
 store key-value pairs and, by specializing the `Base.lt` method, to implement
 how the nodes are ordered.
 
+A node `nd` can be iterated and converted into a pair or a 2-tuple and
+conversely:
+
+    k, v = nd               # k is the key and v is the value of the node nd
+    Pair(nd)                # yields k=>v
+    Tuple(nd)               # yields (k,v)
+    QuickHeaps.Node((k, v)) # is the same as QuickHeaps.Node(k, v)
+    QuickHeaps.Node(k => v) # is the same as QuickHeaps.Node(k, v)
+
+The `getkey` and (unexported) [`QuickHeaps.getval`](@ref) methods can be used
+to respectively retrieve the key and value of a node.  These two methods may be
+specialized for the sub-types of [`QuickHeaps.AbstractNode`](@ref).  For
+example, a *key-only* node type can be fully implemented by:
+
+    struct KeyOnlyNode{K} <: QuickHeaps.AbstractNode{K,Nothing}
+        key::K
+    end
+    QuickHeaps.getkey(x::KeyOnlyNode) = getfield(x, :key)
+    QuickHeaps.getval(x::KeyOnlyNode) = nothing
+    KeyOnlyNode(x::Tuple{K,Nothing}) where {K} = KeyOnlyNode{K}(x[1])
+    KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
+
 """
 abstract type AbstractNode{K,V} end
 
@@ -60,11 +82,38 @@ end
 
 # These methods can be specialized.
 import Base: getkey
+
+"""
+    getkey(x::QuickHeaps.AbstractNode) -> k
+
+yields the key `k` of node `x`.  This method may be specialized for any
+sub-types of [`QuickHeaps.AbstractNode`](@ref).
+
+Also see [`QuickHeaps.getval`](@ref).
+
+"""
 getkey(x::Node) = getfield(x, :key)
+
+"""
+    QuickHeaps.getval(x::QuickHeaps.AbstractNode) -> v
+
+yields the value `v` of node `x`.  This method may be specialized for any
+sub-types of [`QuickHeaps.AbstractNode`](@ref).
+
+Also see [`getkey(::QuickHeaps.AbstractNode)`](@ref).
+
+"""
 getval(x::Node) = getfield(x, :val)
 
-Pair(x::AbstractNode) = getkey(x) => getval(x)
+Node(x::Tuple{Any,Any}) = Node(x[1], x[2])
 Tuple(x::AbstractNode) = (getkey(x), getval(x))
+
+Node(x::Pair) = Node(x.first, x.second)
+Pair(x::AbstractNode) = getkey(x) => getval(x)
+
+iterate(x::AbstractNode) = (getkey(x), first)
+iterate(x::AbstractNode, ::typeof(first)) = (getval(x), last)
+iterate(x::AbstractNode, ::typeof(last)) = nothing
 
 # Nodes are sorted according to their values.
 for O in (:Ordering, :FastForwardOrdering)

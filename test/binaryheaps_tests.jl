@@ -10,12 +10,7 @@ using QuickHeaps:
     FastForwardOrdering, FastForward, FastReverse,
     FastMin, FastMax, SafeMin, SafeMax,
     isheap, heapify, heapify!,
-    ordering
-
-# FIXME: This should be done by default by the `reverse` method.
-reverseordering(o::ForwardOrdering) = ReverseOrdering(o)
-reverseordering(o::FastForwardOrdering) = ReverseOrdering(o)
-reverseordering(o::ReverseOrdering) = o.fwd
+    ordering, reverseordering
 
 is_max_ordering(x) = !is_min_ordering(x)
 is_min_ordering(o::Ordering) = is_min_ordering(typeof(o))
