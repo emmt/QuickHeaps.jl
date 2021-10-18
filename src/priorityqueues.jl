@@ -40,6 +40,8 @@ In other words, nodes are sorted by their value according to ordering `o`.
 abstract type AbstractPriorityQueue{
     K,V,T<:AbstractNode{K,V},O<:Ordering} <: AbstractDict{K,V} end
 
+typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
+
 """
     QuickHeaps.Node{K,V}(k,v)
 
@@ -228,11 +230,11 @@ FastPriorityQueue(o::O, T::Type{<:AbstractNode{Int,V}}, dims::NTuple{N,Integer})
 #          " with ", length(pq), " node(s)")
 
 show(io::IO, ::MIME"text/plain", pq::PriorityQueue{K,V}) where {K,V} =
-    print(io, "priority queue of type ", nameof(typeof(pq)), "{", nameof(K),
+    print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(K),
           ",", nameof(V), "} with ", length(pq), " node(s)")
 
 show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
-    print(io, "priority queue of type ", nameof(typeof(pq)), "{", nameof(V),
+    print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(V),
           "} with ", length(pq), " node(s)")
 
 ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
@@ -249,7 +251,7 @@ first(pq::AbstractPriorityQueue) = peek(pq)
 
 # FIXME: Same code as for binary heaps.
 function peek(pq::AbstractPriorityQueue)
-    isempty(pq) && throw_argument_error("priority queue is empty")
+    isempty(pq) && throw_argument_error(typename(pq), " is empty")
     @inbounds x = getindex(nodes(pq), 1)
     return Tuple(x)
 end
@@ -276,7 +278,7 @@ pop!(pq::AbstractPriorityQueue) = dequeue!(pq)
 # This is almost the same code as pop! for a binary heap.
 function dequeue!(pq::AbstractPriorityQueue)
     n = length(pq)
-    n ≥ 1 || throw_argument_error("priority queue is empty")
+    n ≥ 1 || throw_argument_error(typename(pq), " is empty")
     A = nodes(pq)
     @inbounds x = A[1]
     if n > 1

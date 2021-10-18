@@ -45,6 +45,8 @@ function heap_test(T::Type, h::AbstractBinaryHeap, n::Integer = 7)
     empty!(h)
     @test isempty(h)
     @test isheap(h; check=true)
+    @test_throws ArgumentError peek(h)
+    @test_throws ArgumentError pop!(h)
     for i in 1:n
         push!(h, rand(T))
         @test isheap(h; check=true)
@@ -127,7 +129,7 @@ end
 
 @testset "Binary heaps          " begin
     n = 8
-    for T in (Float32, Int)
+    for T in (Float64, Int)
         heap_test(T, BinaryHeap{T}(), n)
         heap_test(T, BinaryHeap{T}(FastMin), n)
         heap_test(T, BinaryHeap{T}(FastMax), n)
@@ -138,7 +140,7 @@ end
 
 @testset "Fast binary heaps     " begin
     n = 7
-    for T in (Float32, Int)
+    for T in (Float32, Int16)
         heap_test(T, FastBinaryHeap{T}(), n)
         heap_test(T, FastBinaryHeap{T}(FastMin), n)
         heap_test(T, FastBinaryHeap{T}(FastMax), n)

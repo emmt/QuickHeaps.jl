@@ -85,6 +85,16 @@ has_bad_values(A::AbstractArray{<:Integer}) = false
 has_bad_values(A::AbstractArray{<:AbstractFloat}) =
     has_bad_values(A, isnan)
 
+"""
+    typename(x)
+
+yields a short string describing the type of object `x`.  Argument may also be
+the object type.
+
+"""
+typename(x::Any) = typename(typeof(x))
+typename(T::DataType) = string(nameof(T))
+
 require_one_based_indexing(A...) =
     has_offset_axes(A...) && throw_argument_error(
         "arrays must have 1-based indexing")

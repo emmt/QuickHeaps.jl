@@ -1,5 +1,7 @@
 abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
 
+typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
+
 """
     BinaryHeap{T}(o = FastMin)
 
@@ -132,7 +134,7 @@ end
 first(h::AbstractBinaryHeap) = peek(h)
 
 function peek(h::AbstractBinaryHeap)
-    isempty(h) && throw(ArgumentError("heap is empty"))
+    isempty(h) && throw_argument_error(typename(h), " is empty")
     @inbounds r = getindex(nodes(h), 1)
     return r
 end
@@ -142,7 +144,7 @@ empty!(h::BinaryHeap) = (empty!(nodes(h)); h)
 
 function pop!(h::AbstractBinaryHeap)
     n = length(h)
-    n ≥ 1 || throw(ArgumentError("heap is empty"))
+    n ≥ 1 || throw_argument_error(typename(h), " is empty")
     A = nodes(h)
     @inbounds x = A[1]
     if n > 1
