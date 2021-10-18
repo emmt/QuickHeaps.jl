@@ -10,7 +10,7 @@ using QuickHeaps:
     FastForwardOrdering, FastForward, FastReverse,
     FastMin, FastMax, SafeMin, SafeMax,
     isheap, heapify, heapify!,
-    ordering, reverseordering
+    ordering
 
 is_max_ordering(x) = !is_min_ordering(x)
 is_min_ordering(o::Ordering) = is_min_ordering(typeof(o))
@@ -81,7 +81,7 @@ end
             @test isheap(A, o, Int16(n))
             @test isheap(o, A, n)
             @test isheap(o, A, n - 1) # last element can be discarded
-            @test !isheap(A, reverseordering(o))
+            @test !isheap(A, ReverseOrdering(o))
         end
     end
     # Max-heap.
@@ -95,7 +95,7 @@ end
             @test isheap(A, o, n)
             @test isheap(o, A, n)
             @test isheap(o, A, n - 1) # last element can be discarded
-            @test !isheap(A, reverseordering(o))
+            @test !isheap(A, ReverseOrdering(o))
         end
     end
     # Starting with an array which is not a heap in any order.

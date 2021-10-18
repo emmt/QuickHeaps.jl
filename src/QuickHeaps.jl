@@ -88,17 +88,6 @@ const SafeMax = Reverse
 # Same default ordering as algorithms in base Julia and in DataStructures.
 const DefaultOrdering = Forward
 
-"""
-    reverseordering(o)
-
-yields the reverse of ordering `o`.
-
-""" reverseordering
-# FIXME: This should be done by default by the `reverse` method.
-reverseordering(o::ForwardOrdering) = ReverseOrdering(o)
-reverseordering(o::FastForwardOrdering) = ReverseOrdering(o)
-reverseordering(o::ReverseOrdering) = o.fwd
-
 #------------------------------------------------------------------------------
 
 include("utilities.jl")
