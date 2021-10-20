@@ -17,14 +17,18 @@ using QuickHeaps:
 
 import Base.Order.Reverse
 
-@testset "Priority queues       " begin
+function test_queue!(A::AbstractPriorityQueue{K,V},
+                     key_list::AbstractVector{K},
+                     val_list::AbstractVector{V}) where {K,V}
+    # Check arguments.
+    axes(val_list) == axes(key_list) || error("incompatible indices")
+    n = length(key_list)
+    axes(key_list) == (1:n,) || error("non-standard indices")
 
-    # Basic checks for an empty priority queue.
-    K, V = Int, Float64
-    A = PriorityQueue{K,V}()
-    @test isempty(A)
-    @test length(A) == 0
+    # Dummy private function used to "label" the tests.
+    check(flag::Bool, comment) = flag
 
+    # Checks keytype, etc.
     @test keytype(A) == K
     @test keytype(typeof(A)) == K
     @test IteratorSize(keys(A)) == HasLength()
@@ -34,6 +38,7 @@ import Base.Order.Reverse
     @test eltype(keys(A)) == K
     @test eltype(typeof(keys(A))) == K
 
+    # Checks valtype, etc.
     @test valtype(A) == V
     @test valtype(typeof(A)) == V
     @test IteratorSize(values(A)) == HasLength()
@@ -44,48 +49,18 @@ import Base.Order.Reverse
     @test eltype(typeof(values(A))) == V
 
     # Check that `enqueue!` maintains the binary-heap structure.
-    n = 1_000
     R = Dict{K,V}() # reference dictionary
     test_1 = true
-    for k in 1:n
-        v = rand(V)
+    test_2 = true
+    for (k, v) in zip(key_list, val_list)
         enqueue!(A, k, v)
         test_1 &= isheap(nodes(A))
+        test_2 &= !haskey(R, k) # unique key?
         R[k] = v
     end
-    @test test_1
+    @test check(test_1, "binary-heap structure after `enqueue!`")
+    @test check(test_2, "unique keys after `enqueue!`")
     @test length(A) == n
-
-    # Check `getindex`.
-    test_2 = true
-    for k in randperm(n)
-        test_2 &= (A[k] == R[k])
-    end
-    @test test_2
-
-    # Check `setindex`.
-    B = PriorityQueue{K,V}()
-    test_3 = true
-    test_4 = true
-    for k in keys(A)
-        v = A[k]
-        B[k] = v
-        test_3 &= isheap(nodes(B))
-        test_4 &= (haskey(B, k) && B[k] == R[k])
-    end
-    @test test_3
-    @test test_4
-    @test length(B) == length(A)
-    test_5 = true
-    for k in randperm(n)
-        test_5 &= (haskey(B, k) && B[k] == R[k])
-    end
-
-    # Check result of addressing a non-existing key.
-    k = 0
-    @test !haskey(A, k)
-    @test get(A, k, nothing) === nothing
-    @test_throws ArgumentError A[k]
 
     # Check `first`, `peek`, `keys`, and `values`.
     k, v = first(A)
@@ -96,67 +71,160 @@ import Base.Order.Reverse
     @test v == getval(x)
     @test k == getkey(x)
 
-    # Check that `delete!` maintains the binary-heap structure.
-    B = copy(A)
-    test_11 = true
-    test_12 = true
-    test_13 = true
+    # Check `getindex` in random order.
+    test_1 = true
     for i in randperm(n)
-        test_11 &= haskey(B, i)
-        delete!(B, i)
-        test_12 &= !haskey(B, i)
-        test_13 &= isheap(nodes(B))
+        k = key_list[i]
+        test_1 &= (haskey(A,k) && A[k] == R[k])
     end
-    @test test_11
-    @test test_12
-    @test test_13
+    @test check(test_1, "`getindex` in random order")
+
+    # Test that `keys` and `values` yield all elements in the same order as
+    # `iterate`.
+    test_1 = true
+    test_2 = true
+    for (k,v,kv) in zip(keys(A), values(A), A)
+        test_1 &= (k == kv.first)
+        test_2 &= (v == kv.second)
+    end
+    @test check(test_1, "keys in heap order")
+    @test check(test_2, "values in heap order")
+
+    # Check `copy`.
+    B = copy(A)
+    @test typeof(B) === typeof(A)
+    @test length(B) == length(A)
+    @test nodes(A) == nodes(B)
+    @test index(A) == index(B)
+    S = Set(keys(B))
+    @test length(S) == length(B) # keys are unique?
+    test_1 = true
+    for k in S
+        test_1 &= (haskey(A, k) && haskey(B, k) && A[k] == B[k])
+    end
+    @test check(test_1, "`copy` yields same nodes")
+
+    # Check `delete!` and result of addressing a non-existing key.
+    k = key_list[rand(1:n)]
+    delete!(B, k)
+    @test !haskey(B, k)
+    @test get(B, k, nothing) === nothing
+    @test_throws ArgumentError B[k]
+
+    # Check `isempty`, `empty!`, etc.
+    empty!(B)
+    @test isempty(B)
+    @test length(B) == 0
+    @test length(A) == n # no side effects on A
+
+    # Check `setindex!` in heap order.
+    length(B) > 1 && empty!(B)
+    test_1 = true
+    test_2 = true
+    for i in randperm(n)
+        k, v = key_list[i], val_list[i]
+        B[k] = v
+        test_1 &= isheap(nodes(B))
+        test_2 &= (haskey(B, k) && B[k] == R[k])
+    end
+    @test check(test_1, "heap structure preserved by `setindex!`")
+    @test check(test_2, "same value for key after `setindex!`")
+    @test length(B) == length(A)
+    test_1 = true
+    test_2 = true
+    for i in randperm(n)
+        k = key_list[i]
+        test_1 &= haskey(B, k)
+        test_2 &= B[k] == R[k]
+    end
+    @test check(test_1, "no missing keys in random order")
+    @test check(test_2, "same values in random order")
+
+    # Check that `delete!` maintains the binary-heap structure.
+    test_1 = true
+    test_2 = true
+    test_3 = true
+    for i in randperm(n)
+        k = key_list[i]
+        test_1 &= haskey(B, k)
+        delete!(B, k)
+        test_2 &= !haskey(B, k)
+        test_3 &= isheap(nodes(B))
+    end
+    @test check(test_1, "keys exist before `delete!`")
+    @test check(test_2, "keys do not exist after `delete!`")
+    @test check(test_3, "heap structure preserved by `delete!`")
     @test isempty(B)
 
     # Check that `pop!` extracts nodes in order and maintains the binary-heap
     # structure.
     B = copy(A)
-    test_21 = true
-    test_22 = true
+    test_1 = true
+    test_2 = true
     prev = typemin(V)
     for i in 1:n
         k, v = pop!(B)
-        test_21 &= isheap(nodes(B))
-        test_22 &= !(prev > v)
+        test_1 &= isheap(nodes(B))
+        test_2 &= !(prev > v)
         prev = v
     end
-    @test test_21
-    @test test_22
+    @test check(test_1, "heap structure preserved by `pop!`")
+    @test check(test_2, "`pop!` yields keys in order")
     @test isempty(B)
 
-    # Check that unordered `iterate` extracts all nodes without perturbating
-    # the original priority queue.
-    B = copy(A)
-    D = Dict{K,V}()
-    test_31 = true
-    for (k,v) in A
-        test_31 &= !haskey(D, k)
-        D[k] = v
+    # Tests for fast priority queues.
+    if isa(A, FastPriorityQueue)
+        cartesian_index = CartesianIndices(index(A))
+        linear_index = LinearIndices(index(A))
+        test_1 = true
+        test_2 = true
+        test_3 = true
+        test_4 = true
+        test_5 = true
+        test_6 = true
+        test_7 = true
+        test_8 = true
+        for i in randperm(n)
+            k = key_list[i]
+            c = cartesian_index[k]
+            inds = c.I
+            test_1 &= haskey(A, c)
+            test_2 &= haskey(A, inds)
+            test_3 &= (A[k] == A[c])
+            test_4 &= (A[k] == A[inds...])
+            v = A[k]
+            test_5 &= !haskey(delete!(A, c), k)
+            A[c] = v
+            test_6 &= (haskey(A, k) && A[k] == v)
+            test_7 &= !haskey(delete!(A, inds), k)
+            A[inds...] = v
+            test_8 &= (haskey(A, k) && A[k] == v)
+        end
+        @test check(test_1, "`haskey` with Cartesian index")
+        @test check(test_2, "`haskey` with multi-dimensional index")
+        @test check(test_3, "`getindex` with Cartesian index")
+        @test check(test_4, "`getindex` with multi-dimensional index")
+        @test check(test_5, "`delete!` with Cartesian index")
+        @test check(test_6, "`setindex!` with Cartesian index")
+        @test check(test_7, "`delete!` with multi-dimensional index")
+        @test check(test_8, "`setindex!` with multi-dimensional index")
     end
-    @test test_31
-    @test length(D) == n
-    @test nodes(A) == nodes(B)
-    @test index(A) == index(B)
-    test_32 = true
-    for (k,v) in D
-        test_32 &= haskey(A, k)
-    end
-    @test test_32
+end
 
-    # Test `keys` and `values` yield all elements in the same order as `iterate`.
-    test_33 = true
-    test_34 = true
-    for (k,v,kv) in zip(keys(A), values(A), A)
-        test_33 &= (k == kv.first)
-        test_34 &= (v == kv.second)
-    end
-    @test test_33
-    @test test_34
+@testset "Priority queues       " begin
+    K, V, n = Int, Float64, 1000
+    A = PriorityQueue{K,V}()
+    test_queue!(A, map(K, 1:n), rand(V, n))
+end
 
-end # @testset
+@testset "Fast priority queues  " begin
+    V, dims = Float32, (2,3,4)
+    n = prod(dims)
+    m = div(9n + 5, 10) # keep ~90% of indices
+    key_list = randperm(n)[1:m]
+    val_list = rand(V, m)
+    B = FastPriorityQueue{V}(dims)
+    test_queue!(B, key_list, val_list)
+end
 
 end # module
