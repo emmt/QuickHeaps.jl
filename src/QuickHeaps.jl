@@ -39,10 +39,13 @@ import Base:
     delete!,
     empty!,
     first,
+    get,
     getindex,
     haskey,
     isempty,
     iterate,
+    keytype,
+    keys,
     length,
     peek,
     pop!,
@@ -51,7 +54,9 @@ import Base:
     setindex!,
     show,
     size,
-    sizehint!
+    sizehint!,
+    valtype,
+    values
 
 # The `peek` method appeared in Julia 1.5.
 @static if isdefined(Base, :peek)

@@ -105,6 +105,17 @@ Also see [`getkey(::QuickHeaps.AbstractNode)`](@ref).
 """
 getval(x::Node) = getfield(x, :val)
 
+for type in (:AbstractNode, :Node)
+    @eval begin
+        $type(x::$type) = x
+        $type{K}(x::$type{K}) where {K} = x
+        $type{K,V}(x::$type{K,V}) where {K,V} = x
+    end
+end
+Node(x::AbstractNode) = Node(getkey(x), keyval(x))
+Node{K}(x::AbstractNode) where {K} = Node{K}(getkey(x), keyval(x))
+Node{K,V}(x::AbstractNode{K,V}) where {K,V} = Node{K,V}(getkey(x), keyval(x))
+
 Node(x::Tuple{Any,Any}) = Node(x[1], x[2])
 Tuple(x::AbstractNode) = (getkey(x), getval(x))
 
@@ -167,13 +178,44 @@ key with the new value.
 To extract the key `k` and priority `v` of the node of highest priority from
 the queue `pq`, call one of:
 
-    k, v = dequeue!(pq)
+    k = dequeue!(pq)
     k, v = pop!(pq)
 
-To just examine the node node of highest priority, call one of:
+Method `dequeue!` may be called with a type argument `T` as `dequeue!(T,pq)` to
+extract the node of highest priority and apply constructor `T` to convert it to
+something else.  For example, `pop!(pq)` is implemented as `dequeue!(Pair,pq)`
+and you may call `dequeue!(QuickHeaps.AbstractNode,pq)` to extract the node.
+If you want to apply a function `f` taht is not a type constructor to the node
+of highest priority, call:
+
+    f(dequeue!(QuickHeaps.AbstractNode,pq))
+
+To just examine the node of highest priority, call one of:
 
     k, v = peek(pq)
     k, v = first(pq)
+
+Like the `dequeue!` method, the `peek` method may also be called with a type
+argument.
+
+A priority queue `pq` behaves like a dictionary:
+
+    length(pq)                # yields number of nodes
+    isempty(pq)               # yields whether priority queue is empty
+    empty!(pq)                # empties priority queue
+    keytype(pq)               # yields key type `K`
+    valtype(pq)               # yields value type `V`
+    pq[k] = v                 # set value `v` of key `k`
+    push!(pq, k => v)         # idem.
+    haskey(pq, k)             # yields whether key exists
+    get(pq, k, def)           # query value at key, with default
+    delete!(pq, k)            # delete node at key `k`
+    keys(pq)                  # yields iterator over keys
+    vals(pq)                  # yields iterator over values
+    for (k,v) in pq; ...; end # loop over key-value pairs
+
+Note that the 3 above iterators yield nodes in their storage order which is not
+that of their priority.  The order is however the same for the 3 cases.
 
 """
 struct PriorityQueue{K,V,T,O} <: AbstractPriorityQueue{K,V,T,O}
@@ -306,41 +348,102 @@ ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
 nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
 
-haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
-
 length(pq::AbstractPriorityQueue) = length(nodes(pq))
 isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
 
-first(pq::AbstractPriorityQueue) = peek(pq)
+keytype(::AbstractPriorityQueue{K,V}) where {K,V} = K
+valtype(::AbstractPriorityQueue{K,V}) where {K,V} = V
 
-# FIXME: Same code as for binary heaps.
-function peek(pq::AbstractPriorityQueue)
-    isempty(pq) && throw_argument_error(typename(pq), " is empty")
-    @inbounds x = getindex(nodes(pq), 1)
-    return Tuple(x)
+haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
+
+function get(pq::AbstractPriorityQueue, key, def)
+    n = length(pq)
+    if n > 0
+        i = heap_index(pq, key)
+        if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
+            @inbounds x = getindex(nodes(pq), i)
+            return Tuple(x)
+        end
+    end
+    return def
 end
 
-function empty!(pq::AbstractPriorityQueue; force::Bool=false)
-    if force || length(pq) > 0
-        force_empty!(pq)
+function delete!(pq::AbstractPriorityQueue, key)
+    n = length(pq)
+    if n > 0
+        i = heap_index(pq, key)
+        if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
+            A = nodes(pq)
+            @inbounds x = A[i] # node to be deleted
+            if n > 1
+                # Replace the deleted node by the last node in the heap.
+                @inbounds y = A[n] # last node
+                o = ordering(pq)
+                if lt(o, x, y)
+                    # Heap structure _above_ deleted node is already valid.
+                    unsafe_heapify_down!(pq, i, y, n - 1)
+                else
+                    # Heap structure _below_ deleted node is already valid.
+                    unsafe_heapify_up!(pq, i, y)
+                end
+            end
+            unsafe_shrink!(pq, n - 1)
+            unsafe_delete_key!(pq, getkey(x))
+        end
     end
     return pq
 end
 
-function force_empty!(pq::PriorityQueue)
+first(pq::AbstractPriorityQueue) = peek(pq)
+peek(pq::AbstractPriorityQueue) = peek(Pair, pq)
+
+# FIXME: Same code as for binary heaps.
+function peek(T::Type, pq::AbstractPriorityQueue)
+    isempty(pq) && throw_argument_error(typename(pq), " is empty")
+    @inbounds x = getindex(nodes(pq), 1)
+    return T(x)
+end
+
+function empty!(pq::PriorityQueue)
     empty!(nodes(pq))
     empty!(index(pq))
+    return pq
 end
 
-function force_empty!(pq::FastPriorityQueue)
+function empty!(pq::FastPriorityQueue)
     empty!(nodes(pq))
     fill!(index(pq), 0)
+    return pq
 end
 
-pop!(pq::AbstractPriorityQueue) = dequeue!(pq)
+# Private structure used by iterators on priority queues.
+struct _PriorityQueueIterator{F,T<:AbstractPriorityQueue}
+    f::F
+    pq::T
+end
+length(itr::_PriorityQueueIterator) = length(itr.pq)
+
+# Unordered iterators.  NOTE: Both `keys` and `values` shall however return the
+# elements in the same order.
+function iterate(pq::AbstractPriorityQueue, i::Int = 1)
+    i ≤ length(pq) || return nothing
+    @inbounds x = getindex(nodes(pq), i)
+    return Pair(x), i + 1
+end
+keys(pq::AbstractPriorityQueue) = _PriorityQueueIterator(getkey, pq)
+values(pq::AbstractPriorityQueue) = _PriorityQueueIterator(getval, pq)
+function Base.iterate(itr::_PriorityQueueIterator, i::Int = 1)
+    i ≤ length(itr.pq) || return nothing
+    @inbounds x = getindex(nodes(itr.pq), i)
+    return itr.f(x), i + 1
+end
+
+pop!(pq::AbstractPriorityQueue) = dequeue!(Pair, pq)
+
+dequeue!(pq::AbstractPriorityQueue) = getkey(dequeue!(AbstractNode, pq))
 
 # This is almost the same code as pop! for a binary heap.
-function dequeue!(pq::AbstractPriorityQueue)
+function dequeue!(T::Type, pq::AbstractPriorityQueue)
     n = length(pq)
     n ≥ 1 || throw_argument_error(typename(pq), " is empty")
     A = nodes(pq)
@@ -353,7 +456,7 @@ function dequeue!(pq::AbstractPriorityQueue)
     end
     unsafe_delete_key!(pq, getkey(x))
     unsafe_shrink!(pq, n - 1)
-    return Tuple(x)
+    return T(x)
 end
 
 # FIXME: Same code as for a binary heap.
@@ -439,10 +542,8 @@ converts the the key `k` and the value `v` into a node type suitable for
 priority queue `pq`.
 
 """
-to_node(pq::AbstractPriorityQueue{K,V,T}, key::K, val::V) where {K,V,T} =
-    T(key, val)
 to_node(pq::AbstractPriorityQueue{K,V,T}, key, val) where {K,V,T} =
-    to_node(to_key(pq, key), to_val(pq, val))
+    T(to_key(pq, key), to_val(pq, val))
 
 """
     heap_index(pq, k) -> i
@@ -576,32 +677,6 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
         # list and up-heapify to fix the structure and insert the new node.
         n = length(pq) + 1
         unsafe_heapify_up!(unsafe_grow!(pq, n), n, x)
-    end
-    return pq
-end
-
-function delete!(pq::AbstractPriorityQueue, key)
-    n = length(pq)
-    if n > 0
-        i = heap_index(pq, key)
-        if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
-            A = nodes(pq)
-            @inbounds x = A[i] # node to be deleted
-            unsafe_delete_key!(pq, getkey(x))
-            if n > 1
-                # Replace the deleted node by the last node in the heap.
-                @inbounds y = A[n] # last node
-                o = ordering(pq)
-                if lt(o, x, y)
-                    # Heap structure _above_ deleted node is already valid.
-                    unsafe_heapify_down!(pq, i, y, n - 1)
-                else
-                    # Heap structure _below_ deleted node is already valid.
-                    unsafe_heapify_up!(pq, i, y)
-                end
-            end
-            unsafe_shrink!(pq, n - 1)
-        end
     end
     return pq
 end
