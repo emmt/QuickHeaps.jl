@@ -116,7 +116,7 @@ iterate(x::AbstractNode, ::typeof(first)) = (getval(x), last)
 iterate(x::AbstractNode, ::typeof(last)) = nothing
 
 # Nodes are sorted according to their values.
-for O in (:Ordering, :FastForwardOrdering)
+for O in (:Ordering, :ForwardOrdering, :ReverseOrdering, :FastForwardOrdering)
     @eval begin
         lt(o::$O, a::T, b::T) where {T<:AbstractNode} =
             lt(o, getval(a), getval(b))
@@ -182,6 +182,10 @@ struct PriorityQueue{K,V,T,O} <: AbstractPriorityQueue{K,V,T,O}
     index::Dict{K,Int}
 end
 
+# Copy constructor.  The copy is independent from the original.
+copy(pq::PriorityQueue{K,V,T,O}) where {K,V,T,O} =
+    PriorityQueue{K,V,T,O}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
+
 """
     FastPriorityQueue{V}([o=FastMin,] T=Node{Int,V}, dims...)
 
@@ -203,6 +207,14 @@ key:
 With `n` nodes, the storage of this kind of priority queue is
 `prod(dims)*sizeof(Int) + n*sizeof(T)` bytes.
 
+The method
+
+    haskey(pq, k)
+
+yields whether key `k` exists in priority queue `pq`.  Note that `false` is
+returned, if key `k` is an invalid key (out of bounds).  This is unlike the
+syntax `pq[k]` which would throw an exception in that case.
+
 """
 struct FastPriorityQueue{V,T<:AbstractNode{Int,V},
                          O,N} <: AbstractPriorityQueue{Int,V,T,O}
@@ -211,9 +223,13 @@ struct FastPriorityQueue{V,T<:AbstractNode{Int,V},
     index::Array{Int,N}
 end
 
+# Copy constructor.  The copy is independent from the original.
+copy(pq::FastPriorityQueue{V,T,O,N}) where {V,T,O,N} =
+    FastPriorityQueue{V,T,O,N}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
+
 # Constructors for PriorityQueue instances.
 
-function PriorityQueue{K,V}(o::O = FastMin,
+function PriorityQueue{K,V}(o::O = DefaultOrdering,
                             ::Type{T} = Node{K,V}) where {K,V,
                                                           T<:AbstractNode{K,V},
                                                           O<:Ordering}
@@ -290,8 +306,7 @@ ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
 nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
 
-haskey(pq::PriorityQueue, key) = haskey(index(pq), key)
-haskey(pq::FastPriorityQueue, key...) = (index(pq)[key...] > 0)
+haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
 
 length(pq::AbstractPriorityQueue) = length(nodes(pq))
 isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
@@ -305,8 +320,8 @@ function peek(pq::AbstractPriorityQueue)
     return Tuple(x)
 end
 
-function empty!(pq::AbstractPriorityQueue; slow::Bool=false)
-    if slow || length(pq) > 0
+function empty!(pq::AbstractPriorityQueue; force::Bool=false)
+    if force || length(pq) > 0
         force_empty!(pq)
     end
     return pq
@@ -354,7 +369,7 @@ end
 
 push!(pq::AbstractPriorityQueue, pair::Pair) = enqueue!(pq, pair)
 
-push!(pq::AbstractPriorityQueue{<:Any,<:Any,T}, node::T) where {T}=
+push!(pq::AbstractPriorityQueue{<:Any,<:Any,T}, node::T) where {T} =
     enqueue!(pq, node)
 
 getindex(pq::AbstractPriorityQueue, ::Tuple{}) = throw_missing_key()
@@ -367,52 +382,130 @@ getindex(pq::PriorityQueue, key) = getval(pq, get(index(pq), key, 0))
 
 setindex!(pq::PriorityQueue, val, key) = enqueue!(pq, key, val)
 
-@inline function getindex(pq::FastPriorityQueue,
-                          key::Union{Integer, CartesianIndex}...)
-    I = index(pq)
-    k = to_indices(I, key)
-    @boundscheck checkbounds(I, k...)
-    @inbounds i = I[k...]
-    return getval(pq, i)
+# Indexing of fast priority queues.  We first convert the key into a linear
+# index (using the current bounds checking state).
+
+const Index = Union{Integer,CartesianIndex}
+const FastPriorityQueueKey = Union{Integer,Tuple{Vararg{Index}}}
+
+for keytype in (:Integer, :(Index...))
+    @eval begin
+        @inline @propagate_inbounds function getindex(pq::FastPriorityQueue,
+                                                      key::$keytype)
+            k = linear_index(pq, key)
+            @inbounds i = getindex(index(pq), k)
+            A = nodes(pq)
+            if in_range(i, A)
+                @inbounds x = A[i]
+                return getval(x)
+            end
+            throw_argument_error(typename(pq), " has no node with key ",
+                                 normalize_key(pq, key))
+        end
+        @inline @propagate_inbounds function setindex!(pq::FastPriorityQueue,
+                                                       val,
+                                                       key::$keytype)
+            return enqueue!(pq, key, val)
+        end
+    end
 end
 
-@inline function setindex!(pq::FastPriorityQueue, val,
-                           key::Union{Integer, CartesianIndex}...)
-    return enqueue!(pq, key, val)
-end
+normalize_key(pq::FastPriorityQueue, key::Integer) = to_int(key)
+normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{Index}}) =
+    to_indices(index(pq), key)
 
-to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = convert(K, key)
-to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = convert(V, val)
+"""
+    to_key(pq, k)
+
+converts the key `k` to the type suitable for priority queue `pq`.
+
+"""
+to_key(pq::AbstractPriorityQueue{K,V}, key::K) where {K,V} = key
+to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = to_type(K, key)
+
+"""
+    to_val(pq, v)
+
+converts the value `v` to the type suitable for priority queue `pq`.
+
+"""
+to_val(pq::AbstractPriorityQueue{K,V}, val::V) where {K,V} = val
+to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = to_type(V, val)
+
+"""
+    to_node(pq, k, v)
+
+converts the the key `k` and the value `v` into a node type suitable for
+priority queue `pq`.
+
+"""
+to_node(pq::AbstractPriorityQueue{K,V,T}, key::K, val::V) where {K,V,T} =
+    T(key, val)
 to_node(pq::AbstractPriorityQueue{K,V,T}, key, val) where {K,V,T} =
-    T(to_key(pq, key), to_val(pq, val))
+    to_node(to_key(pq, key), to_val(pq, val))
 
-# For fast priority queues, to_key shall yield a linear index.  The key can be
-# a linear index or a multi-dimensional index (anything accepted by
-# to_indices).  In the former case, we have to check whether the linear index
-# is in bounds.  In the latter case, we use LinearIndices which does the bounds
-# checking and this cannot be avoided.
+"""
+    heap_index(pq, k) -> i
 
-@inline @propagate_inbounds to_key(pq::FastPriorityQueue, key::Integer) =
-    # Convert to Int, then re-call to_key for bound checking.  Note that type
-    # assertion neded to avoid infite recursion.
-    to_key(pq, convert(Int, key)::Int)
+yields the index in the binary heap backing the storage of the nodes of the
+priority queue `pq` of the key `k`.  If the key is not in priority queue, `i =
+0` is returned, otherwise `i ∈ 1:n` with `n = length(pq)` is returned.
 
-@inline function to_key(pq::FastPriorityQueue, key::Int)
+The `heap_index` method is used to implement `haskey`, `get`, and `delete!`
+methods for priority queues.  The `heap_index` method shall be specialized for
+any concrete sub-types of `QuickHeaps.AbstractPriorityQueue`.
+
+""" heap_index # NOTE: `heap_index` ~ `ht_keyindex` in `base/dict.jl`
+
+# By default, pretend that the key is missing.
+heap_index(pq::AbstractPriorityQueue, key) = 0
+
+heap_index(pq::PriorityQueue, key) = get(index(pq), key, 0)
+
+function heap_index(pq::FastPriorityQueue, key::Integer)
+    k = to_int(key)
+    I = index(pq)
+    in_range(k, I) || return 0
+    @inbounds i = I[k]
+    return i
+end
+
+function heap_index(pq::FastPriorityQueue,
+                    key::Tuple{Vararg{Union{Integer,CartesianIndex}}})
+    I = index(pq)
+    if checkbounds(Bool, I, key...)
+        @inbounds i = I[key...]
+        return i
+    end
+    return 0
+end
+
+"""
+    linear_index(pq, k)
+
+converts key `k` into a linear index suitable for the fast priority queue `pq`.
+The key can be a linear index or a multi-dimensional index (anything accepted
+by `to_indices`).  The current settings for bounds checking are used.
+
+"""
+@inline @propagate_inbounds linear_index(pq::FastPriorityQueue, key::Integer) =
+    # Convert to Int, then re-call linear_index for bound checking.  Note that
+    # the type assertion performed by `to_type` avoids infinite recursion.
+    linear_index(pq, to_type(Int, key))
+
+@inline function linear_index(pq::FastPriorityQueue, key::Int)
     @boundscheck checkbounds(index(pq), key)
     return key
 end
 
-@inline function to_key(pq::FastPriorityQueue,
-                        key::Tuple{Vararg{Union{Integer,CartesianIndex}}})
-    I = index(pq)
-    k = to_indices(I, key)
-    isa(k, Dims{ndims(I)}) || throw_invalid_key(pq, key)
+@inline @propagate_inbounds function linear_index(pq::FastPriorityQueue,
+                                                  key::Tuple{Vararg{Index}})
     # FIXME: Shall we store the linear_indices (a small object) in the priority
     #        queue directly?
-    return LinearIndices(I)[k...]
+    return LinearIndices(index(pq))[key...] # also does the bound checking
 end
 
-to_key(pq::FastPriorityQueue, key) = throw_invalid_key(pq, key)
+linear_index(pq::FastPriorityQueue, key) = throw_invalid_key(pq, key)
 
 @noinline throw_invalid_key(pq::AbstractPriorityQueue, key) = throw_argument_error(
     "invalid key of type ", typeof(key), " for ", nameof(typeof(pq)))
@@ -426,43 +519,42 @@ to_key(pq::FastPriorityQueue, key) = throw_invalid_key(pq, key)
 enqueue!(pq::AbstractPriorityQueue, pair::Pair) =
     enqueue!(pq, pair.first, pair.second)
 
-enqueue!(pq::PriorityQueue, key, val) =
-    enqueue!(pq, to_node(pq, key, val))
+# For a general purpose priority queue, build the node then enqueue.
+enqueue!(pq::PriorityQueue, key, val) = enqueue!(pq, to_node(pq, key, val))
+enqueue!(pq::PriorityQueue{K,V,T}, x::T) where {K,V,T} =
+    unsafe_enqueue!(pq, x, get(index(pq), getkey(x), 0))
 
-enqueue!(pq::PriorityQueue{K,V,T}, node::T) where {K,V,T} =
-    unsafe_enqueue!(pq, node, get(index(pq), getkey(node), 0))
-
-# At the first stage of the enqueue! method, avoiding bounds checking
-# is not a good idea: it saves almost nothing due to the amount of work;
-# if a multi-dimensional key is there are little interests in
-function enqueue!(pq::FastPriorityQueue, key::Int, val)
-    I = index(pq)
-    in_range(key, I) || throw_argument_error("out of bounds key")
-    @inbounds i = I[key]
-    return unsafe_enqueue!(pq, to_node(pq, key, val), i)
+# For a fast priority queue, converts the key into a linear index, then enqueue.
+@inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue,
+                                              key::Union{Integer,
+                                                         Tuple{Vararg{Index}}},
+                                              val)
+    k = linear_index(pq, key) # not to_key
+    v = to_val(pq, val)
+    x = to_node(pq, k, v)
+    @inbounds i = getindex(index(pq), k)
+    return unsafe_enqueue!(pq, x, i)
 end
 
-function enqueue!(pq::FastPriorityQueue,
-                  key::Tuple{Vararg{Union{Integer,CartesianIndex}}}, val)
-    I = index(pq)
-    k = to_indices(I, key)
-    isa(k, Dims{ndims(I)}) || throw_invalid_key(pq, key)
-    # FIXME: Shall we store the linear_indices (a small object) in the priority
-    #        queue directly?
-    l = LinearIndices(I)[k...]
-    @inbounds i = I[l] # in principle l is correct
-    return unsafe_enqueue!(pq, to_node(pq, l, val), i)
-end
+enqueue!(pq::FastPriorityQueue{V,T}, x::T) where {V,T} =
+    enqueue!(pq, getkey(x), getval(x))
 
-enqueue!(pq::FastPriorityQueue, key::Integer, val) =
-    enqueue!(pq, convert(Int, key)::Int, val)
+"""
+    unsafe_enqueue!(pq, x, i) -> pq
 
-enqueue!(pq::FastPriorityQueue{V,T}, node::T) where {V,T} =
-    enqueue!(pq, getkey(node), getval(node))
+stores node `x` in priority queue `pq` at index `i` and returns the priority
+queue.  The argument `i` is an index in the binary heap backing the storage of
+the nodes of the priority queue.  Index `i` is determined by the key `k` of the
+node `x` and by the current state of the priority queue.  If `i` is not a valid
+index in the binary heap, a new node is added; otherwise, the node at index `i`
+in the binary heap is replaced by `x`.  In any cases, the binary heap is
+reordered as needed.
 
-# The following unsafe method assumes that the key is valid (e.g. it is not
-# out of bounds for fast priority queues) in the sense that I[key] is valid
-# for the index I of the priority queue.
+This function is *unsafe* because it assumes that the key `k` of the node `x`
+is valid (e.g. it is not out of bounds for fast priority queues) in the sense
+that `I[k]` is valid for the index `I` of the priority queue.
+
+"""
 function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
                          x::T, i::Int) where {K,V,T}
     A = nodes(pq)
@@ -489,23 +581,25 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
 end
 
 function delete!(pq::AbstractPriorityQueue, key)
-    i = find_key(pq, key)
-    A = nodes(pq)
-    n = length(A)
-    if in_range(i, A)
-        if n > 1
-            # Replace the deleted node by the last node in the heap.
-            @inbounds x = A[n] # last node
-            @inbounds y = A[i] # node to be deleted
-            o = ordering(pq)
-            if lt(o, y, x)
-                # Heap structure _above_ deleted node is already valid.
-                unsafe_heapify_down!(pq, i, x, n - 1)
-            else
-                # Heap structure _below_ deleted node is already valid.
-                unsafe_heapify_up!(pq, i, x)
-            end
+    n = length(pq)
+    if n > 0
+        i = heap_index(pq, key)
+        if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
+            A = nodes(pq)
+            @inbounds x = A[i] # node to be deleted
             unsafe_delete_key!(pq, getkey(x))
+            if n > 1
+                # Replace the deleted node by the last node in the heap.
+                @inbounds y = A[n] # last node
+                o = ordering(pq)
+                if lt(o, x, y)
+                    # Heap structure _above_ deleted node is already valid.
+                    unsafe_heapify_down!(pq, i, y, n - 1)
+                else
+                    # Heap structure _below_ deleted node is already valid.
+                    unsafe_heapify_up!(pq, i, y)
+                end
+            end
             unsafe_shrink!(pq, n - 1)
         end
     end
