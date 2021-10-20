@@ -598,6 +598,16 @@ function heap_index(pq::FastPriorityQueue, key::Integer)
 end
 
 function heap_index(pq::FastPriorityQueue,
+                    key::CartesianIndex)
+    I = index(pq)
+    if checkbounds(Bool, I, key)
+        @inbounds i = I[key]
+        return i
+    end
+    return 0
+end
+
+function heap_index(pq::FastPriorityQueue,
                     key::Tuple{Vararg{FastIndex}})
     I = index(pq)
     if checkbounds(Bool, I, key...)
