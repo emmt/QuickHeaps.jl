@@ -349,10 +349,14 @@ nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
 
 length(pq::AbstractPriorityQueue) = length(nodes(pq))
+
 isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
 
-keytype(::AbstractPriorityQueue{K,V}) where {K,V} = K
-valtype(::AbstractPriorityQueue{K,V}) where {K,V} = V
+keytype(pq::AbstractPriorityQueue) = keytype(typeof(pq))
+keytype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = K
+
+valtype(pq::AbstractPriorityQueue) = valtype(typeof(pq))
+valtype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = V
 
 haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
 
@@ -421,6 +425,22 @@ struct _PriorityQueueIterator{F,T<:AbstractPriorityQueue}
     f::F
     pq::T
 end
+
+IteratorEltype(itr::_PriorityQueueIterator) = IteratorEltype(typeof(itr))
+IteratorEltype(::Type{<:AbstractPriorityQueue}) = HasEltype()
+eltype(itr::_PriorityQueueIterator) = eltype(typeof(itr))
+function eltype(::Type{<:_PriorityQueueIterator{F,T}}
+                ) where {K,V,F<:typeof(getkey),T<:AbstractPriorityQueue{K,V}}
+    return K
+end
+function eltype(::Type{<:_PriorityQueueIterator{F,T}}
+                ) where {K,V,F<:typeof(getval),T<:AbstractPriorityQueue{K,V}}
+    return V
+end
+eltype(::Type{<:_PriorityQueueIterator}) = Any
+
+IteratorSize(itr::_PriorityQueueIterator) = IteratorSize(typeof(itr))
+IteratorSize(::Type{<:_PriorityQueueIterator}) = HasLength()
 length(itr::_PriorityQueueIterator) = length(itr.pq)
 
 # Unordered iterators.  NOTE: Both `keys` and `values` shall however return the
@@ -481,17 +501,23 @@ setindex!(pq::AbstractPriorityQueue, val, ::Tuple{}) = throw_missing_key()
 
 throw_missing_key() = throw_argument_error("missing key")
 
-getindex(pq::PriorityQueue, key) = getval(pq, get(index(pq), key, 0))
+function getindex(pq::PriorityQueue, key)
+    i = heap_index(pq, key)
+    # FIXME: Testing that i > 0 should be sufficient.
+    in_range(i, length(pq)) || throw_argument_error(
+        typename(pq), " has no node with key ", key)
+    @inbounds r = getindex(nodes(pq), i)
+    return getval(r)
+end
 
 setindex!(pq::PriorityQueue, val, key) = enqueue!(pq, key, val)
 
-# Indexing of fast priority queues.  We first convert the key into a linear
+# Union of types that can be used to index fast priority queues.
+const FastIndex = Union{Integer,CartesianIndex}
+
+# For indexing fast priority queues, we first convert the key into a linear
 # index (using the current bounds checking state).
-
-const Index = Union{Integer,CartesianIndex}
-const FastPriorityQueueKey = Union{Integer,Tuple{Vararg{Index}}}
-
-for keytype in (:Integer, :(Index...))
+for keytype in (:Integer, :(FastIndex...))
     @eval begin
         @inline @propagate_inbounds function getindex(pq::FastPriorityQueue,
                                                       key::$keytype)
@@ -514,7 +540,7 @@ for keytype in (:Integer, :(Index...))
 end
 
 normalize_key(pq::FastPriorityQueue, key::Integer) = to_int(key)
-normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{Index}}) =
+normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}}) =
     to_indices(index(pq), key)
 
 """
@@ -572,7 +598,7 @@ function heap_index(pq::FastPriorityQueue, key::Integer)
 end
 
 function heap_index(pq::FastPriorityQueue,
-                    key::Tuple{Vararg{Union{Integer,CartesianIndex}}})
+                    key::Tuple{Vararg{FastIndex}})
     I = index(pq)
     if checkbounds(Bool, I, key...)
         @inbounds i = I[key...]
@@ -600,7 +626,7 @@ by `to_indices`).  The current settings for bounds checking are used.
 end
 
 @inline @propagate_inbounds function linear_index(pq::FastPriorityQueue,
-                                                  key::Tuple{Vararg{Index}})
+                                                  key::Tuple{Vararg{FastIndex}})
     # FIXME: Shall we store the linear_indices (a small object) in the priority
     #        queue directly?
     return LinearIndices(index(pq))[key...] # also does the bound checking
@@ -626,10 +652,7 @@ enqueue!(pq::PriorityQueue{K,V,T}, x::T) where {K,V,T} =
     unsafe_enqueue!(pq, x, get(index(pq), getkey(x), 0))
 
 # For a fast priority queue, converts the key into a linear index, then enqueue.
-@inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue,
-                                              key::Union{Integer,
-                                                         Tuple{Vararg{Index}}},
-                                              val)
+@inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue, key, val)
     k = linear_index(pq, key) # not to_key
     v = to_val(pq, val)
     x = to_node(pq, k, v)

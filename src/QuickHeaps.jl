@@ -33,10 +33,13 @@ export
 
 import Base:
     IndexStyle,
+    IteratorEltype,
+    IteratorSize,
     Pair,
     Tuple,
     copy,
     delete!,
+    eltype,
     empty!,
     first,
     get,
@@ -63,7 +66,7 @@ import Base:
     import Base: peek
 end
 
-using Base: @propagate_inbounds, OneTo, has_offset_axes
+using Base: @propagate_inbounds, OneTo, has_offset_axes, HasEltype, HasLength
 
 #------------------------------------------------------------------------------
 # In order to perform fast sorting (without taking care of NaN's), we
