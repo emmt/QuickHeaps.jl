@@ -5,6 +5,7 @@ using Test
 using Random
 
 using Base: @propagate_inbounds, lt,
+    ReverseOrdering, Reverse,
     IteratorEltype, HasEltype,
     IteratorSize, HasLength
 
@@ -12,10 +13,7 @@ using QuickHeaps
 using QuickHeaps:
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
     AbstractNode, getkey, getval,
-    isheap, index, nodes, ordering, in_range, heap_index,
-    unsafe_shrink!, unsafe_delete_key!, unsafe_heapify_down!, unsafe_heapify_up!
-
-import Base.Order.Reverse
+    isheap, index, nodes, ordering, in_range, heap_index
 
 function test_queue!(A::AbstractPriorityQueue{K,V},
                      key_list::AbstractVector{K},
@@ -24,6 +22,7 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     axes(val_list) == axes(key_list) || error("incompatible indices")
     n = length(key_list)
     axes(key_list) == (1:n,) || error("non-standard indices")
+    o = ordering(A)
 
     # Dummy private function used to "label" the tests.
     check(flag::Bool, comment) = flag
@@ -54,7 +53,7 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     test_2 = true
     for (k, v) in zip(key_list, val_list)
         enqueue!(A, k, v)
-        test_1 &= isheap(nodes(A))
+        test_1 &= isheap(o, nodes(A))
         test_2 &= !haskey(R, k) # unique key?
         R[k] = v
     end
@@ -64,7 +63,7 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
 
     # Check `first`, `peek`, `keys`, and `values`.
     k, v = first(A)
-    @test v == minimum(values(A))
+    @test v == (isa(o, ReverseOrdering) ? maximum : minimum)(values(A))
     @test v == first(values(A))
     @test k == first(keys(A))
     x = peek(AbstractNode, A)
@@ -124,7 +123,7 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     for i in randperm(n)
         k, v = key_list[i], val_list[i]
         B[k] = v
-        test_1 &= isheap(nodes(B))
+        test_1 &= isheap(o, nodes(B))
         test_2 &= (haskey(B, k) && B[k] == R[k])
     end
     @test check(test_1, "heap structure preserved by `setindex!`")
@@ -148,12 +147,12 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
         k = key_list[i]
         test_1 &= haskey(B, k)
         delete!(B, k)
-        test_2 &= !haskey(B, k)
-        test_3 &= isheap(nodes(B))
+        test_2 &= isheap(o, nodes(B))
+        test_3 &= !haskey(B, k)
     end
     @test check(test_1, "keys exist before `delete!`")
-    @test check(test_2, "keys do not exist after `delete!`")
-    @test check(test_3, "heap structure preserved by `delete!`")
+    @test check(test_2, "heap structure preserved by `delete!`")
+    @test check(test_3, "keys do not exist after `delete!`")
     @test isempty(B)
 
     # Check that `pop!` extracts nodes in order and maintains the binary-heap
@@ -161,11 +160,11 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     B = copy(A)
     test_1 = true
     test_2 = true
-    prev = typemin(V)
+    prev = (isa(o, ReverseOrdering) ? typemax : typemin)(V)
     for i in 1:n
         k, v = pop!(B)
-        test_1 &= isheap(nodes(B))
-        test_2 &= !(prev > v)
+        test_1 &= isheap(o, nodes(B))
+        test_2 &= !lt(o, v, prev)
         prev = v
     end
     @test check(test_1, "heap structure preserved by `pop!`")
@@ -212,9 +211,11 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
 end
 
 @testset "Priority queues       " begin
-    K, V, n = Int, Float64, 1000
-    A = PriorityQueue{K,V}()
-    test_queue!(A, map(K, 1:n), rand(V, n))
+    K, V, n = Int, Float64, 20
+    key_list = map(K, 1:n)
+    val_list = rand(V, n)
+    test_queue!(PriorityQueue{K,V}(), key_list, val_list)
+    test_queue!(PriorityQueue{K,V}(Reverse), key_list, val_list)
 end
 
 @testset "Fast priority queues  " begin
@@ -223,8 +224,8 @@ end
     m = div(9n + 5, 10) # keep ~90% of indices
     key_list = randperm(n)[1:m]
     val_list = rand(V, m)
-    B = FastPriorityQueue{V}(dims)
-    test_queue!(B, key_list, val_list)
+    test_queue!(FastPriorityQueue{V}(dims), key_list, val_list)
+    test_queue!(FastPriorityQueue{V}(Reverse, dims), key_list, val_list)
 end
 
 end # module
