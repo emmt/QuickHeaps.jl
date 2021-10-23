@@ -21,15 +21,20 @@ improvements:
 module QuickHeaps
 
 export
-    #FastMin, FastMax,
-    #SafeMin, SafeMax,
-    FastBinaryHeap,
-    BinaryHeap,
-    FastPriorityQueue,
-    PriorityQueue,
+    # Form Base.Order:
+    Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse,
+
+    # From this package:
+    FastMin, FastMax, SafeMin, SafeMax,
+    AbstractBinaryHeap, BinaryHeap, FastBinaryHeap,
+    AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
+    heapify, heapify!, isheap,
+
+    # From Base (in recent versions of Julia):
     peek,
-    enqueue!,
-    dequeue!
+
+    # From DataStructures:
+    enqueue!, dequeue!, dequeue_pair!
 
 import Base:
     IndexStyle,

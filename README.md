@@ -1,9 +1,170 @@
 # Versatile binary heaps and priority queues for Julia
 
 `QuickHeaps` is a small Julia package providing versatile binary heaps and
-priority queues.  These data structures may be faster and more flexible than
-those provided by
+priority queues.  These data structures are more flexible and may be faster
+than those provided by
 [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl).
+
+
+## Binary heaps
+
+[Binary heaps](https://en.wikipedia.org/wiki/Binary_heap) dynamically store
+values in a tree structure built according to a given ordering of these values.
+Thanks to this structure, a number of operations are very efficient.  If the
+heap contains `n` values, pushing a new value, extracting the least (or the
+greatest) value, deleting a value and replacing a value all have a complexity
+of `O(log(n))`.  Just getting the least (or the greatest) value without
+extracting it from the heap is an `O(1)` operation.
+
+
+### Basic usage
+
+A binary heap is created by:
+
+```julia
+h = BinaryHeap{T}(o = FastMin)
+```
+
+where `T` is the type of values stored in the heap and `o::Ordering` is the
+ordering to use for sorting values.  By default, `FastMin` ordering is used
+which yields a min-heap.  With `o = ReverseOrdering(FastMin)`, a max-heap is
+created.
+
+!!! note:
+    Ordering `FastMin` (resp. `FastMax`) is like `Forward` (resp. `Reverse`)
+    but much faster for floating-point values.  However, `FastMin` (and
+    `FastMax`) are not consistent with NaN (Not-A-Number) values.  If your
+    data may contains NaNs, use `Forward` (or `Reverse`) instead.  Aliases
+    `SafeMin=Forward` (and `SafeMax=Reverse`) are provided by the `QuickHeaps`
+    package.
+
+A vector `vals` storing the initial values of the binary heap can be specified:
+
+```julia
+h = BinaryHeap(vals, o = FastMin)
+```
+
+to create a binary heap starting with the values in `vals`.  In that case, it
+is not necessary to specify the type `T` of the values.  The initial values
+need not be ordered, the `BinaryHeap` constructor automatically takes care of
+that.  If `vals` is a `Vector` instance, the binary-heap will be directly built
+into `vals`.  Call `BinaryHeap(copy(vals))` to create a binary heap with its ow
+storage.
+
+A binary heap `h` can be used as an ordered queue of values:
+
+```julia
+pop!(h)     # yield the first value and discard its node
+push!(h, x) # push value x in heap h
+```
+
+The meaning of the *first value* depends on the ordering of the heap.  To
+examine the first value without discarding its node, call either of:
+
+```julia
+peek(h)
+first(h)
+h[1]
+```
+
+A binary heap `h` behaves like an abstract vector (with 1-based linear
+indices), in particular:
+
+```julia
+length(h)   # yield the number of nodes in heap h
+h[i]        # yield the value of the i-th node of heap h
+h[i] = x    # set the value of the i-th node of heap h and heapify h
+```
+
+Note that `h[1]` is the root node of the heap `h` and that setting a node in
+the heap may triggers reordering of the nodes to maintain the binary heap
+structure.  In other words, after doing `h[i] = x`, do not assume that `h[i]`
+yields `x`.
+
+To delete `i`-th node from the heap `h`, call:
+
+```julia
+delete!(h, i)
+```
+
+Call `empty!(h)` to empty ythe binary heap `h` and `isempty(h)` to query
+whether it is empty.
+
+Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by
+`h[i] = x`, pushing by `push!(h,x)`, and extracting by `pop!(h)` are of
+complexity `O(1)` in the best case, `O(log(n))` in the worst case, with `n =
+length(h)` the number of nodes in the heap `h`.
+
+
+### Advanced usage
+
+Instances of `BinaryHeap` store their values in a Julia vector whose length is
+always equal to the number of stored values.  Slightly faster binary heaps are
+created by the `FastBinaryHeap` constructor.  Such binary heaps never
+automatically reduce the size of the array backing the storage of their values
+(even though the size is automatically augmented as needed).  You may call
+`resize!(h)` to explicitly reduce the storage to its minimum.
+
+A hint about the anticipated size `n` of a heap `h` (of any kind) can be set by:
+
+```julia
+sizehint!(h, n)
+```
+
+which yields `h`.
+
+
+### Customize binary heaps
+
+The behavior of the binary heap types provided by `QuickHeaps` can be tweaked
+by using a particular instance of the ordering `o::Ordering` and by
+specializing the `Base.lt` method called as `Base.lt(o,x,y)` to decide whether
+value `x` occurs before value `y` according to ordering `o`.  Note that in the
+implementation of binary heaps in the `QuickHeaps` package, `x` and `y` will
+always be both of type `T`, the type of the values stored by the heap.
+
+If this is not sufficient, a custom binary heap type may be created that
+inherits from `AbstractBinaryHeap{T,O}` with `T` the type of the values stored
+by the heap and `O` the type of the ordering.  Assuming the array backing the
+storage of the values in the custom heap type has 1-based linear indexing, the
+following methods have to be specialized for an instance `h` of any custom heap
+type:
+
+```julia
+length(h)
+empty!(h)
+QuickHeaps.nodes(h)
+QuickHeaps.ordering(h)
+QuickHeaps.unsafe_grow!(h)
+QuickHeaps.unsafe_shrink!(h)
+```
+
+By default, `resize!(h)` does nothing (except returning its argument) for any
+instance `h` of a type that inherits from `AbstractBinaryHeap`; but this method
+may also be specialized.
+
+The `QuickHeaps` package provides a number of unexported methods that may be
+useful for implementing new binary heap types:
+
+```julia
+heapify
+heapify!
+isheap
+QuickHeaps.heapify_down!
+QuickHeaps.heapify_up!
+QuickHeaps.unsafe_heapify_down!
+QuickHeaps.unsafe_heapify_up!
+QuickHeaps.unsafe_grow!(h)
+QuickHeaps.unsafe_shrink!(h)
+```
+
+Note that the `heapify`, `heapify!`, and `isheap` methods which are exported by
+the `QuickHeaps` package have the same behavior but are different than those in
+the `DataStructures` package.  If you are using both packages, you'll have to
+explicitly prefix these methods by the package module.
+
+
+## Priority queues
 
 Binary heaps can be used to implement simple priority queues.  Indeed,
 implementing a priority queue with keys of type `K` and values of type `V`, may
