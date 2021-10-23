@@ -68,6 +68,10 @@ end
 
 using Base: @propagate_inbounds, OneTo, has_offset_axes, HasEltype, HasLength
 
+import DataStructures:
+    # heapify!, heapify, isheap
+    enqueue!, dequeue!, dequeue_pair!
+
 #------------------------------------------------------------------------------
 # In order to perform fast sorting (without taking care of NaN's), we
 # extend `Base.Order.lt` method for specialized ordering types.  The
