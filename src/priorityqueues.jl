@@ -378,22 +378,24 @@ function delete!(pq::AbstractPriorityQueue, key)
         i = heap_index(pq, key)
         if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
             A = nodes(pq)
-            @inbounds y = A[i] # node to be deleted
+            @inbounds k = getkey(A[i]) # key to be deleted
             if i < n
                 # Replace the deleted node by the last node in the heap and
-                # up-/down-heapify to restore the binary heap structure.
+                # up-/down-heapify to restore the binary heap structure.  We
+                # cannot assume that the deleted node data be accessible nor
+                # valid, so we explicitely replace it before deciding in which
+                # direction to go and reheapify.  Also see `unsafe_enqueue!`.
                 @inbounds x = A[n] # last node
+                @inbounds A[i] = x # do replace deleted node
                 o = ordering(pq)
-                if lt(o, y, x)
-                    # Heap structure _above_ deleted node is already valid.
+                if i ≤ 1 || lt(o, (@inbounds A[heap_parent(i)]), x)
                     unsafe_heapify_down!(pq, i, x, n - 1)
                 else
-                    # Heap structure _below_ deleted node is already valid.
                     unsafe_heapify_up!(pq, i, x)
                 end
             end
             unsafe_shrink!(pq, n - 1)
-            unsafe_delete_key!(pq, getkey(y))
+            unsafe_delete_key!(pq, k)
         end
     end
     return pq
@@ -696,16 +698,16 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
                          x::T, i::Int) where {K,V,T}
     A = nodes(pq)
     if in_range(i, A)
-        # The key alreay exists, replace its node.
-        @inbounds y = A[i] # node to be replaced
+        # The key alreay exists.  Replace the node in the heap by the new node
+        # and up-/down-heapify to restore the binary heap structure.  We cannot
+        # assume that the replaced node data be accessible nor valid, so we
+        # explicitely replace it before deciding in which direction to go and
+        # reheapify.  Also see `delete!`.
+        @inbounds A[i] = x # do replace deleted node
         o = ordering(pq)
-        if lt(o, y, x)
-            # Heap structure _above_ replaced node will remain valid,
-            # down-heapify to fix the heap structure at and _below_ the node.
+        if i ≤ 1 || lt(o, (@inbounds A[heap_parent(i)]), x)
             unsafe_heapify_down!(pq, i, x)
         else
-            # Heap structure _below_ replaced node will remain valid,
-            # up-heapify to fix the heap structure at and _above_ the node.
             unsafe_heapify_up!(pq, i, x)
         end
     else
