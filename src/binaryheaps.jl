@@ -180,6 +180,8 @@ function delete!(h::AbstractBinaryHeap, i::Int)
     n = length(h)
     in_range(i, n) || throw_argument_error("out of range index")
     if i < n
+        # Replace the deleted node by the last node in the heap and
+        # up-/down-heapify to restore the binary heap structure.
         A = nodes(h)
         o = ordering(h)
         @inbounds x = A[n] # node to replace deleted node
