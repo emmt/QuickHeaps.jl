@@ -20,32 +20,12 @@ is_one_based_unit_range(itr::AbstractUnitRange{T}) where {T} =
     first(itr) == oneunit(T)
 
 """
-    to_type(T, x)
-
-lazily yields `x` converted to type `T`.  If `x` is of type `T`, `x` is
-returned; otherwise `convert(T, x)::T` is returned.  Thus the result is
-guaranteed to be of type `T`.  This mimics what is done by `setindex!` for
-arrays (see file `array.jl` in Julia base code).
-
-"""
-to_type(::Type{T}, x::T) where {T} = x
-to_type(::Type{T}, x) where {T} = convert(T, x)::T
-
-"""
     to_eltype(A, x)
 
 lazily yields `x` converted to the type of the elements of `A`.
 
 """
 to_eltype(A, x) = to_type(eltype(A), x)
-
-"""
-    to_int(x)
-
-lazily yields integer `x` converted to type `Int`.
-
-"""
-to_int(x::Integer) = to_type(Int, x)
 
 """
     in_range(i, len::Integer)
