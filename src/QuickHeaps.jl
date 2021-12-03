@@ -25,6 +25,7 @@ export
     Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse,
 
     # From this package:
+    FastForward, FastReverse,
     FastMin, FastMax, SafeMin, SafeMax,
     AbstractBinaryHeap, BinaryHeap, FastBinaryHeap,
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
@@ -106,8 +107,15 @@ const FastMax = FastReverse
 const SafeMin = Forward
 const SafeMax = Reverse
 
-# Same default ordering as algorithms in base Julia and in DataStructures.
-const DefaultOrdering = Forward
+"""
+    default_ordering(T)
+
+yields the default ordering for an ordered data structure of type `T`.  This
+method shall be specialized for each ordered data structure.
+
+"""
+default_ordering(x::Any) = default_ordering(typeof(x))
+default_ordering(::Type) = Forward
 
 #------------------------------------------------------------------------------
 

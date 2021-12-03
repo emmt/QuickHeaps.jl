@@ -62,6 +62,8 @@ In other words, nodes are sorted by their value according to ordering `o`.
 abstract type AbstractPriorityQueue{
     K,V,T<:AbstractNode{K,V},O<:Ordering} <: AbstractDict{K,V} end
 
+default_ordering(::Type{<:AbstractPriorityQueue}) = Forward
+
 typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
 
 """
@@ -135,7 +137,7 @@ for O in (:Ordering, :ForwardOrdering, :ReverseOrdering, :FastForwardOrdering)
 end
 
 """
-    PriorityQueue{K,V}([o=FastMin,] T=Node{K,V})
+    PriorityQueue{K,V}([o=Forward,] T=Node{K,V})
 
 yields a priority queue with ordering specified by `o::Ordering` and for nodes
 of type `T<:AbstractNode{K,V}` with `K` the type of the keys and `V` the type
@@ -229,7 +231,7 @@ copy(pq::PriorityQueue{K,V,T,O}) where {K,V,T,O} =
     PriorityQueue{K,V,T,O}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
 
 """
-    FastPriorityQueue{V}([o=FastMin,] T=Node{Int,V}, dims...)
+    FastPriorityQueue{V}([o=Forward,] T=Node{Int,V}, dims...)
 
 yields a priority queue with ordering specified by `o::Ordering` and for nodes
 of type `T<:AbstractNode{Int,V}` with `V` the type of the values encoding the
@@ -271,7 +273,7 @@ copy(pq::FastPriorityQueue{V,T,O,N}) where {V,T,O,N} =
 
 # Constructors for PriorityQueue instances.
 
-function PriorityQueue{K,V}(o::O = DefaultOrdering,
+function PriorityQueue{K,V}(o::O = default_ordering(PriorityQueue),
                             ::Type{T} = Node{K,V}) where {K,V,
                                                           T<:AbstractNode{K,V},
                                                           O<:Ordering}
@@ -279,7 +281,7 @@ function PriorityQueue{K,V}(o::O = DefaultOrdering,
 end
 
 PriorityQueue{K,V}(::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
-    PriorityQueue{K,V}(FastMin, T)
+    PriorityQueue{K,V}(default_ordering(PriorityQueue), T)
 
 PriorityQueue{K}(::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
     PriorityQueue{K,V}(T)
@@ -327,7 +329,7 @@ FastPriorityQueue{V}(T::Type{<:AbstractNode{Int,V}}, dims::Tuple{Vararg{Integer}
     FastPriorityQueue(T, dims)
 
 FastPriorityQueue(T::Type{<:AbstractNode{Int,V}}, dims::Tuple{Vararg{Integer}}) where {V} =
-    FastPriorityQueue(FastMin, T, dims)
+    FastPriorityQueue(default_ordering(FastPriorityQueue), T, dims)
 
 FastPriorityQueue(o::O, T::Type{<:AbstractNode{Int,V}}, dims::NTuple{N,Integer}) where {O<:Ordering,V,N} =
     FastPriorityQueue{V,T,O,N}(o, T[], zeros(Int, dims))

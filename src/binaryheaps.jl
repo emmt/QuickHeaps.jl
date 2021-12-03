@@ -3,14 +3,15 @@ abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
 typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
 
 """
-    BinaryHeap{T}(o = FastMin)
+    BinaryHeap{T}(o = Forward)
 
 yields an empty binary heap whose nodes are of type `T` and with ordering
-specified by `o`.
+specified by `o`.  A min-heap or a max-heap is built depending on whether `o`
+is set to forward or reverse ordering.
 
 A vector `vals` storing the nodes of the binary heap can be specified:
 
-    BinaryHeap(vals, o = FastMin)
+    BinaryHeap(vals, o = Forward)
 
 A number of methods are available for a binary heap `h`:
 
@@ -46,7 +47,7 @@ Method `sizehint!(h,n)` may be called to anticipate that the heap may contains
 struct BinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
     order::O         # ordering
     nodes::Vector{T} # storage for the nodes
-    BinaryHeap{T}(o::O=FastMin) where {T,O<:Ordering} =
+    BinaryHeap{T}(o::O=default_ordering(BinaryHeap)) where {T,O<:Ordering} =
         new{T,O}(o, Vector{T}(undef, 0))
     BinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
         heapify!(new{T,O}(o, vals))
@@ -55,26 +56,30 @@ end
 """
     h = FastBinaryHeap{T}(...)
 
-yields a fast binary heap `h`.  Compared to `BinaryHeap{T}(...)`, the array
-backing the storage of the heap values is never reduced to improve performances
-in some cases.  You may call `resize!(h)` to explicitly reduce the storage to
-its minimum.
+yields a fast binary heap `h`.  Compared to `BinaryHeap{T}(...)`, the default
+ordering is `FastForward` and the array backing the storage of the heap values
+is never reduced to improve performances in some cases.  You may call
+`resize!(h)` to explicitly reduce the storage to its minimum.
 
 """
 mutable struct FastBinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
     order::O         # ordering
     nodes::Vector{T} # storage for the nodes
     count::Int       # current number of nodes
-    FastBinaryHeap{T}(o::O=FastMin) where {T,O<:Ordering} =
+    FastBinaryHeap{T}(o::O=default_ordering(FastBinaryHeap)) where {T,O<:Ordering} =
         new{T,O}(o, Vector{T}(undef, 0), 0)
     FastBinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
         heapify!(new{T,O}(o, vals, length(vals)))
 end
 
+default_ordering(::Type{<:AbstractBinaryHeap}) = Forward
+default_ordering(::Type{<:FastBinaryHeap}) = FastForward
+
 # Outer constructors.
-for type in (:FastBinaryHeap, :BinaryHeap)
+for type in (:BinaryHeap, :FastBinaryHeap)
     @eval begin
-        $type{T}(vals::AbstractVector) where {T} = $type{T}(FastMin, vals)
+        $type{T}(vals::AbstractVector) where {T} =
+            $type{T}(default_ordering($type), vals)
         $type(vals::AbstractVector{T}) where {T} = $type{T}(vals)
         $type(o::Ordering, vals::AbstractVector{T}) where {T} =
             $type{T}(o, vals)
@@ -339,12 +344,13 @@ isheap(h::AbstractBinaryHeap; check::Bool = false) =
 # as in base Julia and DataStructures.
 for func in (:heapify, :heapify!, :isheap)
     @eval begin
-        function $func(A::AbstractArray, o::Ordering = DefaultOrdering,
+        function $func(A::AbstractArray,
+                       o::Ordering = default_ordering(A),
                        n::Integer = length(A))
             return $func(o, A, n)
         end
         function $func(A::AbstractArray, n::Integer,
-                       o::Ordering = DefaultOrdering)
+                       o::Ordering = default_ordering(A))
             return $func(o, A, n)
         end
     end
