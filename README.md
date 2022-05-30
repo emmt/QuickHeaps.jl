@@ -91,7 +91,7 @@ To delete the `i`-th node from the heap `h`, call:
 delete!(h, i)
 ```
 
-Call `empty!(h)` to delte all the nodes of the binary heap `h` and `isempty(h)`
+Call `empty!(h)` to delete all the nodes of the binary heap `h` and `isempty(h)`
 to query whether `h` is empty.
 
 :heart: Operations that modify the heap, like deletion by `delete!(h,i)`,
@@ -144,7 +144,7 @@ QuickHeaps.unsafe_grow!(h)
 QuickHeaps.unsafe_shrink!(h)
 ```
 
-to have a fully functional custo binary heap type.
+to have a fully functional custom binary heap type.
 
 By default, `resize!(h)` does nothing (except returning its argument) for any
 instance `h` of a type that inherits from `AbstractBinaryHeap`; but this method
@@ -172,7 +172,7 @@ packages, you'll have to explicitly prefix these methods by the package module.
 ## Priority queues
 
 Binary heaps can be used to implement simple priority queues.  Indeed,
-implementing a priority queue with keys of type `K` and values of type `V`, may
+implementing a priority queue, with keys of type `K` and values of type `V`, may
 be as simple as:
 
 ```julia
@@ -186,8 +186,9 @@ pq = FastBinaryHeap{Node}()
 
 In words, such a priority queue is a binary heap (a min-heap in that case) of
 nodes that store their value and their key and which as sorted according to
-their values.  The same `Node` structure with the same specialization of
-`Base.lt` is provided by `QuickHeaps`, and a simpler version of the example is:
+their values.  The above `Node` structure with the same specialization of
+`Base.lt` is provided (but not exported) by `QuickHeaps`, and a simpler version
+of the example is:
 
 ```julia
 using QuickHeaps: Node
@@ -237,11 +238,11 @@ lt(o::ForwardOrdering, a, b) = isless(a,b)
 lt(o::ReverseOrdering, a, b) = lt(o.fwd,b,a)
 ```
 
-So it turns out that, `isless` is eventually called not the operator `<`.  For
+So it turns out that, `isless` is eventually called, not the operator `<`.  For
 integers `isless(x,y)` and `x < y` are the same (at least as far as execution
-time is concerned) but for floating values, `isless` takes care of NaN's which
-involves overheads and this may strongly impact the execution time of sorting
-algorithms.
+time is concerned) but for floating-point values, `isless` takes care of NaN's
+which involves overheads and this may strongly impact the execution time of
+sorting algorithms.
 
 Simple means to ignore NaN's in sorting consists in defining your own ordering
 types and extend the `Base.Order.lt` method, this is pretty simple:
@@ -257,10 +258,11 @@ lt(::FastForwardOrdering, a, b) = a < b
 ```
 
 Then just use keyword `order=FastForward` or `order=FastReverse` in calls to
-sort methods to benefit from a speed-up factor between 2 or 3.  Almost for
-free!  The very same trick has been implemented in the
+sort methods to benefit from a speed-up factor between 2 or 3.  Almost for free!
+The very same trick has been implemented in the
 [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl)
-package.
+package with `DataStructures.FasterForward()` and
+`DataStructures.FasterReverse()`.
 
 Checking that an array has NaN's can be checked in linear time, that is `O(n)`,
 for arrays of `n` floating-point values by the following method:
@@ -296,10 +298,11 @@ For integer-valued arrays, it takes `O(1)` time to check for NaN's:
 has_nans(A::AbstractArray{<:Integer}) = false
 ```
 
-An additional speed-up by a factor between 1.5 and 2 is achievable by proper
-use of `@inline`, `@inbounds` and `@propagate_inbounds` macros in the code
+An additional speed-up by a factor between 1.5 and 2 is achievable by proper use
+of `@inline`, `@inbounds` and `@propagate_inbounds` macros in the code
 implementing the sorting algorithms.  This however requires to modify existing
-code.
+code.  This is what is done in
+[`QuickHeaps`](https://github.com/emmt/QuickHeaps.jl).
 
 
 ### Application to binary heaps
