@@ -1,8 +1,6 @@
 # Versatile binary heaps and priority queues for Julia
 
 [![License][license-img]][license-url]
-[![Stable][doc-stable-img]][doc-stable-url]
-[![Dev][doc-dev-img]][doc-dev-url]
 [![Build Status][github-ci-img]][github-ci-url]
 [![Build Status][appveyor-img]][appveyor-url]
 [![Coverage][codecov-img]][codecov-url]
