@@ -1,13 +1,16 @@
 # Versatile binary heaps and priority queues for Julia
 
+[![License][license-img]][license-url]
+[![Stable][doc-stable-img]][doc-stable-url]
+[![Dev][doc-dev-img]][doc-dev-url]
+[![Build Status][github-ci-img]][github-ci-url]
+[![Build Status][appveyor-img]][appveyor-url]
+[![Coverage][codecov-img]][codecov-url]
+
 `QuickHeaps` is a small [Julia][julia-url] package providing versatile [binary
 heaps](#binary-heaps) and [priority queues](#priority-queues).  These data
 structures are more flexible and may be quite significantly faster than those
 provided by [`DataStructures`][datastructures-url].
-
-| **License**                     | **Build Status**                  | **Code Coverage**                                                   |
-|:--------------------------------|:----------------------------------|:--------------------------------------------------------------------|
-| [![][license-img]][license-url] | [![][appveyor-img]][appveyor-url] | [![][coveralls-img]][coveralls-url] [![][codecov-img]][codecov-url] |
 
 
 ## Binary heaps
@@ -365,14 +368,11 @@ factor better than 2 with faster orderings.
 [license-url]: ./LICENSE.md
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 
-[travis-img]: https://travis-ci.com/emmt/QuickHeaps.jl.svg?branch=master
-[travis-url]: https://travis-ci.com/emmt/QuickHeaps.jl
+[github-ci-img]: https://github.com/emmt/QuickHeaps.jl/actions/workflows/CI.yml/badge.svg?branch=master
+[github-ci-url]: https://github.com/emmt/QuickHeaps.jl/actions/workflows/CI.yml?query=branch%3Amaster
 
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/github/emmt/QuickHeaps.jl?branch=master
 [appveyor-url]: https://ci.appveyor.com/project/emmt/QuickHeaps-jl/branch/master
-
-[coveralls-img]: https://coveralls.io/repos/emmt/QuickHeaps.jl/badge.svg?branch=master&service=github
-[coveralls-url]: https://coveralls.io/github/emmt/QuickHeaps.jl?branch=master
 
 [codecov-img]: http://codecov.io/github/emmt/QuickHeaps.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/emmt/QuickHeaps.jl?branch=master
