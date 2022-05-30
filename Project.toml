@@ -1,15 +1,16 @@
 name = "QuickHeaps"
 uuid = "30b38841-0f52-47f8-a5f8-18d5d4064379"
 authors = ["Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 ArrayTools = "1dc0ca97-c5ce-4e77-ac6d-c576ac9d7f27"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 
 [compat]
-julia = "1"
 ArrayTools = "0.2.3"
+DataStructures = "0.18"
+julia = "1"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
