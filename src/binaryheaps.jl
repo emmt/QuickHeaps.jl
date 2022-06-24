@@ -94,7 +94,7 @@ yields the array backing the storage of the values in the binary heap `h`.
 This method may be specialized for custom binary heap types.
 
 """
-ordering(h::AbstractBinaryHeap) = getfield(h, :order)
+nodes(h::AbstractBinaryHeap) = getfield(h, :nodes)
 
 """
     QuickHeaps.ordering(h)
@@ -104,7 +104,7 @@ yields the ordering of the values in the binary heap `h`.
 This method may be specialized for custom binary heap types.
 
 """
-nodes(h::AbstractBinaryHeap) = getfield(h, :nodes)
+ordering(h::AbstractBinaryHeap) = getfield(h, :order)
 
 length(h::FastBinaryHeap) = getfield(h, :count)
 length(h::BinaryHeap) = length(nodes(h))
