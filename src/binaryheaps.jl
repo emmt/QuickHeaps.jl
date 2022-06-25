@@ -30,14 +30,14 @@ A binary heap `h` behaves like an abstract vector(with 1-based linear indices):
     h[i] = x    # set the i-th node of heap h and heapify h
 
 Note that `h[1]` is the root node of the heap `h` and that setting a node in
-the heap may triggers reordering of the nodes to maintain the binary heap
+the heap may trigger reordering of the nodes to maintain the binary heap
 structure.  In other words, after doing `h[i] = x`, do not assume that `h[i]`
 yields `x`.
 
 Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by
 `h[i] = x`, pushing by `push!(h,x)`, and extracting by `pop!(h)` are of
 complexity `O(1)` in the best case, `O(log(n))` in the worst case, with `n =
-length(h)` the number of nodes in the heap `h`.  Query the value of a given
+length(h)` the number of nodes in the heap `h`.  Retrieving the value of a given
 node by `peek(h)`, `first(h)`, or `h[i]` is always of complexity `O(1)`.
 
 Method `sizehint!(h,n)` may be called to anticipate that the heap may contains
