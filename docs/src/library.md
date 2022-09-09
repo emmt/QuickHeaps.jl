@@ -1,0 +1,65 @@
+# Reference
+
+The following reproduces the in-lined documentation about types and methods of
+the [`QuickHeaps`](https://github.com/emmt/QuickHeaps.jl) package. This
+documentation is also available from the REPL by typing `?` followed by the
+name of a method or a type.
+
+## Binary Heaps
+
+```@docs
+QuickHeaps.BinaryHeap
+QuickHeaps.FastBinaryHeap
+QuickHeaps.heapify
+QuickHeaps.heapify!
+QuickHeaps.heapify_down!
+QuickHeaps.heapify_up!
+QuickHeaps.isheap
+```
+
+## Priority Queues
+
+```@docs
+QuickHeaps.AbstractPriorityQueue
+QuickHeaps.PriorityQueue
+QuickHeaps.FastPriorityQueue
+```
+
+## Nodes
+
+```@docs
+QuickHeaps.AbstractNode
+QuickHeaps.Node
+QuickHeaps.getkey
+QuickHeaps.getval
+```
+
+## Orderings
+
+```@docs
+QuickHeaps.FastForwardOrdering
+QuickHeaps.default_ordering
+```
+
+## Miscellaneous
+
+The following unexported methods may be needed for implementing new types of
+binary heap or of priority queue. End-users probably not have to
+worry about these.
+
+```@docs
+QuickHeaps.has_bad_values
+QuickHeaps.has_standard_linear_indexing
+QuickHeaps.heap_index
+QuickHeaps.in_range
+QuickHeaps.is_one_based_unit_range
+QuickHeaps.linear_index
+QuickHeaps.nodes
+QuickHeaps.ordering
+QuickHeaps.setroot!
+QuickHeaps.to_eltype
+QuickHeaps.to_key
+QuickHeaps.to_node
+QuickHeaps.to_val
+QuickHeaps.typename
+```
