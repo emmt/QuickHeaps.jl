@@ -126,6 +126,7 @@ end
     n = 8
     for T in (Float64, Int)
         heap_test(T, BinaryHeap{T}(), n)
+        heap_test(T, BinaryHeap(T[]), n)
         heap_test(T, BinaryHeap{T}(FastMin), n)
         heap_test(T, BinaryHeap{T}(FastMax), n)
         heap_test(T, BinaryHeap{T}(SafeMin), n)

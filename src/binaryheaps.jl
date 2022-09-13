@@ -4,7 +4,7 @@
 is the super-type of binary heaps in `QuickHeaps` whose values have type `T`
 and whose ordering has type `O`.
 
-A number of methods are available for a binary heap of `h`:
+A number of methods are available for a binary heap `h`:
 
     pop!(h)        # deletes root node of heap h and yields its value
     push!(h, x)    # pushes value x in heap h
@@ -45,14 +45,13 @@ yields an empty binary heap whose values have type `T` and with ordering
 specified by `o`. A min-heap or a max-heap is built depending on whether `o` is
 set to forward or reverse ordering.
 
-A vector `vals` storing the nodes of the binary heap can be specified:
+An optional vector `vals` storing the initial values of the binary heap can be
+specified. These values in `vals` need not be ordered, the `BinaryHeap`
+constructor automatically takes care of that. If `vals` is a `Vector{T}`
+instance, the binary-heap will be directly built into `vals`. Call
+`BinaryHeap(copy(vals))` to create a binary heap with its own storage.
 
-    BinaryHeap{T=eltype(vals)}(vals::AbstractVector, o::Ordering = Forward)
-
-The initial values in `vals` need not be ordered, the `BinaryHeap` constructor
-automatically takes care of that. If `vals` is a `Vector{T}` instance, the
-binary-heap will be directly built into `vals`. Call `BinaryHeap(copy(vals))`
-to create a binary heap with its own storage.
+Arguments `o` and `vals` may be specified in any order.
 
 Method `sizehint!(h,n)` may be called to anticipate that the heap may contains
 `n` values.
@@ -93,10 +92,12 @@ default_ordering(::Type{<:FastBinaryHeap}) = FastForward
 # Outer constructors.
 for type in (:BinaryHeap, :FastBinaryHeap)
     @eval begin
-        $type{T}(vals::AbstractVector) where {T} =
+        $type{T}(vals::AbstractVector, o::Ordering=default_ordering($type)) where {T} =
             $type{T}(default_ordering($type), vals)
         $type(vals::AbstractVector{T}) where {T} = $type{T}(vals)
         $type(o::Ordering, vals::AbstractVector{T}) where {T} =
+            $type{T}(o, vals)
+        $type(vals::AbstractVector{T}, o::Ordering) where {T} =
             $type{T}(o, vals)
     end
 end
