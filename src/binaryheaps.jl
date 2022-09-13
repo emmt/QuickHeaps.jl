@@ -1,29 +1,22 @@
-abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
-
-typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
-
 """
-    BinaryHeap{T}(o = Forward)
+    QuickHeaps.AbstractBinaryHeap{T,O}
 
-yields an empty binary heap whose nodes are of type `T` and with ordering
-specified by `o`.  A min-heap or a max-heap is built depending on whether `o`
-is set to forward or reverse ordering.
+is the super-type of binary heaps in `QuickHeaps` whose values have type `T`
+and whose ordering has type `O`.
 
-A vector `vals` storing the nodes of the binary heap can be specified:
+A number of methods are available for a binary heap of `h`:
 
-    BinaryHeap(vals, o = Forward)
+    pop!(h)        # deletes root node of heap h and yields its value
+    push!(h, x)    # pushes value x in heap h
+    empty!(h)      # empties heap h
+    isempty(h)     # yields whether heap h is empty
+    delete!(h, i)  # deletes i-th node from heap h
+    peek(h)        # yields value of root node of heap h without deleting it
+    first(h)       # idem
+    setroot!(h, x) # same as h[1] = x, replaces value of root node of heap h by x
 
-A number of methods are available for a binary heap `h`:
-
-    pop!(h)       # deletes root node of heap h and yields its value
-    push!(h, x)   # pushes value x in heap h
-    empty!(h)     # empties heap h
-    isempty(h)    # yields whether heap h is empty
-    delete!(h, i) # deletes i-th node from heap h
-    peek(h)       # yields value of root node of heap h without deleting it
-    first(h)      # idem
-
-A binary heap `h` behaves like an abstract vector(with 1-based linear indices):
+A binary heap `h` behaves like an abstract vector (with 1-based linear
+indices), in particular:
 
     length(h)   # the number of nodes in heap h
     h[i]        # the i-th node of heap h
@@ -31,14 +24,35 @@ A binary heap `h` behaves like an abstract vector(with 1-based linear indices):
 
 Note that `h[1]` is the root node of the heap `h` and that setting a node in
 the heap may trigger reordering of the nodes to maintain the binary heap
-structure.  In other words, after doing `h[i] = x`, do not assume that `h[i]`
+structure. In other words, after doing `h[i] = x`, do not assume that `h[i]`
 yields `x`.
 
 Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by
 `h[i] = x`, pushing by `push!(h,x)`, and extracting by `pop!(h)` are of
 complexity `O(1)` in the best case, `O(log(n))` in the worst case, with `n =
-length(h)` the number of nodes in the heap `h`.  Retrieving the value of a given
+length(h)` the number of nodes in the heap `h`. Retrieving the value of a given
 node by `peek(h)`, `first(h)`, or `h[i]` is always of complexity `O(1)`.
+
+"""
+abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
+
+typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
+
+"""
+    BinaryHeap{T}([o::Ordering = Forward,][ vals::AbstractVector])
+
+yields an empty binary heap whose values have type `T` and with ordering
+specified by `o`. A min-heap or a max-heap is built depending on whether `o` is
+set to forward or reverse ordering.
+
+A vector `vals` storing the nodes of the binary heap can be specified:
+
+    BinaryHeap{T=eltype(vals)}(vals::AbstractVector, o::Ordering = Forward)
+
+The initial values in `vals` need not be ordered, the `BinaryHeap` constructor
+automatically takes care of that. If `vals` is a `Vector{T}` instance, the
+binary-heap will be directly built into `vals`. Call `BinaryHeap(copy(vals))`
+to create a binary heap with its own storage.
 
 Method `sizehint!(h,n)` may be called to anticipate that the heap may contains
 `n` values.
@@ -54,12 +68,13 @@ struct BinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
 end
 
 """
-    h = FastBinaryHeap{T}(...)
+    FastBinaryHeap{T}([o::Ordering = FastForward,][ vals::AbstractVector])
 
-yields a fast binary heap `h`.  Compared to `BinaryHeap{T}(...)`, the default
+yields a fast binary heap. Compared to `BinaryHeap{T}(...)`, the default
 ordering is `FastForward` and the array backing the storage of the heap values
-is never reduced to improve performances in some cases.  You may call
-`resize!(h)` to explicitly reduce the storage to its minimum.
+is never reduced to improve performances in some cases. You may call
+`resize!(h)` to explicitly reduce the storage of fast binary-heap `h` to its
+minimum.
 
 """
 mutable struct FastBinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
@@ -196,6 +211,22 @@ push!(h::AbstractBinaryHeap, x) = push!(h, to_eltype(h, x))
 function push!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h) + 1
     unsafe_heapify_up!(ordering(h), unsafe_grow!(h, n), n, x)
+    return h
+end
+
+"""
+    setroot!(h, x) -> h
+
+replaces the value of the root note in heap `h` by `x`.  This is similar to
+`h[1] = x`.
+
+"""
+setroot!(h::AbstractBinaryHeap, x) = setroot!(h, to_eltype(h, x))
+
+function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
+    n = length(h)
+    n ≥ 1 || throw_argument_error(typename(h), " is empty")
+    unsafe_heapify_down!(ordering(h), nodes(h), 1, x, n)
     return h
 end
 

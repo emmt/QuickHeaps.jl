@@ -1,210 +1,35 @@
 # Versatile binary heaps and priority queues for Julia
 
+[![Doc. Stable][doc-stable-img]][doc-stable]
+[![Doc. Devel][doc-dev-img]][doc-dev]
 [![License][license-img]][license-url]
 [![Build Status][github-ci-img]][github-ci-url]
 [![Build Status][appveyor-img]][appveyor-url]
 [![Coverage][codecov-img]][codecov-url]
 
 `QuickHeaps` is a small [Julia][julia-url] package providing versatile [binary
-heaps](#binary-heaps) and [priority queues](#priority-queues).  These data
-structures are more flexible and may be quite significantly faster than those
-provided by [`DataStructures`][datastructures-url].
+heaps](https://en.wikipedia.org/wiki/Binary_heap) and [priority
+queues](https://en.wikipedia.org/wiki/Priority_queue). These data structures
+are more flexible and may be quite significantly faster than those provided by
+[`DataStructures`][datastructures-url].
 
+## Installation
 
-## Binary heaps
-
-[Binary heaps](https://en.wikipedia.org/wiki/Binary_heap) dynamically store
-values in a tree structure built according to a given ordering of these values.
-Thanks to this structure, a number of operations can be implemented so as to be
-very efficient.  If a binary heap contains `n` values, pushing a new value,
-extracting the least (or the greatest) value, deleting a value, and replacing a
-value all have a complexity of `O(log(n))` at worst.  Just getting the least
-(or the greatest) value without extracting it from the heap is an `O(1)`
-operation.
-
-
-### Basic usage
-
-A binary heap is created by:
+The easiest way to install `QuickHeaps` is to use [Julia's package
+manager](https://pkgdocs.julialang.org/):
 
 ```julia
-h = BinaryHeap{T}(o = FastMin)
+using Pkg
+pkg"add QuickHeaps"
 ```
 
-where `T` is the type of values stored in the heap and `o::Ordering` is the
-ordering to use for sorting values.  By default, `FastMin` ordering is used
-which yields a min-heap.  With `o = ReverseOrdering(FastMin)` or `o = FastMax`,
-a max-heap is created.
+## Documentation
 
-:warning: Ordering `FastMin` (resp. `FastMax`) is like `Forward`
-(resp. `Reverse`) but much faster for floating-point values.  However,
-`FastMin` and `FastMax` are not consistent with NaN (*Not a Number*) values.
-If your data may contains NaNs, use `Forward` or `Reverse` instead of `FastMin`
-or `FastMax`.  Aliases `SafeMin=Forward` (and `SafeMax=Reverse`) are provided
-by the `QuickHeaps` package.
+Documentation is available for different versions of `QuickHeaps`:
 
-A vector `vals` storing the initial values of the binary heap can be specified:
+- [last release][doc-stable];
 
-```julia
-h = BinaryHeap{T}(vals, o = FastMin)
-```
-
-to create a binary heap starting with the values in `vals`.  Type parameter `T`
-can be omitted to assume `T=eltype(vals)`.  The initial values need not be
-ordered, the `BinaryHeap` constructor automatically takes care of that.  If
-`vals` is a `Vector` instance with elements of type `T`, the binary-heap will
-be directly built into `vals`.  Call `BinaryHeap(copy(vals))` to create a
-binary heap with its own storage.
-
-A binary heap `h` can be used as an ordered queue of values:
-
-```julia
-pop!(h)     # yields the first value and discard its node
-push!(h, x) # pushes value x in heap h
-```
-
-The *first value* is the first one according to the ordering of the heap.
-To examine the first value without discarding its node, call either of:
-
-```julia
-peek(h)
-first(h)
-h[1]
-```
-
-A binary heap `h` behaves like an abstract vector (with 1-based linear
-indices), in particular:
-
-```julia
-length(h)   # yields the number of nodes in heap h
-h[i]        # yields the value of the i-th node of heap h
-h[i] = x    # sets the value of the i-th node of heap h and heapify h
-```
-
-Note that `h[1]` is the value of the root node of the heap `h` and that setting
-the value of a node in the heap may trigger reordering of the nodes to maintain
-the binary heap structure.  In other words, after doing `h[i] = x`, do not
-assume that `h[i]` yields `x`.
-
-To delete the `i`-th node from the heap `h`, call:
-
-```julia
-delete!(h, i)
-```
-
-Call `empty!(h)` to delete all the nodes of the binary heap `h` and `isempty(h)`
-to query whether `h` is empty.
-
-:heart: Operations that modify the heap, like deletion by `delete!(h,i)`,
-insertion by `h[i] = x`, pushing by `push!(h,x)`, and extracting by `pop!(h)`
-are of complexity `O(1)` in the best case, `O(log(n))` in the worst case, with
-`n = length(h)` the number of nodes in the heap `h`.  Query the value of a
-given node by `peek(h)`, `first(h)`, or `h[i]` is always of complexity `O(1)`.
-
-
-### Advanced usage
-
-Instances of `BinaryHeap` store their values in a Julia vector whose length is
-always equal to the number of stored values.  Slightly faster binary heaps are
-created by the `FastBinaryHeap` constructor.  Such binary heaps never
-automatically reduce the size of the array backing the storage of their values
-(even though the size is automatically augmented as needed).  You may call
-`resize!(h)` to explicitly reduce the storage to its minimum.
-
-A hint about the anticipated size `n` of a heap `h` (of any kind) can be set by:
-
-```julia
-sizehint!(h, n)
-```
-
-which yields `h`.
-
-
-### Customize binary heaps
-
-The behavior of the binary heap types provided by `QuickHeaps` can be tweaked
-by using a particular instance of the ordering `o::Ordering` and by
-specializing the `Base.lt` method called as `Base.lt(o,x,y)` to decide whether
-value `x` occurs before value `y` according to ordering `o`.  Note that in the
-implementation of binary heaps in the `QuickHeaps` package, `x` and `y` will
-always be both of type `T`, the type of the values stored by the heap.
-
-If this is not sufficient, a custom binary heap type may be created that
-inherits from `AbstractBinaryHeap{T,O}` with `T` the type of the values stored
-by the heap and `O` the type of the ordering.  Assuming the array backing the
-storage of the values in the custom heap type has 1-based linear indexing, it
-is sufficient to specialize the following methods for an instance `h` of the
-custom heap type:
-
-```julia
-length(h)
-empty!(h)
-QuickHeaps.nodes(h)
-QuickHeaps.ordering(h)
-QuickHeaps.unsafe_grow!(h)
-QuickHeaps.unsafe_shrink!(h)
-```
-
-to have a fully functional custom binary heap type.
-
-By default, `resize!(h)` does nothing (except returning its argument) for any
-instance `h` of a type that inherits from `AbstractBinaryHeap`; but this method
-may also be specialized.
-
-The `QuickHeaps` package provides a number of methods (some unexported) that
-may be useful for implementing new binary heap types:
-
-```julia
-heapify
-heapify!
-isheap
-QuickHeaps.heapify_down!
-QuickHeaps.heapify_up!
-QuickHeaps.unsafe_heapify_down!
-QuickHeaps.unsafe_heapify_up!
-```
-
-Note that the `heapify`, `heapify!`, and `isheap` methods which are exported by
-the `QuickHeaps` package have the same behavior but are different than those in
-the [`DataStructures`][datastructures-url] package.  If you are using both
-packages, you'll have to explicitly prefix these methods by the package module.
-
-
-## Priority queues
-
-Binary heaps can be used to implement simple priority queues.  Indeed,
-implementing a priority queue, with keys of type `K` and values of type `V`, may
-be as simple as:
-
-```julia
-struct Node{K,V}
-   key::K
-   val::V
-end
-Base.lt(o::Base.Ordering, a::Node, b::Node) = lt(o, a.val, b.val)
-pq = FastBinaryHeap{Node}()
-```
-
-In words, such a priority queue is a binary heap (a min-heap in that case) of
-nodes that store their value and their key and which as sorted according to
-their values.  The above `Node` structure with the same specialization of
-`Base.lt` is provided (but not exported) by `QuickHeaps`, and a simpler version
-of the example is:
-
-```julia
-using QuickHeaps: Node
-pq = FastBinaryHeap{Node}()
-```
-
-Such a priority queue is faster than `DataStructures.PriorityQueue` but it
-implements no means to requeue a node nor to ensure that keys are unique.  A
-dictionary or a set can be used for that, but this would slow down the priority
-queue.
-
-A `QuickHeaps.FastBinaryHeap` does not reduce the size of the array backing the
-storage of the binary heap.  This is fine when the binary heap is used as a
-workspace in another algorithm.  Use `QuickHeaps.BinaryHeap` to automatically
-resize the storage array so that its length is always that of the heap.
+- [development version][doc-stable].
 
 
 ## Speed up and strengthen sorting algorithms
@@ -365,6 +190,12 @@ factor better than 2 with faster orderings.
 
 [license-url]: ./LICENSE.md
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
+
+[doc-stable]: https://emmt.github.io/QuickHeaps.jl/stable
+[doc-dev]: https://emmt.github.io/QuickHeaps.jl/dev
+
+[doc-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[doc-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
 
 [github-ci-img]: https://github.com/emmt/QuickHeaps.jl/actions/workflows/CI.yml/badge.svg?branch=master
 [github-ci-url]: https://github.com/emmt/QuickHeaps.jl/actions/workflows/CI.yml?query=branch%3Amaster

@@ -1,94 +1,39 @@
+# These methods can be specialized.
+import Base: getkey
+
 """
     QuickHeaps.AbstractNode{K,V}
 
 is the super-type of nodes with a key of type `K` and a value of type `V`.
-Nodes can be used in binary heaps and priority queues where they are used to
-store key-value pairs and, by specializing the `Base.lt` method, to implement
-how the nodes are ordered.
+Nodes can be used in binary heaps and priority queues to represent
+key-value pairs and specific ordering rules may be imposed by specializing the
+`Base.lt` method which is by default:
 
-A node `nd` can be iterated and converted into a pair or a 2-tuple and
-conversely:
-
-    k, v = nd               # k is the key and v is the value of the node nd
-    Pair(nd)                # yields k=>v
-    Tuple(nd)               # yields (k,v)
-    QuickHeaps.Node((k, v)) # is the same as QuickHeaps.Node(k, v)
-    QuickHeaps.Node(k => v) # is the same as QuickHeaps.Node(k, v)
-
-The `getkey` and (unexported) [`QuickHeaps.getval`](@ref) methods can be used
-to respectively retrieve the key and value of a node.  These two methods may be
-specialized for the sub-types of [`QuickHeaps.AbstractNode`](@ref).  For
-example, a *key-only* node type can be fully implemented by:
-
-    struct KeyOnlyNode{K} <: QuickHeaps.AbstractNode{K,Nothing}
-        key::K
-    end
-    QuickHeaps.getkey(x::KeyOnlyNode) = getfield(x, :key)
-    QuickHeaps.getval(x::KeyOnlyNode) = nothing
-    KeyOnlyNode(x::Tuple{K,Nothing}) where {K} = KeyOnlyNode{K}(x[1])
-    KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
+    Base.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.AbstractNode} =
+        lt(o, QuickHeaps.getval(a), QuickHeaps.getval(b))
 
 """
 abstract type AbstractNode{K,V} end
 
 """
-    QuickHeaps.AbstractPriorityQueue{K,V,T,O}
+    QuickHeaps.Node{K=typeof(k),V=typeof(v)}(k,v)
 
-is the super type of priority queues with nodes consisting in pairs of keys of
-type `K` and priority values of type `V`.  Priority queues implement an API
-similar to dictionaries with the additional feature of maintaining an ordered
-structure so that getting the node of highest priority costs `O(1)` while
-pushing a node costs `O(log(n))` with `n` the size of the queue.
+yields a node storing key `k` and value `v`. Optional type parameters `K` and
+`V` are the respective types of the key and of the value.
 
-Type parameter `T<:AbstractNode{K,V}` is the type of the nodes stored in the
-queue and type parameter `O` is the type of the ordering of the queue.  How are
-ordered the nodes is completely customizable by specializing the `Base.lt`
-method with the following signature:
-
-    lt(o::CustomOrderingType, a::CustomNodeType, b::CustomNodeType)
-
-which shall yield whether node `a` has (strictly) higher priority than node `b`
-in the queue and where `CustomOrderingType<:Base.Ordering` and
-`CustomNodeType<:QuickHeaps.AbstractNode` are the respective types of the
-ordering and of the node of the priority queue.
-
-For the default node type, `QuickHeaps.Node{K,V}`, the implementation is:
-
-    lt(o::Ordering, a::T, b::T) where {T<:Node} = lt(o, a.val, b.val)
-
-In other words, nodes are sorted by their value according to ordering `o`.
+See also [`QuickHeaps.AbstractNode`](@ref),
+[`QuickHeaps.AbstractPriorityQueue`](@ref).
 
 """
-abstract type AbstractPriorityQueue{
-    K,V,T<:AbstractNode{K,V},O<:Ordering} <: AbstractDict{K,V} end
-
-default_ordering(::Type{<:AbstractPriorityQueue}) = Forward
-
-typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
-
-"""
-    QuickHeaps.Node{K,V}(k,v)
-
-yields a node storing key `k` and value `v`.  Type parameters `K` and `V` are
-the respective types of the key and of the value.  If omitted the defaults are
-`K=typeof(k)` and `V=typeof(v)`.
-
-""" Node
-
-# The following structure was introduced to be more specific than Pair{K,V}.
-# So Base.lt can be specialized without type-piracy.
 struct Node{K,V} <: AbstractNode{K,V}
     key::K
     val::V
 end
 
-# These methods can be specialized.
-import Base: getkey
-
 """
     getkey(x::QuickHeaps.AbstractNode) -> k
 
-yields the key `k` of node `x`.  This method may be specialized for any
+yields the key `k` of node `x`. This method may be specialized for any
 sub-types of [`QuickHeaps.AbstractNode`](@ref).
 
 Also see [`QuickHeaps.getval`](@ref).
@@ -99,7 +44,7 @@ getkey(x::Node) = getfield(x, :key)
 """
     QuickHeaps.getval(x::QuickHeaps.AbstractNode) -> v
 
-yields the value `v` of node `x`.  This method may be specialized for any
+yields the value `v` of node `x`. This method may be specialized for any
 sub-types of [`QuickHeaps.AbstractNode`](@ref).
 
 Also see [`getkey(::QuickHeaps.AbstractNode)`](@ref).
@@ -137,87 +82,43 @@ for O in (:Ordering, :ForwardOrdering, :ReverseOrdering, :FastForwardOrdering)
 end
 
 """
+    QuickHeaps.AbstractPriorityQueue{K,V,T,O}
+
+is the super type of priority queues with nodes consisting in pairs of keys of
+type `K` and priority values of type `V`; parameter `T<:AbstractNode{K,V}` is
+the type of the nodes stored in the queue and parameter `O<:Base.Ordering` is
+the type of the ordering of the queue.
+
+Priority queues implement an API similar to dictionaries with the additional
+feature of maintaining an ordered structure so that getting the node of highest
+priority costs `O(1)` while pushing a node costs `O(log(n))` with `n` the size
+of the queue. See online documentation for more details.
+
+`QuickHeaps` provides two concrete types of priority queues:
+[`PriorityQueue`](@ref) for any kind of keys and [`FastPriorityQueue`](@ref)
+for keys which are analoguous to array indices.
+
+"""
+abstract type AbstractPriorityQueue{
+    K,V,T<:AbstractNode{K,V},O<:Ordering} <: AbstractDict{K,V} end
+
+default_ordering(::Type{<:AbstractPriorityQueue}) = Forward
+
+typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
+
+"""
     PriorityQueue{K,V}([o=Forward,] T=Node{K,V})
 
-yields a priority queue with ordering specified by `o::Ordering` and for nodes
-of type `T<:AbstractNode{K,V}` with `K` the type of the keys and `V` the type
-of the values encoding the priority.
+yields a priority queue for keys of type `K` and priority values of type `V`.
+Optional arguments `o::Ordering` and `T<:AbstractNode{K,V}` are to specify the
+ordering of values and type of nodes to store key-value pairs. Type parameters
+`K` and `V` may be omitted if the node type `T` is specified.
 
-Type parameters `K` and `V` may be omitted if the node type `T` is specified.
+Having a specific node type may be useful to specialize the `Base.lt` method
+which is called to determine the order.
 
-Parameters:
-
-- `K` is key type;
-- `V` is value type;
-- `T<:AbstractNode{K,V}` is node type;
-- `O<:Ordering` is ordering type;
-- `I<:Index{K}` is the type of the index;
-
-Keys can be:
-
-- A linear index or a Cartesian index in another array.  The index of the
-  priority queue is a, possibly, multi-dimensional array of integers with the
-  same dimensions as the other array.  The stored values are the linear indices
-  in the vector of nodes of the priority queue or 0 if there no such node.
-  This kind of index must keep a track of the number of nodes.
-
-- Anything else: a dictionary will be used to associate keys with indices in
-  the vector of nodes of the priority queue.
-
-To enqueue key `k` with value `v` in priority queue `pq`, all the following
-are equivalent:
-
-    pq[k] = v
-    push!(pq, k => v)
-    enqueue!(pq, k, v)
-    enqueue!(pq, k => v)
-
-Note that key `k` may already exists in `pq`; in that case, the value
-associated with the key is updated and the queue reorderd as needed.  This is
-faster than (FIXME: check this) first deleting the key and then enqueuing the
-key with the new value.
-
-To extract the key `k` and priority `v` of the node of highest priority from
-the queue `pq`, call one of:
-
-    k = dequeue!(pq)
-    k, v = pop!(pq)
-
-Method `dequeue!` may be called with a type argument `T` as `dequeue!(T,pq)` to
-extract the node of highest priority and apply constructor `T` to convert it to
-something else.  For example, `pop!(pq)` is implemented as `dequeue!(Pair,pq)`
-and you may call `dequeue!(QuickHeaps.AbstractNode,pq)` to extract the node.
-If you want to apply a function `f` taht is not a type constructor to the node
-of highest priority, call:
-
-    f(dequeue!(QuickHeaps.AbstractNode,pq))
-
-To just examine the node of highest priority, call one of:
-
-    k, v = peek(pq)
-    k, v = first(pq)
-
-Like the `dequeue!` method, the `peek` method may also be called with a type
-argument.
-
-A priority queue `pq` behaves like a dictionary:
-
-    length(pq)                # yields number of nodes
-    isempty(pq)               # yields whether priority queue is empty
-    empty!(pq)                # empties priority queue
-    keytype(pq)               # yields key type `K`
-    valtype(pq)               # yields value type `V`
-    pq[k] = v                 # set value `v` of key `k`
-    push!(pq, k => v)         # idem.
-    haskey(pq, k)             # yields whether key exists
-    get(pq, k, def)           # query value at key, with default
-    delete!(pq, k)            # delete node at key `k`
-    keys(pq)                  # yields iterator over keys
-    vals(pq)                  # yields iterator over values
-    for (k,v) in pq; ...; end # loop over key-value pairs
-
-Note that the 3 above iterators yield nodes in their storage order which is not
-that of their priority.  The order is however the same for the 3 cases.
+If keys are analoguous to indices (linear or Cartesian) in an array,
+[`FastPriorityQueue`](@ref) may provide a faster alternative.
 
 """
 struct PriorityQueue{K,V,T,O} <: AbstractPriorityQueue{K,V,T,O}
@@ -226,38 +127,20 @@ struct PriorityQueue{K,V,T,O} <: AbstractPriorityQueue{K,V,T,O}
     index::Dict{K,Int}
 end
 
-# Copy constructor.  The copy is independent from the original.
+# Copy constructor. The copy is independent from the original.
 copy(pq::PriorityQueue{K,V,T,O}) where {K,V,T,O} =
     PriorityQueue{K,V,T,O}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
 
 """
-    FastPriorityQueue{V}([o=Forward,] T=Node{Int,V}, dims...)
+    FastPriorityQueue{V}([o=Forward,] [T=Node{Int,V},] dims...)
 
-yields a priority queue with ordering specified by `o::Ordering` and for nodes
-of type `T<:AbstractNode{Int,V}` with `V` the type of the values encoding the
-priority. Type parameter `V` may be omitted if the node type `T` is specified.
+yields a priority queue for keys analoguous of indices in an array of size
+`dims...` and priority values of type `V`. Optional arguments `o::Ordering` and
+`T<:AbstractNode{Int,V}` are to specify the ordering of values and type of
+nodes to store key-value pairs (the key is stored as a linear index of type
+`Int`). Type parameter `V` may be omitted if the node type `T` is specified.
 
-The keys in this specialized priority queue are the linear or Cartesian indices
-in an array of size `dims...`.  Internally, the keys are stored as linear
-indices of type `Int` but the priority queue may be indexed with linear or
-Cartesian indices.  For example, if `pq` is a priority queue of this kind built
-with `dims = (3,4,5)`, then all the following expressions refer to the same
-key:
-
-    pq[44]
-    pq[2,3,4]
-    pq[CartesianIndex(2,3,4)]
-
-With `n` nodes, the storage of this kind of priority queue is
-`prod(dims)*sizeof(Int) + n*sizeof(T)` bytes.
-
-The method
-
-    haskey(pq, k)
-
-yields whether key `k` exists in priority queue `pq`.  Note that `false` is
-returned, if key `k` is an invalid key (out of bounds).  This is unlike the
-syntax `pq[k]` which would throw an exception in that case.
+See [`PriorityQueue`](@ref) if keys cannot be assumed to be array indices.
 
 """
 struct FastPriorityQueue{V,T<:AbstractNode{Int,V},
@@ -551,7 +434,7 @@ normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}}) =
     to_indices(index(pq), key)
 
 """
-    to_key(pq, k)
+    Quickheaps.to_key(pq, k)
 
 converts the key `k` to the type suitable for priority queue `pq`.
 
@@ -560,7 +443,7 @@ to_key(pq::AbstractPriorityQueue{K,V}, key::K) where {K,V} = key
 to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = to_type(K, key)
 
 """
-    to_val(pq, v)
+    Quickheaps.to_val(pq, v)
 
 converts the value `v` to the type suitable for priority queue `pq`.
 
@@ -569,7 +452,7 @@ to_val(pq::AbstractPriorityQueue{K,V}, val::V) where {K,V} = val
 to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = to_type(V, val)
 
 """
-    to_node(pq, k, v)
+    Quickheaps.to_node(pq, k, v)
 
 converts the the key `k` and the value `v` into a node type suitable for
 priority queue `pq`.
@@ -579,11 +462,11 @@ to_node(pq::AbstractPriorityQueue{K,V,T}, key, val) where {K,V,T} =
     T(to_key(pq, key), to_val(pq, val))
 
 """
-    heap_index(pq, k) -> i
+    Quickheaps.heap_index(pq, k) -> i
 
-yields the index in the binary heap backing the storage of the nodes of the
-priority queue `pq` of the key `k`.  If the key is not in priority queue, `i =
-0` is returned, otherwise `i ∈ 1:n` with `n = length(pq)` is returned.
+yields the index of the key `k` in the binary heap backing the storage of the
+nodes of the priority queue `pq`. If the key is not in priority queue, `i = 0`
+is returned, otherwise `i ∈ 1:n` with `n = length(pq)` is returned.
 
 The `heap_index` method is used to implement `haskey`, `get`, and `delete!`
 methods for priority queues.  The `heap_index` method shall be specialized for
@@ -726,8 +609,8 @@ end
 
 requeues key `k` at priority `v` in priority queue `pq` forcing the
 heapification of the binary heap backing the storage of the nodes of `pq` in
-the direction `dir`.  A node with the same key `k` must already exists in the
-queue.  If `dir = Val(:down)`, it is assumed that the new priority `v` of the
+the direction `dir`. A node with the same key `k` must already exists in the
+queue. If `dir = Val(:down)`, it is assumed that the new priority `v` of the
 key `k` is less than the former priority; if `dir = Val(:up)`, it is assumed
 that the new priority is greater than the former one.
 

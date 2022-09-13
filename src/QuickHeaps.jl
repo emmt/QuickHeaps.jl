@@ -30,6 +30,7 @@ export
     AbstractBinaryHeap, BinaryHeap, FastBinaryHeap,
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
     heapify, heapify!, isheap,
+    setroot!,
 
     # From Base (in recent versions of Julia):
     peek,

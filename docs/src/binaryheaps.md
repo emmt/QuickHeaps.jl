@@ -3,16 +3,17 @@
 [Binary heaps](https://en.wikipedia.org/wiki/Binary_heap) dynamically store
 values in a tree structure built according to a given ordering of these values.
 Thanks to this structure, a number of operations can be efficiently
-implemented. If a binary heap contains `n` values, pushing a new value,
-extracting the least (or the greatest depending on the ordering) value out of
-the heap, deleting a value, and replacing a value all have a complexity of
-`O(log(n))` at worst. Just getting the least (or the greatest) value without
-extracting it out of the heap is an `O(1)` operation.
+implemented. For a binary heap of `n` values, pushing a new value, extracting
+the least (or the greatest depending on the ordering) value out of the heap,
+deleting a value, and replacing a value all have a complexity of `O(log(n))` at
+worst. Just getting the least (or the greatest) value without extracting it out
+of the heap is an `O(1)` operation.
 
 
 ## Basic usage
 
-In `QuickHeaps`, a binary heap is created by:
+In `QuickHeaps`, a binary heap is created by the [`BinaryHeap`](@ref)
+constructor:
 
 ```julia
 h = BinaryHeap{T}(o = FastMin)
@@ -96,12 +97,12 @@ Call `empty!(h)` to delete all the nodes of the binary heap `h` and
 
 ### Advanced usage
 
-Instances of `BinaryHeap` store their values in a Julia vector whose length is
-always equal to the number of stored values. Slightly faster binary heaps are
-created by the `FastBinaryHeap` constructor. Such binary heaps never
-automatically reduce the size of the array backing the storage of their values
-(even though the size is automatically augmented as needed). You may call
-`resize!(h)` to explicitly reduce the storage to its minimum.
+Instances of [`BinaryHeap`](@ref) store their values in a Julia vector whose
+length is always equal to the number of stored values. Slightly faster binary
+heaps are created by the [`FastBinaryHeap`](@ref) constructor. Such binary
+heaps never automatically reduce the size of the array backing the storage of
+their values (even though the size is automatically augmented as needed). You
+may call `resize!(h)` to explicitly reduce the storage to its minimum.
 
 A hint about the anticipated size `n` of a heap `h` (of any kind) can be set by:
 
@@ -126,16 +127,16 @@ inherits from `AbstractBinaryHeap{T,O}` with `T` the type of the values stored
 by the heap and `O` the type of the ordering. Assuming the array backing the
 storage of the values in the custom heap type has 1-based linear indexing, it
 is sufficient to specialize the following methods for an instance `h` of the
-custom heap type:
+custom heap type, say `CustomBinaryHeap`:
 
-```julia
-Base.length(h)
-Base.empty!(h)
-QuickHeaps.nodes(h)
-QuickHeaps.ordering(h)
-QuickHeaps.unsafe_grow!(h)
-QuickHeaps.unsafe_shrink!(h)
-```
+- `Base.length(h::CustomBinaryHeap)` yields the number of values in `h`;
+- `Base.empty!(h::CustomBinaryHeap)` delete all values in `h`;
+- [`QuickHeaps.nodes`](@ref)`(h::CustomBinaryHeap)` yields the array backing
+  the storage of values;
+- [`QuickHeaps.ordering`](@ref)`(h::CustomBinaryHeap)`] yields the ordering of
+  the values;
+- [`QuickHeaps.unsafe_grow!`](@ref)`(h::CustomBinaryHeap)`
+- [`QuickHeaps.unsafe_shrink!`](@ref)`(h::CustomBinaryHeap)`
 
 to have a fully functional custom binary heap type.
 
@@ -146,26 +147,26 @@ method may also be specialized.
 The `QuickHeaps` package provides a number of methods (some unexported) that
 may be useful for implementing new binary heap types:
 
-```julia
-heapify
-heapify!
-isheap
-QuickHeaps.heapify_down!
-QuickHeaps.heapify_up!
-QuickHeaps.unsafe_heapify_down!
-QuickHeaps.unsafe_heapify_up!
-```
+- [`QuickHeaps.heapify`](@ref)
+- [`QuickHeaps.heapify!`](@ref)
+- [`QuickHeaps.isheap`](@ref)
+- [`QuickHeaps.heapify_down!`](@ref)
+- [`QuickHeaps.heapify_up!`](@ref)
+- [`QuickHeaps.unsafe_heapify_down!`](@ref)
+- [`QuickHeaps.unsafe_heapify_up!`](@ref)
+
 
 Note that the `heapify`, `heapify!`, and `isheap` methods which are exported by
 the `QuickHeaps` package have the same behavior but are different than those in
-the [`DataStructures`][datastructures-url] package. If you are using both
-packages, you'll have to explicitly prefix these methods by the package module.
+the [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl)
+package. If you are using both packages, you'll have to explicitly prefix these
+methods by the package module.
 
 
 ## Simple priority queues
 
 A binary heap can be used to implement a simple [priority
-queues](https://en.wikipedia.org/wiki/Priority_queue) with keys of type `K` and
+queue](https://en.wikipedia.org/wiki/Priority_queue) with keys of type `K` and
 values of type `V` as follows:
 
 ```julia
@@ -173,15 +174,15 @@ struct Node{K,V}
    key::K
    val::V
 end
-Base.lt(o::Base.Ordering, a::Node, b::Node) = lt(o, a.val, b.val)
+Base.lt(o::Base.Ordering, a::T, b::T) where {T<:Node} = lt(o, a.val, b.val)
 Q = FastBinaryHeap{Node}()
 ```
 
 This simple priority queue is a binary heap (a *min-heap* in that case) of
-nodes that store their value and their key and which as sorted according to
-their values. The same `Node` structure as the one defined above and with the
-same specialization of `Base.lt` is provided (but not exported) by
-`QuickHeaps`, so a simplified version of the above example is:
+nodes storing key-value pairs which as sorted according to their values. The
+same `Node` structure as the one defined above and with the same specialization
+of `Base.lt` is provided (but not exported) by `QuickHeaps`, so a simplified
+version of the above example is:
 
 ```julia
 using QuickHeaps: Node
@@ -192,5 +193,5 @@ Such a priority queue is faster than `DataStructures.PriorityQueue` but it
 provides no means to requeue a node nor to ensure that keys are unique. An
 auxiliary array, a dictionary, or a set can be used for that, this is
 implemented by [`QuickHeaps.PriorityQueue`](@ref) and
-[`QuickHeaps.FastPriorityQueue`](@ref) which are more flexible than the simple
-implementation in the above example.
+[`QuickHeaps.FastPriorityQueue`](@ref) which are more flexible and offer more
+capabilities than the simple implementation in the above example.

@@ -8,6 +8,7 @@ name of a method or a type.
 ## Binary Heaps
 
 ```@docs
+QuickHeaps.AbstractBinaryHeap
 QuickHeaps.BinaryHeap
 QuickHeaps.FastBinaryHeap
 QuickHeaps.heapify
@@ -15,6 +16,10 @@ QuickHeaps.heapify!
 QuickHeaps.heapify_down!
 QuickHeaps.heapify_up!
 QuickHeaps.isheap
+QuickHeaps.unsafe_heapify_down!
+QuickHeaps.unsafe_heapify_up!
+QuickHeaps.unsafe_grow!
+QuickHeaps.unsafe_shrink!
 ```
 
 ## Priority Queues
