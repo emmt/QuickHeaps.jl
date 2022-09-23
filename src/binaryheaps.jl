@@ -93,12 +93,10 @@ default_ordering(::Type{<:FastBinaryHeap}) = FastForward
 for type in (:BinaryHeap, :FastBinaryHeap)
     @eval begin
         $type{T}(vals::AbstractVector, o::Ordering=default_ordering($type)) where {T} =
-            $type{T}(default_ordering($type), vals)
+            $type{T}(o, vals)
         $type(vals::AbstractVector{T}) where {T} = $type{T}(vals)
-        $type(o::Ordering, vals::AbstractVector{T}) where {T} =
-            $type{T}(o, vals)
-        $type(vals::AbstractVector{T}, o::Ordering) where {T} =
-            $type{T}(o, vals)
+        $type(o::Ordering, vals::AbstractVector{T}) where {T} = $type{T}(o, vals)
+        $type(vals::AbstractVector{T}, o::Ordering) where {T} = $type{T}(o, vals)
     end
 end
 
@@ -198,7 +196,7 @@ function pop!(h::AbstractBinaryHeap)
     return x
 end
 
-push!(h::AbstractBinaryHeap, ::Tuple{}) = h
+push!(h::AbstractBinaryHeap, ::Tuple{}) = h # FIXME remove this
 
 function push!(h::AbstractBinaryHeap, args...)
     for x in args
@@ -219,7 +217,7 @@ end
     setroot!(h, x) -> h
 
 replaces the value of the root note in heap `h` by `x`.  This is similar to
-`h[1] = x`.
+`h[1] = x` but a bit faster.
 
 """
 setroot!(h::AbstractBinaryHeap, x) = setroot!(h, to_eltype(h, x))
@@ -489,13 +487,13 @@ throws an exception if the first elements of array `A` are not suitable for
 storing a binary heap of size `n`.
 
 """
-check_heap_storage(A::AbstractArray) = begin
+function check_heap_storage(A::AbstractArray)
     has_standard_linear_indexing(A) || throw(ArgumentError(
         "array storing a binary heap must have 1-based linear indexing"))
     nothing
 end
 
-check_heap_storage(A::AbstractArray, n::Int) = begin
+function check_heap_storage(A::AbstractArray, n::Int)
     # Check that array has linear indexing and that 0 ≤ n ≤ length(A).
     check_heap_storage(A)
     (n % UInt) ≤ (length(A) % UInt) || throw_argument_error(
