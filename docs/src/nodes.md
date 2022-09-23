@@ -1,4 +1,4 @@
-# Nodes in priority queues
+# Nodes types
 
 Nodes in priority queues provided by `QuickHeaps` have super-type:
 
@@ -7,6 +7,8 @@ QuickHeaps.AbstractNode{K,V}
 ```
 
 with `K` and `V` the respective types of the key and of the value of the node.
+In principle, priority of a node is based on its value, but this may be
+changed by using custom node and/or ordering types.
 
 Having a specific node type different than, say, `Pair{K,V}` is to allow
 customizing how the nodes are compared for ordering by specializing `Base.lt`

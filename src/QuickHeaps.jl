@@ -6,9 +6,9 @@ for Julia.
 Wikipedia page https://en.wikipedia.org/wiki/Binary_heap has very clear
 explanations about binary heaps.
 
-This code was much inspired by the DataStructures.jl package (see
-https://github.com/JuliaCollections/DataStructures.jl) but has a number of
-improvements:
+This code was much inspired by the
+[DataStructures.jl](https://github.com/JuliaCollections/DataStructures.jl)
+package but has a number of improvements:
 
 - sorting methods are 2 to 4 times faster (in part because NaN are
   ignored but also because of carefully in-lining critical sections);

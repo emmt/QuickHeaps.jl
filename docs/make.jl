@@ -11,6 +11,7 @@ makedocs(
         prettyurls = DEPLOYDOCS,
     ),
     authors = "Éric Thiébaut and contributors",
+    modules = [QuickHeaps],
     pages = ["index.md", "install.md", "binaryheaps.md",
          "priorityqueues.md", "nodes.md", "library.md"]
 )
