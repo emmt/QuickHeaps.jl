@@ -47,10 +47,12 @@ in_range(i::Integer, R::OneTo) = in_range(i, length(R))
 in_range(i::Integer, R::AbstractUnitRange{<:Integer}) = (i ∈ R)
 
 """
-    has_bad_values(A, isbad)
+    has_bad_values(A[, isbad])
 
-yields whether array `A` has bad values according to predicate `isbad`.  For
+yields whether array `A` has bad values according to predicate `isbad`. For
 arrays with floating-point values, `isbad` default to `isnan` if unspecified.
+For integer-valued arrays, this function always returns `false` if `isnan` is
+unspecified.
 
 """
 function has_bad_values(A::AbstractArray, isbad)
@@ -60,10 +62,8 @@ function has_bad_values(A::AbstractArray, isbad)
     end
     return flag
 end
-
 has_bad_values(A::AbstractArray{<:Integer}) = false
-has_bad_values(A::AbstractArray{<:AbstractFloat}) =
-    has_bad_values(A, isnan)
+has_bad_values(A::AbstractArray{<:AbstractFloat}) = has_bad_values(A, isnan)
 
 """
     typename(x)
@@ -79,10 +79,10 @@ require_one_based_indexing(A...) =
     has_offset_axes(A...) && throw_argument_error(
         "arrays must have 1-based indexing")
 
-throw_argument_error(msg::AbstractString) = throw(ArgumentError(msg))
-@noinline throw_argument_error(args...) =
-    throw_argument_error(string(args...))
-
-throw_dimension_mismatch(msg::AbstractString) = throw(DimensionMismatch(msg))
-@noinline throw_dimension_mismatch(args...) =
-    throw_dimension_mismatch(string(args...))
+for (func, type) in ((:throw_argument_error, :ArgumentError),
+                     (:throw_dimension_mismatch, :DimensionMismatch),)
+    @eval begin
+        $func(msg::$type.types[1]) = throw($type(msg))
+        @noinline $func(args...) = $func(string(args...))
+    end
+end
