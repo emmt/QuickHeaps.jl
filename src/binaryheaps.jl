@@ -198,14 +198,10 @@ end
 
 push!(h::AbstractBinaryHeap, ::Tuple{}) = h # FIXME remove this
 
-function push!(h::AbstractBinaryHeap, args...)
-    for x in args
-        push!(h, x)
-    end
-    return h
-end
-
+# Implement push! in a similar way as for AbstractDict to force loop unrolling.
 push!(h::AbstractBinaryHeap, x) = push!(h, to_eltype(h, x))
+push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
+push!(h::AbstractBinaryHeap, x, y, z...) = push!(push!(push!(h, x), y), z...)
 
 function push!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h) + 1
