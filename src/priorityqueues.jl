@@ -62,9 +62,9 @@ for type in (:AbstractNode, :Node)
         $type{K,V}(x::$type{K,V}) where {K,V} = x
     end
 end
-Node(x::AbstractNode) = Node(getkey(x), keyval(x))
-Node{K}(x::AbstractNode) where {K} = Node{K}(getkey(x), keyval(x))
-Node{K,V}(x::AbstractNode) where {K,V} = Node{K,V}(getkey(x), keyval(x))
+Node(x::AbstractNode) = Node(getkey(x), getval(x))
+Node{K}(x::AbstractNode) where {K} = Node{K}(getkey(x), getval(x))
+Node{K,V}(x::AbstractNode) where {K,V} = Node{K,V}(getkey(x), getval(x))
 
 Node(x::Tuple{Any,Any}) = Node(x[1], x[2])
 Node{K}(x::Tuple{Any,Any}) where {K} = Node{K}(x[1], x[2])

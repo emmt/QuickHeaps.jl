@@ -79,7 +79,14 @@ KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
         @test Pair(x) === (k => nothing)
         @test KeyOnlyNode(k => nothing) === x
         kp, vp = x
+        V = typeof(vp)
         @test kp === k && vp === nothing
+        @test Node(x) === Node(kp, vp)
+        @test Node{K}(x) === Node(kp, vp)
+        @test Node{K,V}(x) === Node(kp, vp)
+        @test convert(Node, x) === Node(kp, vp)
+        @test convert(Node{K}, x) === Node(kp, vp)
+        @test convert(Node{K,V}, x) === Node(kp, vp)
     end
 end
 
