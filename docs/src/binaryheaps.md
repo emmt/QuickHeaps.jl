@@ -67,15 +67,16 @@ A binary heap `h` behaves like an abstract vector (with 1-based linear
 indices), in particular:
 
 ```julia
-length(h)   # yields the number of nodes in heap h
-h[i]        # yields the value of the i-th node of heap h
-h[i] = x    # sets the value of the i-th node of heap h and heapify h
+length(h)   # yields the number of values in heap h
+h[i]        # yields the i-th value of heap h
+h[i] = x    # sets the i-th value of heap h and heapify h
 ```
 
-Note that `h[1]` is the value of the root node of the heap `h` and that setting
-the value of a node in the heap may trigger reordering of the nodes to maintain
-the binary heap structure. In particular, after doing `h[i] = x`, do not assume
-that `h[i]` yields `x`.
+Note that `h[1]` is the value of the root entry of the heap `h` (the least heap
+values for a min-heap, the greatest heap value for a max-heap) and that setting
+a value in the heap may trigger reordering of the values stored by the heap to
+maintain the binary heap structure. In particular, after doing `h[i] = x`, do
+not assume that `h[i]` yields `x`.
 
 To delete the `i`-th value from the heap `h`, call:
 
@@ -83,15 +84,15 @@ To delete the `i`-th value from the heap `h`, call:
 delete!(h, i)
 ```
 
-Call `empty!(h)` to delete all the nodes of the binary heap `h` and
+Call `empty!(h)` to delete all the values of the binary heap `h` and
 `isempty(h)` to query whether `h` is empty.
 
 !!! note
-    Operations that modify the heap, like deletion by `delete!(h,i)`, insertion
-    by `h[i] = x`, pushing by `push!(h,x)`, and extracting by `pop!(h)` are of
-    numerical complexity `O(1)` in the best case, `O(log(n))` in the worst
-    case, with `n = length(h)` the number of nodes in the heap `h`. Query the
-    value of a given node by `peek(h)`, `first(h)`, or `h[i]` is always of
+    Operations that modify the heap, like deletion by `delete!(h,i)`,
+    insertion by `h[i] = x`, pushing by `push!(h,x)`, and extracting by
+    `pop!(h)` are of numerical complexity `O(1)` in the best case, `O(log(n))`
+    in the worst case, with `n = length(h)` the number of values in the heap
+    `h`. Query a given value with `peek(h)`, `first(h)`, or `h[i]` is always of
     complexity `O(1)`.
 
 
@@ -131,7 +132,7 @@ custom heap type, say `CustomBinaryHeap`:
 
 - `Base.length(h::CustomBinaryHeap)` yields the number of values in `h`;
 - `Base.empty!(h::CustomBinaryHeap)` delete all values in `h`;
-- [`QuickHeaps.nodes`](@ref)`(h::CustomBinaryHeap)` yields the array backing
+- [`QuickHeaps.storage`](@ref)`(h::CustomBinaryHeap)` yields the array backing
   the storage of values;
 - [`QuickHeaps.ordering`](@ref)`(h::CustomBinaryHeap)`] yields the ordering of
   the values;

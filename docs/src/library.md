@@ -63,6 +63,7 @@ QuickHeaps.in_range
 QuickHeaps.is_one_based_unit_range
 QuickHeaps.linear_index
 QuickHeaps.nodes
+QuickHeaps.storage
 QuickHeaps.ordering
 QuickHeaps.setroot!
 QuickHeaps.to_eltype

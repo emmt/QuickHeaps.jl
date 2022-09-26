@@ -4,34 +4,36 @@
 is the super-type of binary heaps in `QuickHeaps` whose values have type `T`
 and whose ordering has type `O`.
 
-A number of methods are available for a binary heap `h`:
+The following methods are available for a binary heap `h` (those which modify
+the heap contents re-order heap values as needed to maintain the heap
+structure):
 
-    pop!(h)        # deletes root node of heap h and yields its value
+    pop!(h)        # deletes and returns root value of heap h
     push!(h, x)    # pushes value x in heap h
     empty!(h)      # empties heap h
     isempty(h)     # yields whether heap h is empty
-    delete!(h, i)  # deletes i-th node from heap h
-    peek(h)        # yields value of root node of heap h without deleting it
+    delete!(h, i)  # deletes i-th value from heap h
+    peek(h)        # yields root value of heap h without deleting it
     first(h)       # idem
-    setroot!(h, x) # same as h[1] = x, replaces value of root node of heap h by x
+    setroot!(h, x) # same as h[1] = x, replaces root value of heap h by x
 
 A binary heap `h` behaves like an abstract vector (with 1-based linear
 indices), in particular:
 
-    length(h)   # the number of nodes in heap h
-    h[i]        # the i-th node of heap h
-    h[i] = x    # set the i-th node of heap h and heapify h
+    length(h)   # the number of values in heap h
+    h[i]        # the i-th value of heap h
+    h[i] = x    # set the i-th value of heap h and heapify h
 
-Note that `h[1]` is the root node of the heap `h` and that setting a node in
-the heap may trigger reordering of the nodes to maintain the binary heap
+Note that `h[1]` is the root value of the heap `h` and that setting a value in
+the heap may trigger reordering of the values to maintain the binary heap
 structure. In other words, after doing `h[i] = x`, do not assume that `h[i]`
 yields `x`.
 
 Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by
 `h[i] = x`, pushing by `push!(h,x)`, and extracting by `pop!(h)` are of
 complexity `O(1)` in the best case, `O(log(n))` in the worst case, with `n =
-length(h)` the number of nodes in the heap `h`. Retrieving the value of a given
-node by `peek(h)`, `first(h)`, or `h[i]` is always of complexity `O(1)`.
+length(h)` the number of values in the heap `h`. Retrieving a given value with
+`peek(h)`, `first(h)`, or `h[i]` is always of complexity `O(1)`.
 
 """
 abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
@@ -58,8 +60,8 @@ Method `sizehint!(h,n)` may be called to anticipate that the heap may contains
 
 """
 struct BinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
-    order::O         # ordering
-    nodes::Vector{T} # storage for the nodes
+    order::O        # ordering of values
+    data::Vector{T} # storage for the values
     BinaryHeap{T}(o::O=default_ordering(BinaryHeap)) where {T,O<:Ordering} =
         new{T,O}(o, Vector{T}(undef, 0))
     BinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
@@ -77,9 +79,9 @@ minimum.
 
 """
 mutable struct FastBinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
-    order::O         # ordering
-    nodes::Vector{T} # storage for the nodes
-    count::Int       # current number of nodes
+    order::O        # ordering of values
+    data::Vector{T} # storage for the values
+    count::Int      # current number of values
     FastBinaryHeap{T}(o::O=default_ordering(FastBinaryHeap)) where {T,O<:Ordering} =
         new{T,O}(o, Vector{T}(undef, 0), 0)
     FastBinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
@@ -101,14 +103,14 @@ for type in (:BinaryHeap, :FastBinaryHeap)
 end
 
 """
-    QuickHeaps.nodes(h)
+    QuickHeaps.storage(h)
 
 yields the array backing the storage of the values in the binary heap `h`.
 
 This method may be specialized for custom binary heap types.
 
 """
-nodes(h::AbstractBinaryHeap) = getfield(h, :nodes)
+storage(h::AbstractBinaryHeap) = getfield(h, :data)
 
 """
     QuickHeaps.ordering(h)
@@ -121,11 +123,11 @@ This method may be specialized for custom binary heap types.
 ordering(h::AbstractBinaryHeap) = getfield(h, :order)
 
 length(h::FastBinaryHeap) = getfield(h, :count)
-length(h::BinaryHeap) = length(nodes(h))
+length(h::BinaryHeap) = length(storage(h))
 size(h::AbstractBinaryHeap) = (length(h),)
 IndexStyle(::Type{<:AbstractBinaryHeap}) = IndexLinear()
 sizehint!(h::AbstractBinaryHeap, n::Integer) = begin
-    sizehint!(nodes(h), n)
+    sizehint!(storage(h), n)
     return h
 end
 isempty(h::AbstractBinaryHeap) = length(h) < 1
@@ -133,7 +135,7 @@ isempty(h::AbstractBinaryHeap) = length(h) < 1
 # Call `resize!(h)` with no other arguments to reduce the storage size.
 resize!(h::AbstractBinaryHeap) = h # do nothing by default
 resize!(h::FastBinaryHeap) = begin
-    resize!(nodes(h), length(h))
+    resize!(storage(h), length(h))
     return h
 end
 
@@ -145,7 +147,7 @@ heap_parent(i::Int) = div(i, 2)
 
 @inline function getindex(h::AbstractBinaryHeap, i::Int)
     @boundscheck checkbounds(h, i)
-    @inbounds r = getindex(nodes(h), i)
+    @inbounds r = getindex(storage(h), i)
     return r
 end
 
@@ -155,16 +157,16 @@ end
 @inline function setindex!(h::AbstractBinaryHeap{T},
                            x::T, i::Int) where {T}
     @boundscheck checkbounds(h, i)
-    A = nodes(h)
-    @inbounds y = A[i] # replaced node
+    A = storage(h)
+    @inbounds y = A[i] # replaced value
     o = ordering(h)
     if lt(o, y, x)
-        # Heap structure _above_ replaced node will remain valid, down-heapify
-        # to fix the heap structure at and _below_ the node.
+        # Heap structure _above_ replaced entry will remain valid, down-heapify
+        # to fix the heap structure at and _below_ the entry.
         unsafe_heapify_down!(o, A, i, x, length(h))
     else
-        # Heap structure _below_ replaced node will remain valid, up-heapify to
-        # fix the heap structure at and _above_ the node.
+        # Heap structure _below_ replaced entry will remain valid, up-heapify
+        # to fix the heap structure at and _above_ the entry.
         unsafe_heapify_up!(o, A, i, x)
     end
     return h
@@ -174,20 +176,20 @@ first(h::AbstractBinaryHeap) = peek(h)
 
 function peek(h::AbstractBinaryHeap)
     isempty(h) && throw_argument_error(typename(h), " is empty")
-    @inbounds r = getindex(nodes(h), 1)
+    @inbounds r = getindex(storage(h), 1)
     return r
 end
 
 empty!(h::FastBinaryHeap) = (setfield!(h, :count, 0); h)
-empty!(h::BinaryHeap) = (empty!(nodes(h)); h)
+empty!(h::BinaryHeap) = (empty!(storage(h)); h)
 
 function pop!(h::AbstractBinaryHeap)
     n = length(h)
     n ≥ 1 || throw_argument_error(typename(h), " is empty")
-    A = nodes(h)
+    A = storage(h)
     @inbounds x = A[1]
     if n > 1
-        # Peek the last node and down-heapify starting at the root of the
+        # Peek the last value and down-heapify starting at the root of the
         # binary heap to insert it.
         @inbounds y = A[n]
         unsafe_heapify_down!(ordering(h), A, 1, y, n - 1)
@@ -210,7 +212,7 @@ end
 """
     setroot!(h, x) -> h
 
-replaces the value of the root note in heap `h` by `x`.  This is similar to
+replaces the value of the root note in heap `h` by `x`. This is similar to
 `h[1] = x` but a bit faster.
 
 """
@@ -219,7 +221,7 @@ setroot!(h::AbstractBinaryHeap, x) = setroot!(h, to_eltype(h, x))
 function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h)
     n ≥ 1 || throw_argument_error(typename(h), " is empty")
-    unsafe_heapify_down!(ordering(h), nodes(h), 1, x, n)
+    unsafe_heapify_down!(ordering(h), storage(h), 1, x, n)
     return h
 end
 
@@ -229,20 +231,19 @@ function delete!(h::AbstractBinaryHeap, i::Int)
     n = length(h)
     in_range(i, n) || throw_argument_error("out of range index")
     if i < n
-        # Replace the deleted node by the last node in the heap and
+        # Replace the deleted value by the last value in the heap and
         # up-/down-heapify to restore the binary heap structure.
-        A = nodes(h)
+        A = storage(h)
         o = ordering(h)
-        @inbounds x = A[n] # node to replace deleted node
-        @inbounds y = A[i] # deleted node
+        @inbounds x = A[n] # value to replace deleted value
+        @inbounds y = A[i] # deleted value
         if lt(o, y, x)
-            # Heap structure _above_ deleted node will remain valid,
-            # down-heapify to fix the heap structure at and _below_ the
-            # node.
+            # Heap structure _above_ deleted entry will remain valid,
+            # down-heapify to fix the heap structure at and _below_ the entry.
             unsafe_heapify_down!(o, A, i, x, n - 1)
         else
-            # Heap structure _below_ deleted node will remain valid,
-            # up-heapify to fix the heap structure at and _above_ the node.
+            # Heap structure _below_ deleted entry will remain valid,
+            # up-heapify to fix the heap structure at and _above_ the entry.
             unsafe_heapify_up!(o, A, i, x)
         end
     end
@@ -254,17 +255,17 @@ end
     QuickHeaps.unsafe_grow!(h, n) -> A
 
 grows the size of the binary heap `h` to be `n` and returns the array `A`
-backing the storage of the nodes.  This method is *unsafe* because it does not
+backing the storage of the values. This method is *unsafe* because it does not
 check its arguments and because it breaks the binary heap structure of the
-array of nodes.
+array of values.
 
 This method is called by `push!` to grow the size of the heap and shall be
 specialized for any concrete sub-types of `QuickHeaps.AbstractBinaryHeap`.
 
 """
-unsafe_grow!(h::BinaryHeap, n::Int) = resize!(nodes(h), n)
+unsafe_grow!(h::BinaryHeap, n::Int) = resize!(storage(h), n)
 unsafe_grow!(h::FastBinaryHeap, n::Int) = begin
-    A = nodes(h)
+    A = storage(h)
     length(A) < n && resize!(A, n)
     setfield!(h, :count, n)
     return A
@@ -273,7 +274,7 @@ end
 """
     QuickHeaps.unsafe_shrink!(h, n)
 
-shrinks the size of the binary heap `h` to be `n`.  This method is *unsafe*
+shrinks the size of the binary heap `h` to be `n`. This method is *unsafe*
 because it does not check its arguments.
 
 This method is called by `delete!` to eventually reduce the size of the heap
@@ -281,13 +282,13 @@ and shall be specialized for any concrete sub-type of
 [`QuickHeaps.AbstractBinaryHeap`](@ref).
 
 """
-unsafe_shrink!(h::BinaryHeap, n::Int) = resize!(nodes(h), n)
+unsafe_shrink!(h::BinaryHeap, n::Int) = resize!(storage(h), n)
 unsafe_shrink!(h::FastBinaryHeap, n::Int) = setfield!(h, :count, n)
 
 """
     heapify!(h) -> h
 
-reorders the nodes in the binary heap `h` in-place.  This method should be
+reorders the values in the binary heap `h` in-place. This method should be
 called to initialize the heap or to re-order the heap if its contents have been
 modified by other methods than `pop!` or `push!`.
 
@@ -297,12 +298,12 @@ the heap values:
     heapify!([o=Base.Forward,] A, n=length(A)) -> A
 
 reorders the `n` first elements of array `A` in-place to form a binary heap
-according to the ordering specified by `o`.  The array `A` must have 1-based
-linear indexing.  Arguments may be specified in any order.
+according to the ordering specified by `o`. The array `A` must have 1-based
+linear indexing. Arguments may be specified in any order.
 
 """
 function heapify!(h::AbstractBinaryHeap)
-    heapify!(ordering(h), nodes(h), length(h))
+    heapify!(ordering(h), storage(h), length(h))
     return h
 end
 
@@ -321,8 +322,8 @@ end
     heapify([o=Base.Forward,] A, n=length(A))
 
 yields an array with the `n` first values of array `A` stored in a binary heap
-structure of ordering specified by `o`.  The storage of the returned heap is
-a different array than `A`.  Arguments may be specified in any order.
+structure of ordering specified by `o`. The storage of the returned heap is a
+different array than `A`. Arguments may be specified in any order.
 
 """
 heapify(o::Ordering, A::AbstractArray, n::Integer) = heapify(o, A, to_int(n))
@@ -334,11 +335,11 @@ heapify(o::Ordering, A::AbstractArray{T}, n::Int = length(A)) where {T} =
     isheap([o=Base.Forward,], A, n=length(A))
 
 yields whether the `n` first elements of array `A` have a binary heap structure
-ordered as specified by `o`.  Arguments may be specified in any order.
+ordered as specified by `o`. Arguments may be specified in any order.
 
     isheap(obj; check=false)
 
-yields whether object `obj` is a binary heap.  If keyword `check` is true, the
+yields whether object `obj` is a binary heap. If keyword `check` is true, the
 internal structure of `obj` is checked; otherwise, the type of `obj` is trusted
 to determine whether it is a binary heap.
 
@@ -359,7 +360,7 @@ end
 
 isheap(h::AbstractBinaryHeap; check::Bool = false) =
     if check
-        isheap(ordering(h), nodes(h), length(h))
+        isheap(ordering(h), storage(h), length(h))
     else
         true
     end
@@ -383,12 +384,12 @@ end
 """
     QuickHeaps.heapify_down!(o, A, i, x=A[i], n=lengh(A))
 
-stores the value `x` in the `i`-th node of the binary heap built into the `n`
+stores the value `x` in the `i`-th entry of the binary heap built into the `n`
 first elements of array `A` with ordering `o` and, if needed, moves down the
 inserted value to maintain the binary heap structure.
 
 This method is called to *heapify* an array in order to initialize or rebuild
-the heap structure or to replace the value of the root node of the heap and
+the heap structure or to replace the value of the root value of the heap and
 update the heap structure.
 
 """
@@ -432,9 +433,9 @@ end
 """
    QuickHeaps.heapify_up!(o, A, i, x=A[i])
 
-stores the value `x` in the `i`-th node of the binary heap built into the
-`n ≥ i` first elements of array `A` with ordering `o` and, if needed, moves
-up the value to maintain the heap structure.
+stores the value `x` in the `i`-th entry of the binary heap built into the `n ≥
+i` first elements of array `A` with ordering `o` and, if needed, moves up the
+value to maintain the heap structure.
 
 """
 function heapify_up!(o::Ordering, A::AbstractArray,

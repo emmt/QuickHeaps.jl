@@ -1,0 +1,23 @@
+# User visible changes in QuickHeaps
+
+## Version 0.2.0
+
+- Provide `dequeue_node!` which removes the root node from a priority queue and
+  returns it. This is similar to `dequeue_pair!` or `pop!` which both return a
+  `Pair`. The syntax `dequeue(T,pq)!` to remove the root node from `pq` and
+  return it converted to type `T` is no longer supported; call
+  `T(dequeue_node!(pq))` or `convert(T, dequeue_node!(pq))` instead.
+
+- The noun *node* is replaced by *value* for a binary-heap. The non-exported
+  method `QuickHeaps.nodes(h)` has been renamed as `QuickHeaps.storage(h)` to
+  retrieve the object backing the storage of binary heap `h`.
+
+- Remove unused non-exported methods `unsafe_heapify!`,
+  `require_one_based_indexing`, ...
+
+
+## Version 0.1.2
+
+- Fix a few bugs.
+- provide docs.
+- Extend tests.

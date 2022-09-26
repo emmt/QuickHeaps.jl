@@ -10,7 +10,7 @@ using QuickHeaps:
     FastForwardOrdering, FastForward, FastReverse,
     FastMin, FastMax, SafeMin, SafeMax,
     isheap, heapify, heapify!,
-    ordering, nodes
+    ordering, storage
 
 orientation(::Any) = 0
 orientation(h::AbstractBinaryHeap) = orientation(typeof(h))
@@ -46,8 +46,8 @@ const nil = Nil()
 Base.print(io::IO, ::Nil) = nothing
 
 # Yields a non-heap vector of the values.
-vals(h::BinaryHeap) = nodes(h)
-vals(h::AbstractBinaryHeap) = view(nodes(h), Base.OneTo(length(h)))
+vals(h::BinaryHeap) = storage(h)
+vals(h::AbstractBinaryHeap) = view(storage(h), Base.OneTo(length(h)))
 
 # Checks whether 2 arrays have the same entries although not nceessarily in the same
 # order.
