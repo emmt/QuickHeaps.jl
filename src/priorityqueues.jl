@@ -321,27 +321,27 @@ function empty!(pq::FastPriorityQueue)
 end
 
 # Private structure used by iterators on priority queues.
-struct _PriorityQueueIterator{F,T<:AbstractPriorityQueue}
+struct PriorityQueueIterator{F,T<:AbstractPriorityQueue}
     f::F
     pq::T
 end
 
-IteratorEltype(itr::_PriorityQueueIterator) = IteratorEltype(typeof(itr))
+IteratorEltype(itr::PriorityQueueIterator) = IteratorEltype(typeof(itr))
 IteratorEltype(::Type{<:AbstractPriorityQueue}) = HasEltype()
-eltype(itr::_PriorityQueueIterator) = eltype(typeof(itr))
-function eltype(::Type{<:_PriorityQueueIterator{F,T}}
+eltype(itr::PriorityQueueIterator) = eltype(typeof(itr))
+function eltype(::Type{<:PriorityQueueIterator{F,T}}
                 ) where {K,V,F<:typeof(getkey),T<:AbstractPriorityQueue{K,V}}
     return K
 end
-function eltype(::Type{<:_PriorityQueueIterator{F,T}}
+function eltype(::Type{<:PriorityQueueIterator{F,T}}
                 ) where {K,V,F<:typeof(getval),T<:AbstractPriorityQueue{K,V}}
     return V
 end
-eltype(::Type{<:_PriorityQueueIterator}) = Any
+eltype(::Type{<:PriorityQueueIterator}) = Any
 
-IteratorSize(itr::_PriorityQueueIterator) = IteratorSize(typeof(itr))
-IteratorSize(::Type{<:_PriorityQueueIterator}) = HasLength()
-length(itr::_PriorityQueueIterator) = length(itr.pq)
+IteratorSize(itr::PriorityQueueIterator) = IteratorSize(typeof(itr))
+IteratorSize(::Type{<:PriorityQueueIterator}) = HasLength()
+length(itr::PriorityQueueIterator) = length(itr.pq)
 
 # Unordered iterators.  NOTE: Both `keys` and `values` shall however return the
 # elements in the same order.
@@ -350,9 +350,9 @@ function iterate(pq::AbstractPriorityQueue, i::Int = 1)
     @inbounds x = getindex(nodes(pq), i)
     return Pair(x), i + 1
 end
-keys(pq::AbstractPriorityQueue) = _PriorityQueueIterator(getkey, pq)
-values(pq::AbstractPriorityQueue) = _PriorityQueueIterator(getval, pq)
-function Base.iterate(itr::_PriorityQueueIterator, i::Int = 1)
+keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(getkey, pq)
+values(pq::AbstractPriorityQueue) = PriorityQueueIterator(getval, pq)
+function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
     i ≤ length(itr.pq) || return nothing
     @inbounds x = getindex(nodes(itr.pq), i)
     return itr.f(x), i + 1
