@@ -383,18 +383,20 @@ end
 
 push!(pq::AbstractPriorityQueue, ::Tuple{}) = pq # FIXME: unused.
 
-# FIXME: Same code as for a binary heap.
-function push!(pq::AbstractPriorityQueue, args...)
-    for arg in args
-        push!(pq, arg)
+# For AbstractDict, pushing pair(s) is already implemented via setindex!
+# Implement push! for 2-tuples and nodes in a similar way as for AbstractDict.
+push!(pq::AbstractPriorityQueue, a::AbstractNode) =
+    enqueue!(pq, getkey(a), getval(a))
+push!(pq::AbstractPriorityQueue, a::Tuple{Any,Any}) =
+    enqueue!(pq, a[1], a[2])
+for T in (AbstractNode, Tuple{Any,Any})
+    @eval begin
+        push!(pq::AbstractPriorityQueue, a::$T, b::$T) =
+            push!(push!(pq, a), b)
+        push!(pq::AbstractPriorityQueue, a::$T, b::$T, c::$T...) =
+            push!(push!(push!(pq, a), b), c...)
     end
-    return pq
 end
-
-push!(pq::AbstractPriorityQueue, pair::Pair) = enqueue!(pq, pair)
-
-push!(pq::AbstractPriorityQueue{<:Any,<:Any,T}, node::T) where {T} =
-    enqueue!(pq, node)
 
 getindex(pq::AbstractPriorityQueue, ::Tuple{}) = throw_missing_key()
 
@@ -519,7 +521,7 @@ function heap_index(pq::FastPriorityQueue,
 end
 
 """
-    linear_index(pq, k)
+    QuickHeaps.linear_index(pq, k)
 
 converts key `k` into a linear index suitable for the fast priority queue `pq`.
 The key can be a linear index or a multi-dimensional index (anything accepted
@@ -575,7 +577,7 @@ enqueue!(pq::FastPriorityQueue{V,T}, x::T) where {V,T} =
     enqueue!(pq, getkey(x), getval(x))
 
 """
-    unsafe_enqueue!(pq, x, i) -> pq
+    QuickHeaps.unsafe_enqueue!(pq, x, i) -> pq
 
 stores node `x` in priority queue `pq` at index `i` and returns the priority
 queue.  The argument `i` is an index in the binary heap backing the storage of
@@ -616,7 +618,7 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
 end
 
 """
-    unsafe_enqueue!(dir, pq, k, v) -> pq
+    QuickHeaps.unsafe_enqueue!(dir, pq, k, v) -> pq
 
 requeues key `k` at priority `v` in priority queue `pq` forcing the
 heapification of the binary heap backing the storage of the nodes of `pq` in
@@ -655,7 +657,7 @@ function unsafe_heapify!(::Val{:up},
 end
 
 """
-    unsafe_grow!(pq, n) -> pq
+    QuickHeaps.unsafe_grow!(pq, n) -> pq
 
 grows the size of the binary heap backing the storage of the nodes of the
 priority queue `pq` to be `n` and returns the priority queue object.
@@ -667,7 +669,7 @@ unsafe_grow!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int) = begin
 end
 
 """
-    unsafe_shrink!(pq, n)
+    QuickHeaps.unsafe_shrink!(pq, n)
 
 shrinks the size of the binary heap backing the storage of the nodes of the
 priority queue `pq` to be `n`.
@@ -677,7 +679,7 @@ unsafe_shrink!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int) =
     resize!(nodes(pq), n)
 
 """
-    unsafe_delete_key!(pq, k)
+    QuickHeaps.unsafe_delete_key!(pq, k)
 
 deletes key `k` from the index of the priority queue `pq` assuming `k`
 is valid.
