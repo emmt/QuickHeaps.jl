@@ -121,7 +121,7 @@ const A2 = [3.0, 6.4, 1.1, 9.2, 1.2, 8.2, 1.3, 7.9, 9.1, 2.3, 8.2];
 end
 
 @testset "Binary heaps          " begin
-    @test QuickHeaps.default_ordering(BinaryHeap) === SafeMin
+    @test QuickHeaps.default_ordering(AbstractBinaryHeap) === SafeMin
     @test QuickHeaps.default_ordering(FastBinaryHeap) === FastMin
     pass = 0
     for o in (nil, SafeMin, SafeMax, FastMin, FastMax),
