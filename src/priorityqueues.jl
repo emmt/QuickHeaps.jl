@@ -28,7 +28,10 @@ See also [`QuickHeaps.AbstractNode`](@ref),
 struct Node{K,V} <: AbstractNode{K,V}
     key::K
     val::V
+    Node{K,V}(key, val) where {K,V} = new{K,V}(key, val)
 end
+Node{K}(key, val::V) where {K,V} = Node{K,V}(key, val)
+Node(key::K, val::V) where {K,V} = Node{K,V}(key, val)
 
 """
     getkey(x::QuickHeaps.AbstractNode) -> k
@@ -61,13 +64,22 @@ for type in (:AbstractNode, :Node)
 end
 Node(x::AbstractNode) = Node(getkey(x), keyval(x))
 Node{K}(x::AbstractNode) where {K} = Node{K}(getkey(x), keyval(x))
-Node{K,V}(x::AbstractNode{K,V}) where {K,V} = Node{K,V}(getkey(x), keyval(x))
+Node{K,V}(x::AbstractNode) where {K,V} = Node{K,V}(getkey(x), keyval(x))
 
 Node(x::Tuple{Any,Any}) = Node(x[1], x[2])
+Node{K}(x::Tuple{Any,Any}) where {K} = Node{K}(x[1], x[2])
+Node{K,V}(x::Tuple{Any,Any}) where {K,V} = Node{K,V}(x[1], x[2])
 Tuple(x::AbstractNode) = (getkey(x), getval(x))
 
 Node(x::Pair) = Node(x.first, x.second)
+Node{K}(x::Pair) where {K} = Node{K}(x.first, x.second)
+Node{K,V}(x::Pair) where {K,V} = Node{K,V}(x.first, x.second)
 Pair(x::AbstractNode) = getkey(x) => getval(x)
+
+Base.convert(::Type{T}, x::T) where {T<:AbstractNode} = x
+Base.convert(::Type{T}, x::AbstractNode) where {T<:AbstractNode} = T(x)
+Base.convert(::Type{T}, x::Tuple{Any,Any}) where {T<:AbstractNode} = T(x)
+Base.convert(::Type{T}, x::Pair) where {T<:AbstractNode} = T(x)
 
 iterate(x::AbstractNode) = (getkey(x), first)
 iterate(x::AbstractNode, ::typeof(first)) = (getval(x), last)
@@ -369,8 +381,7 @@ function dequeue!(T::Type, pq::AbstractPriorityQueue)
     return T(x)
 end
 
-# FIXME: Same code as for a binary heap.
-push!(pq::AbstractPriorityQueue, ::Tuple{}) = pq
+push!(pq::AbstractPriorityQueue, ::Tuple{}) = pq # FIXME: unused.
 
 # FIXME: Same code as for a binary heap.
 function push!(pq::AbstractPriorityQueue, args...)

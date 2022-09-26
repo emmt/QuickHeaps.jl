@@ -13,17 +13,48 @@ import QuickHeaps: getkey, getval
     for (k, v) in (("foo", 2.1), (:bar, 11), (CartesianIndex(11,2), nothing))
         K = typeof(k)
         V = typeof(v)
-        nd = Node(k, v)
-        @test isa(nd, AbstractNode)
-        @test isa(nd, Node)
-        @test isa(nd, AbstractNode{K,V})
-        @test isa(nd, Node{K,V})
-        @test Tuple(nd) === (k, v)
-        @test Node((k, v)) === nd
-        @test Pair(nd) === (k => v)
-        @test Node(k => v) === nd
-        kp, vp = nd
+        x = Node(k, v)
+        @test isa(x, AbstractNode)
+        @test isa(x, Node)
+        @test isa(x, AbstractNode{K,V})
+        @test isa(x, Node{K,V})
+        # Node <-> Tuple
+        @test Tuple(x) === (k, v)
+        @test Node((k, v)) === x
+        @test convert(Node, (k, v)) === x
+        @test convert(Node{K}, (k, v)) === x
+        @test convert(Node{K,V}, (k, v)) === x
+        kp, vp = x
         @test kp === k && vp === v
+        # Node <-> Pair
+        @test Pair(x) === (k => v)
+        @test Node(k => v) === x
+        @test convert(Node, k => v) === x
+        @test convert(Node{K}, k => v) === x
+        @test convert(Node{K,V}, k => v) === x
+        # Node <-> (Abstract)Node
+        @test AbstractNode(x) === x
+        @test AbstractNode{K}(x) === x
+        @test AbstractNode{K,V}(x) === x
+        @test convert(AbstractNode, x) === x
+        @test convert(AbstractNode{K}, x) === x
+        @test convert(AbstractNode{K,V}, x) === x
+        @test Node(x) === x
+        @test Node{K}(x) === x
+        @test Node{K,V}(x) === x
+        @test convert(Node, x) === x
+        @test convert(Node{K}, x) === x
+        @test convert(Node{K,V}, x) === x
+        # Iterator.
+        r1 = iterate(x)
+        @test r1 isa Tuple{Any,Any} && r1[1] === getkey(x)
+        if r1 isa Tuple{Any,Any}
+            r2 = iterate(x, r1[2])
+            @test r2 isa Tuple{Any,Any} && r2[1] === getval(x)
+            if r2 isa Tuple{Any,Any}
+                @test iterate(x, r2[2]) isa Nothing
+            end
+        end
     end
 end
 
@@ -38,16 +69,16 @@ KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
 @testset "Custom nodes          " begin
     for k in ("foo", :bar, CartesianIndex(1,2))
         K = typeof(k)
-        nd = KeyOnlyNode(k)
-        @test isa(nd, AbstractNode)
-        @test isa(nd, KeyOnlyNode)
-        @test isa(nd, AbstractNode{K,Nothing})
-        @test isa(nd, KeyOnlyNode{K})
-        @test Tuple(nd) === (k, nothing)
-        @test KeyOnlyNode((k, nothing)) === nd
-        @test Pair(nd) === (k => nothing)
-        @test KeyOnlyNode(k => nothing) === nd
-        kp, vp = nd
+        x = KeyOnlyNode(k)
+        @test isa(x, AbstractNode)
+        @test isa(x, KeyOnlyNode)
+        @test isa(x, AbstractNode{K,Nothing})
+        @test isa(x, KeyOnlyNode{K})
+        @test Tuple(x) === (k, nothing)
+        @test KeyOnlyNode((k, nothing)) === x
+        @test Pair(x) === (k => nothing)
+        @test KeyOnlyNode(k => nothing) === x
+        kp, vp = x
         @test kp === k && vp === nothing
     end
 end
