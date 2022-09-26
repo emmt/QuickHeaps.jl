@@ -75,7 +75,7 @@ the object type.
 typename(x::Any) = typename(typeof(x))
 typename(T::DataType) = string(nameof(T))
 
-require_one_based_indexing(A...) =
+require_one_based_indexing(A::AbstractArray...) = # FIXME: not used
     has_offset_axes(A...) && throw_argument_error(
         "arrays must have 1-based indexing")
 
