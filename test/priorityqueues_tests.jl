@@ -155,20 +155,37 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     @test check(test_3, "keys do not exist after `delete!`")
     @test isempty(B)
 
-    # Check that `pop!` extracts nodes in order and maintains the binary-heap
-    # structure.
+    # Check that `pop!`, `dequeue_pair!`, and `dequeue_node!`, extracts nodes
+    # in order and maintains the binary-heap structure.
     B = copy(A)
+    test_0 = true
     test_1 = true
     test_2 = true
+    test_3 = true
     prev = (isa(o, ReverseOrdering) ? typemax : typemin)(V)
     for i in 1:n
-        k, v = pop!(B)
-        test_1 &= isheap(o, nodes(B))
-        test_2 &= !lt(o, v, prev)
+        if (i % 3) == 1
+            x = pop!(B)
+            test_0 &= (x isa Pair)
+            k, v = x
+        elseif (i % 3) == 2
+            x = dequeue_pair!(B)
+            test_0 &= (x isa Pair)
+            k, v = x
+        else
+            x = dequeue_node!(B)
+            test_1 &= (x isa AbstractNode)
+            k, v = x
+        end
+        k, v = x
+        test_2 &= isheap(o, nodes(B))
+        test_3 &= !lt(o, v, prev)
         prev = v
     end
-    @test check(test_1, "heap structure preserved by `pop!`")
-    @test check(test_2, "`pop!` yields keys in order")
+    @test check(test_0, "`pop!` and `dequeue_pair!` yield pairs")
+    @test check(test_1, "`dequeue_node!` yield nodes")
+    @test check(test_2, "heap structure preserved by `pop!`")
+    @test check(test_3, "`pop!` yields keys in order")
     @test isempty(B)
 
     # Tests for fast priority queues.

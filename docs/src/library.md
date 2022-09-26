@@ -28,6 +28,9 @@ QuickHeaps.unsafe_shrink!
 QuickHeaps.AbstractPriorityQueue
 QuickHeaps.PriorityQueue
 QuickHeaps.FastPriorityQueue
+dequeue!(::QuickHeaps.AbstractPriorityQueue)
+dequeue_node!
+dequeue_pair!
 ```
 
 ## Nodes

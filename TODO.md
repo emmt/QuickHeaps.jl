@@ -19,9 +19,7 @@
 
 - Deal with non 1-based indices in binary heaps.
 
-- Add `dequeue_node!`.
-
-- Ensure type-satbility of pairs (`Pair{K,V}`) returned by Priority queues.
+- Ensure type-stability of pairs (`Pair{K,V}`) returned by Priority queues.
 
 - Have a `wrap!(BinaryHeap,vals)` method that shares the vector of values while
   the constructor always copies the vector of values.

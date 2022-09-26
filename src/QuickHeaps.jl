@@ -31,6 +31,7 @@ export
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
     heapify, heapify!, isheap,
     setroot!,
+    dequeue_node!,
 
     # From Base (in recent versions of Julia):
     peek,

@@ -352,14 +352,28 @@ function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
     return itr.f(x), i + 1
 end
 
-pop!(pq::AbstractPriorityQueue) = dequeue!(Pair, pq)
+pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
 
-dequeue_pair!(pq::AbstractPriorityQueue) = dequeue!(Pair, pq)
+"""
+    dequeue!(pq)
 
-dequeue!(pq::AbstractPriorityQueue) = getkey(dequeue!(AbstractNode, pq))
+removes the root node from the priority queue `pq` and returns its key.
 
-# This is almost the same code as pop! for a binary heap.
-function dequeue!(T::Type, pq::AbstractPriorityQueue)
+Also see [`dequeue_node!`](@ref) and [`dequeue_pair!`](@ref).
+
+"""
+dequeue!(pq::AbstractPriorityQueue) = getkey(dequeue_node!(pq))
+
+"""
+    dequeue_node!(pq)
+
+removes and returns the root node from the priority queue `pq`.
+
+Also see [`dequeue!`](@ref) and [`dequeue_pair!`](@ref).
+
+"""
+function dequeue_node!(pq::AbstractPriorityQueue)
+    # The code is almost the same as pop! for a binary heap.
     n = length(pq)
     n ≥ 1 || throw_argument_error(typename(pq), " is empty")
     A = nodes(pq)
@@ -372,8 +386,19 @@ function dequeue!(T::Type, pq::AbstractPriorityQueue)
     end
     unsafe_delete_key!(pq, getkey(x))
     unsafe_shrink!(pq, n - 1)
-    return T(x)
+    return x
 end
+
+"""
+    dequeue_pair!(pq)
+
+removes the root node from the priority queue `pq` and returns it as a
+key-value `Pair`. This is the same as `pop!(pq)`.
+
+Also see [`dequeue!`](@ref) and [`dequeue_node!`](@ref).
+
+"""
+dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
 
 # For AbstractDict, pushing pair(s) is already implemented via setindex!
 # Implement push! for 2-tuples and nodes in a similar way as for AbstractDict.

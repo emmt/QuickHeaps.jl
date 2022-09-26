@@ -89,18 +89,17 @@ associated with the key is updated and the queue reorderd if necessary in, at
 worse, `O(log(n))` operations. This is generally faster than first deleting the
 key and then enqueuing the key with the new priority.
 
-To extract the key `k` and, possibly, the priority `v` of the node of highest
-priority out of the queue `Q`, call one of:
+To extract the node of highest priority out of the queue `Q` and get its key
+`k` and, possibly, its priority `v`, call one of:
 
 ```julia
 k = dequeue!(Q)
 k, v = pop!(Q)
 ```
 
-Method `dequeue!` may be called as `dequeue!(T,Q)` to extract the node of
-highest priority and apply constructor `T` to convert the node to something
-else. For example, `pop!(Q)` is implemented as `dequeue!(Pair,Q)` and calling
-`dequeue!(QuickHeaps.AbstractNode,Q)` yields the actual node (not a pair).
+Methods [`dequeue_pair!`](@ref) and [`dequeue_node!`](@ref) also extract the
+root node out of a priority queue and return it as a `Pair` or as as a node of
+the type used by the queue.
 
 To just examine the node of highest priority, call one of:
 
