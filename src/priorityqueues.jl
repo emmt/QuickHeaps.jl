@@ -375,8 +375,6 @@ function dequeue!(T::Type, pq::AbstractPriorityQueue)
     return T(x)
 end
 
-push!(pq::AbstractPriorityQueue, ::Tuple{}) = pq # FIXME: unused.
-
 # For AbstractDict, pushing pair(s) is already implemented via setindex!
 # Implement push! for 2-tuples and nodes in a similar way as for AbstractDict.
 push!(pq::AbstractPriorityQueue, a::AbstractNode) =
@@ -609,45 +607,6 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
         unsafe_heapify_up!(unsafe_grow!(pq, n), n, x)
     end
     return pq
-end
-
-"""
-    QuickHeaps.unsafe_enqueue!(dir, pq, k, v) -> pq
-
-requeues key `k` at priority `v` in priority queue `pq` forcing the
-heapification of the binary heap backing the storage of the nodes of `pq` in
-the direction `dir`. A node with the same key `k` must already exists in the
-queue. If `dir = Val(:down)`, it is assumed that the new priority `v` of the
-key `k` is less than the former priority; if `dir = Val(:up)`, it is assumed
-that the new priority is greater than the former one.
-
-This specialization of the `unsafe_enqueue!` method is *unsafe* because the
-binary heap backing the storage of the nodes may be left with an invalid
-structure if `dir` is wrong.
-
-"""
-@inline @propagate_inbounds function unsafe_enqueue!(dir::Union{Val{:down},
-                                                                Val{:up}},
-                                                     pq::AbstractPriorityQueue,
-                                                     k, v)
-    i = heap_index(pq, k)
-    in_range(i, length(pq)) || throw_argument_error(
-        "key ", key, " does not exists in ", typename(pq))
-    @inbounds x = getindex(nodes(pq), i)
-    unsafe_heapify!(dir, pq, x, i)
-    return pq
-end
-
-function unsafe_heapify!(::Val{:down},
-                         pq::AbstractPriorityQueue{K,V,T},
-                         x::T, i::Int) where {K,V,T}
-    unsafe_heapify_down!(pq, i, x)
-end
-
-function unsafe_heapify!(::Val{:up},
-                         pq::AbstractPriorityQueue{K,V,T},
-                         x::T, i::Int, ::Val{:up}) where {K,V,T}
-    unsafe_heapify_up!(pq, i, x)
 end
 
 """

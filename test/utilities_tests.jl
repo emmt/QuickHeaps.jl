@@ -15,8 +15,6 @@ using QuickHeaps
     @test QuickHeaps.is_one_based_unit_range(2:4) == false
     @test QuickHeaps.is_one_based_unit_range(1:2:5) == false
 
-    @test QuickHeaps.require_one_based_indexing(1:2) == false
-
     let A = rand(Float32, 2)
         @test QuickHeaps.to_eltype(A, 11) isa Float32
         @test QuickHeaps.to_eltype(A, π) isa Float32

@@ -196,8 +196,6 @@ function pop!(h::AbstractBinaryHeap)
     return x
 end
 
-push!(h::AbstractBinaryHeap, ::Tuple{}) = h # FIXME remove this
-
 # Implement push! in a similar way as for AbstractDict to force loop unrolling.
 push!(h::AbstractBinaryHeap, x) = push!(h, to_eltype(h, x))
 push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
