@@ -321,23 +321,17 @@ function empty!(pq::FastPriorityQueue)
 end
 
 # Private structure used by iterators on priority queues.
-struct PriorityQueueIterator{F,T<:AbstractPriorityQueue}
+struct PriorityQueueIterator{F,Q<:AbstractPriorityQueue}
     f::F
-    pq::T
+    pq::Q
 end
 
 IteratorEltype(itr::PriorityQueueIterator) = IteratorEltype(typeof(itr))
-IteratorEltype(::Type{<:AbstractPriorityQueue}) = HasEltype()
+IteratorEltype(::Type{<:PriorityQueueIterator}) = HasEltype()
 eltype(itr::PriorityQueueIterator) = eltype(typeof(itr))
-function eltype(::Type{<:PriorityQueueIterator{F,T}}
-                ) where {K,V,F<:typeof(getkey),T<:AbstractPriorityQueue{K,V}}
-    return K
-end
-function eltype(::Type{<:PriorityQueueIterator{F,T}}
-                ) where {K,V,F<:typeof(getval),T<:AbstractPriorityQueue{K,V}}
-    return V
-end
-eltype(::Type{<:PriorityQueueIterator}) = Any
+eltype(::Type{<:PriorityQueueIterator{typeof(getkey),Q}}) where {Q} = keytype(Q)
+eltype(::Type{<:PriorityQueueIterator{typeof(getval),Q}}) where {Q} = valtype(Q)
+eltype(::Type{<:PriorityQueueIterator{F,Q}}) where {F,Q} = Any
 
 IteratorSize(itr::PriorityQueueIterator) = IteratorSize(typeof(itr))
 IteratorSize(::Type{<:PriorityQueueIterator}) = HasLength()
@@ -698,8 +692,7 @@ unsafe_delete_key!(I::AbstractDict, key) = delete!(I, key)
     o = ordering(pq)
     A = nodes(pq)
     I = index(pq)
-    # FIXME: @inbounds
-    begin
+    @inbounds begin
         while (l = heap_left(i)) ≤ n
             j = (r = heap_right(i)) > n || lt(o, A[l], A[r]) ? l : r
             lt(o, A[j], x) || break
@@ -717,8 +710,7 @@ end
     o = ordering(pq)
     A = nodes(pq)
     I = index(pq)
-    # FIXME: @inbounds
-    begin
+    @inbounds begin
         while (j = heap_parent(i)) ≥ 1 && lt(o, x, A[j])
             I[getkey(A[j])] = i
             A[i] = A[j]
