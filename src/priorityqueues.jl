@@ -185,16 +185,18 @@ valtype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = V
 
 haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
 
-function get(pq::AbstractPriorityQueue, key, def)
-    n = length(pq)
-    if n > 0
-        i = heap_index(pq, key)
-        if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
-            @inbounds x = getindex(nodes(pq), i)
-            return getval(x)
+for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
+    @eval function $func(pq::AbstractPriorityQueue, key, def)
+        n = length(pq)
+        if n > 0
+            i = heap_index(pq, key)
+            if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
+                @inbounds x = getindex(nodes(pq), i)
+                return $getter(x)
+            end
         end
+        return def
     end
-    return def
 end
 
 function delete!(pq::AbstractPriorityQueue, key)
@@ -203,7 +205,7 @@ function delete!(pq::AbstractPriorityQueue, key)
         i = heap_index(pq, key)
         if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
             A = nodes(pq)
-            @inbounds k = getkey(A[i]) # key to be deleted
+            @inbounds k = get_key(A[i]) # key to be deleted
             if i < n
                 # Replace the deleted node by the last node in the heap and
                 # up-/down-heapify to restore the binary heap structure. We
@@ -257,8 +259,8 @@ end
 IteratorEltype(itr::PriorityQueueIterator) = IteratorEltype(typeof(itr))
 IteratorEltype(::Type{<:PriorityQueueIterator}) = HasEltype()
 eltype(itr::PriorityQueueIterator) = eltype(typeof(itr))
-eltype(::Type{<:PriorityQueueIterator{typeof(getkey),Q}}) where {Q} = keytype(Q)
-eltype(::Type{<:PriorityQueueIterator{typeof(getval),Q}}) where {Q} = valtype(Q)
+eltype(::Type{<:PriorityQueueIterator{typeof(get_key),Q}}) where {Q} = keytype(Q)
+eltype(::Type{<:PriorityQueueIterator{typeof(get_val),Q}}) where {Q} = valtype(Q)
 eltype(::Type{<:PriorityQueueIterator{F,Q}}) where {F,Q} = Any
 
 IteratorSize(itr::PriorityQueueIterator) = IteratorSize(typeof(itr))
@@ -272,8 +274,8 @@ function iterate(pq::AbstractPriorityQueue, i::Int = 1)
     @inbounds x = getindex(nodes(pq), i)
     return Pair(x), i + 1
 end
-keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(getkey, pq)
-values(pq::AbstractPriorityQueue) = PriorityQueueIterator(getval, pq)
+keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_key, pq)
+values(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_val, pq)
 function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
     in_range(i, length(itr.pq)) || return nothing
     @inbounds x = getindex(nodes(itr.pq), i)
@@ -290,7 +292,7 @@ removes the root node from the priority queue `pq` and returns its key.
 Also see [`dequeue_node!`](@ref) and [`dequeue_pair!`](@ref).
 
 """
-dequeue!(pq::AbstractPriorityQueue) = getkey(dequeue_node!(pq))
+dequeue!(pq::AbstractPriorityQueue) = get_key(dequeue_node!(pq))
 
 """
     dequeue_node!(pq)
@@ -312,7 +314,7 @@ function dequeue_node!(pq::AbstractPriorityQueue)
         @inbounds y = A[n]
         unsafe_heapify_down!(pq, 1, y, n - 1)
     end
-    unsafe_delete_key!(pq, getkey(x))
+    unsafe_delete_key!(pq, get_key(x))
     unsafe_shrink!(pq, n - 1)
     return x
 end
@@ -331,7 +333,7 @@ dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
 # For AbstractDict, pushing pair(s) is already implemented via setindex!
 # Implement push! for 2-tuples and nodes in a similar way as for AbstractDict.
 push!(pq::AbstractPriorityQueue, a::AbstractNode) =
-    enqueue!(pq, getkey(a), getval(a))
+    enqueue!(pq, get_key(a), get_val(a))
 push!(pq::AbstractPriorityQueue, a::Tuple{Any,Any}) =
     enqueue!(pq, a[1], a[2])
 for T in (AbstractNode, Tuple{Any,Any})
@@ -355,7 +357,7 @@ function getindex(pq::PriorityQueue, key)
     in_range(i, length(pq)) || throw_argument_error(
         typename(pq), " has no node with key ", key)
     @inbounds r = getindex(nodes(pq), i)
-    return getval(r)
+    return get_val(r)
 end
 
 setindex!(pq::PriorityQueue, val, key) = enqueue!(pq, key, val)
@@ -374,7 +376,7 @@ for keytype in (:Integer, :(FastIndex...))
             A = nodes(pq)
             if in_range(i, A)
                 @inbounds x = A[i]
-                return getval(x)
+                return get_val(x)
             end
             throw_argument_error(typename(pq), " has no node with key ",
                                  normalize_key(pq, key))
@@ -507,7 +509,7 @@ enqueue!(pq::AbstractPriorityQueue, pair::Pair) =
 # For a general purpose priority queue, build the node then enqueue.
 enqueue!(pq::PriorityQueue, key, val) = enqueue!(pq, to_node(pq, key, val))
 enqueue!(pq::PriorityQueue{K,V,O,T}, x::T) where {K,V,O,T} =
-    unsafe_enqueue!(pq, x, get(index(pq), getkey(x), 0))
+    unsafe_enqueue!(pq, x, get(index(pq), get_key(x), 0))
 
 # For a fast priority queue, converts the key into a linear index, then enqueue.
 @inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue, key, val)
@@ -519,7 +521,7 @@ enqueue!(pq::PriorityQueue{K,V,O,T}, x::T) where {K,V,O,T} =
 end
 
 enqueue!(pq::FastPriorityQueue{V,N,O,T}, x::T) where {V,N,O,T} =
-    enqueue!(pq, getkey(x), getval(x))
+    enqueue!(pq, get_key(x), get_val(x))
 
 """
     QuickHeaps.unsafe_enqueue!(pq, x, i) -> pq
@@ -606,11 +608,11 @@ unsafe_delete_key!(I::AbstractDict, key) = delete!(I, key)
         while (l = heap_left(i)) ≤ n
             j = (r = heap_right(i)) > n || lt(o, A[l], A[r]) ? l : r
             lt(o, A[j], x) || break
-            I[getkey(A[j])] = i
+            I[get_key(A[j])] = i
             A[i] = A[j]
             i = j
         end
-        I[getkey(x)] = i
+        I[get_key(x)] = i
         A[i] = x
     end
 end
@@ -621,11 +623,11 @@ end
     I = index(pq)
     @inbounds begin
         while (j = heap_parent(i)) ≥ 1 && lt(o, x, A[j])
-            I[getkey(A[j])] = i
+            I[get_key(A[j])] = i
             A[i] = A[j]
             i = j
         end
-        I[getkey(x)] = i
+        I[get_key(x)] = i
         A[i] = x
     end
 end

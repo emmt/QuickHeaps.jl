@@ -7,7 +7,7 @@ using Base: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse, lt
 using QuickHeaps
 using QuickHeaps:
     AbstractNode, Node
-import QuickHeaps: getkey, getval
+import QuickHeaps: get_key, get_val
 
 @testset "Standard nodes        " begin
     for (k, v) in (("foo", 2.1), (:bar, 11), (CartesianIndex(11,2), nothing))
@@ -47,10 +47,10 @@ import QuickHeaps: getkey, getval
         @test convert(Node{K,V}, x) === x
         # Iterator.
         r1 = iterate(x)
-        @test r1 isa Tuple{Any,Any} && r1[1] === getkey(x)
+        @test r1 isa Tuple{Any,Any} && r1[1] === get_key(x)
         if r1 isa Tuple{Any,Any}
             r2 = iterate(x, r1[2])
-            @test r2 isa Tuple{Any,Any} && r2[1] === getval(x)
+            @test r2 isa Tuple{Any,Any} && r2[1] === get_val(x)
             if r2 isa Tuple{Any,Any}
                 @test iterate(x, r2[2]) isa Nothing
             end
@@ -61,8 +61,8 @@ end
 struct KeyOnlyNode{K} <: AbstractNode{K,Nothing}
     key::K
 end
-getkey(x::KeyOnlyNode) = getfield(x, :key)
-getval(x::KeyOnlyNode) = nothing
+get_key(x::KeyOnlyNode) = getfield(x, :key)
+get_val(x::KeyOnlyNode) = nothing
 KeyOnlyNode(x::Tuple{K,Nothing}) where {K} = KeyOnlyNode{K}(x[1])
 KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
 

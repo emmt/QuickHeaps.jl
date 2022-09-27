@@ -2,6 +2,9 @@
 
 ## Version 0.2.0
 
+This version mainly provides a cleaner API where proprity queues behave more
+like dictionaries.
+
 - Provide `dequeue_node!` which removes the root node from a priority queue and
   returns it. This is similar to `dequeue_pair!` or `pop!` which both return a
   `Pair`. The syntax `dequeue(T,pq)!` to remove the root node from `pq` and
@@ -18,8 +21,9 @@
   the priority values, `O` the type of the ordering, `T<:AbstractNode{K,V}` the
   type of the nodes, and `N` the number of dimensions.
 
-- `get(pq,key,def)` yields the value (was the node) associated with `key` in
-  priority queue `pq` or `def` if such a key does not exist.
+- Priority queues behave more like dictionaries. Methods `get(pq,key,def)` and
+  `getkey(pq,key,def)` yield the value (was the node) and the key associated
+  with `key` in priority queue `pq` or `def` if such a key does not exist.
 
 - `heapify_down!` and `heapify_up!` return the array.
 

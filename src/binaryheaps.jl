@@ -44,8 +44,8 @@ typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
     BinaryHeap{T}([o::Ordering = Forward,][ vals::AbstractVector])
 
 yields an empty binary heap whose values have type `T` and with ordering
-specified by `o`. A min-heap or a max-heap is built depending on whether `o` is
-set to forward or reverse ordering.
+specified by `o`. For example, a min-heap (resp. a max-heap) is built if `o`
+specifies forward (resp. reverse) ordering.
 
 An optional vector `vals` storing the initial values of the binary heap can be
 specified. These values in `vals` need not be ordered, the `BinaryHeap`

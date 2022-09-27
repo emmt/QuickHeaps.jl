@@ -38,8 +38,8 @@ dequeue_pair!
 ```@docs
 QuickHeaps.AbstractNode
 QuickHeaps.Node
-QuickHeaps.getkey
-QuickHeaps.getval
+QuickHeaps.get_key
+QuickHeaps.get_val
 ```
 
 ## Orderings
@@ -63,6 +63,7 @@ QuickHeaps.in_range
 QuickHeaps.is_one_based_unit_range
 QuickHeaps.linear_index
 QuickHeaps.nodes
+QuickHeaps.index
 QuickHeaps.storage
 QuickHeaps.ordering
 QuickHeaps.setroot!

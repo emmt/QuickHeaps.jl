@@ -12,7 +12,7 @@ using Base: @propagate_inbounds, lt,
 using QuickHeaps
 using QuickHeaps:
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
-    AbstractNode, getkey, getval,
+    AbstractNode, get_key, get_val,
     isheap, index, nodes, ordering, in_range, heap_index
 
 function test_queue!(A::AbstractPriorityQueue{K,V},
@@ -67,8 +67,8 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     @test v == first(values(A))
     @test k == first(keys(A))
     x = peek(AbstractNode, A)
-    @test v == getval(x)
-    @test k == getkey(x)
+    @test v == get_val(x)
+    @test k == get_key(x)
 
     # Check `getindex` in random order.
     test_1 = true
@@ -103,17 +103,21 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     end
     @test check(test_1, "`copy` yields same nodes")
 
-    # Check `delete!` and result of addressing a non-existing key.
+    # Check `haskey`, `get`, and `getkey`.
     test_1 = true
     test_2 = true
+    test_3 = true
     for key in keys(B)
         test_1 &= haskey(B, key)
         test_2 &= get(B,key,undef) === B[key]
+        test_3 &= getkey(B,key,undef) === key
     end
     @test check(test_1, "`haskey(pq,key)` yields true for all existing keys")
-    @test check(test_2, "`get(pq,key,def)` yields key priority")
+    @test check(test_2, "`get(pq,key,def)` yields key priority for all existing keys")
+    @test check(test_2, "`getkey(pq,key,def)` yields key for all existing keys")
 
-    for key in (length(B) - 3, 2)
+    # Check `delete!` and result of addressing a non-existing key.
+    for key in (length(B) - 3, length(B)>>1, 2)
         delete!(B, key)
         @test !haskey(B, key)
         @test get(B, key, undef) === undef
