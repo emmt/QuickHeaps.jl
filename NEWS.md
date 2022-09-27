@@ -12,6 +12,12 @@
   method `QuickHeaps.nodes(h)` has been renamed as `QuickHeaps.storage(h)` to
   retrieve the object backing the storage of the binary heap `h`.
 
+- Change parameters of priority queue types which are now
+  `AbstractPriorityQueue{K,V,O}`, `PriorityQueue{K,V,O,T}`, and
+  `FastPriorityQueue{V,N,O,T}` with `K` the type of the keys, `V` the type of
+  the priority values, `O` the type of the ordering, `T<:AbstractNode{K,V}` the
+  type of the nodes, and `N` the number of dimensions.
+
 - `heapify_down!` and `heapify_up!` return the array.
 
 - Remove unused non-exported methods `unsafe_heapify!`,

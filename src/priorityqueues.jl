@@ -1,10 +1,8 @@
 """
-    QuickHeaps.AbstractPriorityQueue{K,V,T,O}
+    QuickHeaps.AbstractPriorityQueue{K,V,O}
 
 is the super type of priority queues with nodes consisting in pairs of keys of
-type `K` and priority values of type `V`; parameter `T<:AbstractNode{K,V}` is
-the type of the nodes stored in the queue and parameter `O<:Base.Ordering` is
-the type of the ordering of the queue.
+type `K`, priority values of type `V`, and ordering of type `O<:Base.Ordering`.
 
 Priority queues implement an API similar to dictionaries with the additional
 feature of maintaining an ordered structure so that getting the node of highest
@@ -16,8 +14,7 @@ of the queue. See online documentation for more details.
 for keys which are analoguous to array indices.
 
 """
-abstract type AbstractPriorityQueue{
-    K,V,T<:AbstractNode{K,V},O<:Ordering} <: AbstractDict{K,V} end
+abstract type AbstractPriorityQueue{K,V,O<:Ordering} <: AbstractDict{K,V} end
 
 default_ordering(::Type{<:AbstractPriorityQueue}) = Forward
 
@@ -38,15 +35,15 @@ If keys are analoguous to indices (linear or Cartesian) in an array,
 [`FastPriorityQueue`](@ref) may provide a faster alternative.
 
 """
-struct PriorityQueue{K,V,T,O} <: AbstractPriorityQueue{K,V,T,O}
+struct PriorityQueue{K,V,O,T} <: AbstractPriorityQueue{K,V,O}
     order::O
     nodes::Vector{T}
     index::Dict{K,Int}
 end
 
 # Copy constructor. The copy is independent from the original.
-copy(pq::PriorityQueue{K,V,T,O}) where {K,V,T,O} =
-    PriorityQueue{K,V,T,O}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
+copy(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
+    PriorityQueue{K,V,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
 
 """
     FastPriorityQueue{V}([o=Forward,] [T=Node{Int,V},] dims...)
@@ -60,24 +57,23 @@ nodes to store key-value pairs (the key is stored as a linear index of type
 See [`PriorityQueue`](@ref) if keys cannot be assumed to be array indices.
 
 """
-struct FastPriorityQueue{V,T<:AbstractNode{Int,V},
-                         O,N} <: AbstractPriorityQueue{Int,V,T,O}
+struct FastPriorityQueue{V,N,O,
+                         T<:AbstractNode{Int,V}} <: AbstractPriorityQueue{Int,V,O}
     order::O
     nodes::Vector{T}
     index::Array{Int,N}
 end
 
 # Copy constructor.  The copy is independent from the original.
-copy(pq::FastPriorityQueue{V,T,O,N}) where {V,T,O,N} =
-    FastPriorityQueue{V,T,O,N}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
+copy(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
+    FastPriorityQueue{V,N,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
 
 # Constructors for PriorityQueue instances.
 
 function PriorityQueue{K,V}(o::O = default_ordering(PriorityQueue),
-                            ::Type{T} = Node{K,V}) where {K,V,
-                                                          T<:AbstractNode{K,V},
-                                                          O<:Ordering}
-    return PriorityQueue{K,V,T,O}(o, T[], Dict{K,V}())
+                            ::Type{T} = Node{K,V}) where {K,V,O<:Ordering,
+                                                          T<:AbstractNode{K,V}}
+    return PriorityQueue{K,V,O,T}(o, T[], Dict{K,V}())
 end
 
 PriorityQueue{K,V}(::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
@@ -132,7 +128,7 @@ FastPriorityQueue(T::Type{<:AbstractNode{Int,V}}, dims::Tuple{Vararg{Integer}}) 
     FastPriorityQueue(default_ordering(FastPriorityQueue), T, dims)
 
 FastPriorityQueue(o::O, T::Type{<:AbstractNode{Int,V}}, dims::NTuple{N,Integer}) where {O<:Ordering,V,N} =
-    FastPriorityQueue{V,T,O,N}(o, T[], zeros(Int, dims))
+    FastPriorityQueue{V,N,O,T}(o, T[], zeros(Int, dims))
 
 #show(io::IO, ::MIME"text/plain", pq::AbstractPriorityQueue) =
 #    print(io, "priority queue of type ", nameof(typeof(pq)),
@@ -149,6 +145,10 @@ show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
 ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
 nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
+
+node_type(pq::AbstractPriorityQueue) = node_type(typeof(pq))
+node_type(::Type{<:PriorityQueue{K,V,O,T}}) where {K,V,O,T} = T
+node_type(::Type{<:FastPriorityQueue{V,N,O,T}}) where {V,N,O,T} = T
 
 length(pq::AbstractPriorityQueue) = length(nodes(pq))
 
@@ -183,12 +183,12 @@ function delete!(pq::AbstractPriorityQueue, key)
             @inbounds k = getkey(A[i]) # key to be deleted
             if i < n
                 # Replace the deleted node by the last node in the heap and
-                # up-/down-heapify to restore the binary heap structure.  We
+                # up-/down-heapify to restore the binary heap structure. We
                 # cannot assume that the deleted node data be accessible nor
                 # valid, so we explicitely replace it before deciding in which
-                # direction to go and reheapify.  Also see `unsafe_enqueue!`.
-                @inbounds x = A[n] # last node
-                @inbounds A[i] = x # do replace deleted node
+                # direction to go and reheapify. Also see `unsafe_enqueue!`.
+                @inbounds x = A[n] # get last node
+                @inbounds A[i] = x # replace deleted node
                 o = ordering(pq)
                 if i ≤ 1 || lt(o, (@inbounds A[heap_parent(i)]), x)
                     unsafe_heapify_down!(pq, i, x, n - 1)
@@ -242,8 +242,8 @@ IteratorSize(itr::PriorityQueueIterator) = IteratorSize(typeof(itr))
 IteratorSize(::Type{<:PriorityQueueIterator}) = HasLength()
 length(itr::PriorityQueueIterator) = length(itr.pq)
 
-# Unordered iterators.  NOTE: Both `keys` and `values` shall however return the
-# elements in the same order.
+# Unordered iterators. NOTE: All iterators shall however return the elements in
+# the same order.
 function iterate(pq::AbstractPriorityQueue, i::Int = 1)
     in_range(i, length(pq)) || return nothing
     @inbounds x = getindex(nodes(pq), i)
@@ -393,8 +393,8 @@ converts the the key `k` and the value `v` into a node type suitable for
 priority queue `pq`.
 
 """
-to_node(pq::AbstractPriorityQueue{K,V,T}, key, val) where {K,V,T} =
-    T(to_key(pq, key), to_val(pq, val))
+to_node(pq::AbstractPriorityQueue, key, val) =
+    node_type(pq)(to_key(pq, key), to_val(pq, val))
 
 """
     Quickheaps.heap_index(pq, k) -> i
@@ -483,7 +483,7 @@ enqueue!(pq::AbstractPriorityQueue, pair::Pair) =
 
 # For a general purpose priority queue, build the node then enqueue.
 enqueue!(pq::PriorityQueue, key, val) = enqueue!(pq, to_node(pq, key, val))
-enqueue!(pq::PriorityQueue{K,V,T}, x::T) where {K,V,T} =
+enqueue!(pq::PriorityQueue{K,V,O,T}, x::T) where {K,V,O,T} =
     unsafe_enqueue!(pq, x, get(index(pq), getkey(x), 0))
 
 # For a fast priority queue, converts the key into a linear index, then enqueue.
@@ -495,18 +495,18 @@ enqueue!(pq::PriorityQueue{K,V,T}, x::T) where {K,V,T} =
     return unsafe_enqueue!(pq, x, i)
 end
 
-enqueue!(pq::FastPriorityQueue{V,T}, x::T) where {V,T} =
+enqueue!(pq::FastPriorityQueue{V,N,O,T}, x::T) where {V,N,O,T} =
     enqueue!(pq, getkey(x), getval(x))
 
 """
     QuickHeaps.unsafe_enqueue!(pq, x, i) -> pq
 
 stores node `x` in priority queue `pq` at index `i` and returns the priority
-queue.  The argument `i` is an index in the binary heap backing the storage of
-the nodes of the priority queue.  Index `i` is determined by the key `k` of the
-node `x` and by the current state of the priority queue.  If `i` is not a valid
+queue. The argument `i` is an index in the binary heap backing the storage of
+the nodes of the priority queue. Index `i` is determined by the key `k` of the
+node `x` and by the current state of the priority queue. If `i` is not a valid
 index in the binary heap, a new node is added; otherwise, the node at index `i`
-in the binary heap is replaced by `x`.  In any cases, the binary heap is
+in the binary heap is replaced by `x`. In any cases, the binary heap is
 reordered as needed.
 
 This function is *unsafe* because it assumes that the key `k` of the node `x`
@@ -514,16 +514,15 @@ is valid (e.g. it is not out of bounds for fast priority queues) in the sense
 that `I[k]` is valid for the index `I` of the priority queue.
 
 """
-function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
-                         x::T, i::Int) where {K,V,T}
+function unsafe_enqueue!(pq::AbstractPriorityQueue, x, i::Int)
     A = nodes(pq)
     if in_range(i, A)
-        # The key alreay exists.  Replace the node in the heap by the new node
-        # and up-/down-heapify to restore the binary heap structure.  We cannot
+        # The key alreay exists. Replace the node in the heap by the new node
+        # and up-/down-heapify to restore the binary heap structure. We cannot
         # assume that the replaced node data be accessible nor valid, so we
         # explicitely replace it before deciding in which direction to go and
-        # reheapify.  Also see `delete!`.
-        @inbounds A[i] = x # do replace deleted node
+        # reheapify. Also see `delete!`.
+        @inbounds A[i] = x # replace deleted node
         o = ordering(pq)
         if i ≤ 1 || lt(o, (@inbounds A[heap_parent(i)]), x)
             unsafe_heapify_down!(pq, i, x)
@@ -531,7 +530,7 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue{K,V,T},
             unsafe_heapify_up!(pq, i, x)
         end
     else
-        # No such key already exists.  Create a new slot at the end of the node
+        # No such key already exists. Create a new slot at the end of the node
         # list and up-heapify to fix the structure and insert the new node.
         n = length(pq) + 1
         unsafe_heapify_up!(unsafe_grow!(pq, n), n, x)
@@ -575,9 +574,8 @@ unsafe_delete_key!(pq::AbstractPriorityQueue{K}, key::K) where {K} =
 unsafe_delete_key!(I::Array{Int}, key::Int) = @inbounds I[key] = 0
 unsafe_delete_key!(I::AbstractDict, key) = delete!(I, key)
 
-@inline function unsafe_heapify_down!(pq::AbstractPriorityQueue{K,V,T},
-                                      i::Int, x::T,
-                                      n::Int = length(pq)) where {K,V,T}
+@inline function unsafe_heapify_down!(pq::AbstractPriorityQueue, i::Int,
+                                      x, n::Int = length(pq))
     o = ordering(pq)
     A = nodes(pq)
     I = index(pq)
@@ -594,8 +592,7 @@ unsafe_delete_key!(I::AbstractDict, key) = delete!(I, key)
     end
 end
 
-@inline function unsafe_heapify_up!(pq::AbstractPriorityQueue{K,V,T},
-                                    i::Int, x::T) where {K,V,T}
+@inline function unsafe_heapify_up!(pq::AbstractPriorityQueue, i::Int, x)
     o = ordering(pq)
     A = nodes(pq)
     I = index(pq)

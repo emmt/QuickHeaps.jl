@@ -27,8 +27,6 @@
 - Remove unused `heapify_down!`, `heapify_up!`, and
   `require_one_based_indexing`.
 
-- Change ordering of type parameters for `AbstractPriorityQueue` to
-  `{K,V,O,T<:AbstractNode{K,V}}`. Change `show` method for
-  `AbstractPriorityQueue` to reflect that.
+- Change `show` method for `AbstractPriorityQueue` to reflect that.
 
 - Allow for directly storing pairs in `AbstractPriorityQueue`?
