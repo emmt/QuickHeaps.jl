@@ -340,14 +340,14 @@ length(itr::PriorityQueueIterator) = length(itr.pq)
 # Unordered iterators.  NOTE: Both `keys` and `values` shall however return the
 # elements in the same order.
 function iterate(pq::AbstractPriorityQueue, i::Int = 1)
-    i ≤ length(pq) || return nothing
+    in_range(i, length(pq)) || return nothing
     @inbounds x = getindex(nodes(pq), i)
     return Pair(x), i + 1
 end
 keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(getkey, pq)
 values(pq::AbstractPriorityQueue) = PriorityQueueIterator(getval, pq)
 function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
-    i ≤ length(itr.pq) || return nothing
+    in_range(i, length(itr.pq)) || return nothing
     @inbounds x = getindex(nodes(itr.pq), i)
     return itr.f(x), i + 1
 end
