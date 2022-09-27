@@ -1,7 +1,7 @@
 name = "QuickHeaps"
 uuid = "30b38841-0f52-47f8-a5f8-18d5d4064379"
 authors = ["Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>"]
-version = "0.1.2"
+version = "0.2.0"
 
 [deps]
 ArrayTools = "1dc0ca97-c5ce-4e77-ac6d-c576ac9d7f27"
