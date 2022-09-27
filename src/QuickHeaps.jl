@@ -52,6 +52,7 @@ import Base:
     first,
     get,
     getindex,
+    getkey,
     haskey,
     isempty,
     iterate,
@@ -123,6 +124,7 @@ default_ordering(::Type) = Forward
 
 include("utilities.jl")
 include("binaryheaps.jl")
+include("nodes.jl")
 include("priorityqueues.jl")
 
 end # module
