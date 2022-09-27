@@ -15,20 +15,14 @@
 
 - Priority queue index can be any sub-type of `AbstractDict` of `AbstractArray`.
 
-- Improve doc.
-
 - Deal with non 1-based indices in binary heaps.
 
-- Ensure type-stability of pairs (`Pair{K,V}`) returned by Priority queues.
+- Ensure type-stability of pairs (`Pair{K,V}`) returned by priority queues.
 
 - Have a `wrap!(BinaryHeap,vals)` method that shares the vector of values while
   the constructor always copies the vector of values.
 
-- For binary heaps, `nodes` -> `values`.
-
 - For priority queues: extend `pairs`
-
-- `heapify_down!` and `heapify_up!` return the array.
 
 - Remove unused `heapify_down!`, `heapify_up!`, and
   `require_one_based_indexing`.

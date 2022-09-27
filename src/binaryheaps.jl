@@ -382,7 +382,7 @@ for func in (:heapify, :heapify!, :isheap)
 end
 
 """
-    QuickHeaps.heapify_down!(o, A, i, x=A[i], n=lengh(A))
+    QuickHeaps.heapify_down!(o, A, i, x=A[i], n=lengh(A)) -> A
 
 stores the value `x` in the `i`-th entry of the binary heap built into the `n`
 first elements of array `A` with ordering `o` and, if needed, moves down the
@@ -403,6 +403,7 @@ function heapify_down!(o::Ordering, A::AbstractArray{T},
     check_heap_storage(A, n)
     in_range(i, n) || throw_argument_error("out of range index")
     unsafe_heapify_down!(o, A, i, x, n)
+    return A
 end
 
 """
@@ -431,10 +432,10 @@ and `1 ≤ i ≤ n`.
 end
 
 """
-   QuickHeaps.heapify_up!(o, A, i, x=A[i])
+   QuickHeaps.heapify_up!(o, A, i, x=A[i]) -> A
 
-stores the value `x` in the `i`-th entry of the binary heap built into the `n ≥
-i` first elements of array `A` with ordering `o` and, if needed, moves up the
+stores the value `x` in the `i`-th entry of the binary heap built into the `i`
+first elements of array `A` with ordering `o` and, if needed, moves up the
 value to maintain the heap structure.
 
 """
@@ -447,6 +448,7 @@ function heapify_up!(o::Ordering, A::AbstractArray{T}, i::Int, x::T) where {T}
     check_heap_storage(A)
     in_range(i, length(A)) || error("out of range index")
     unsafe_heapify_up!(o, A, i, x)
+    return A
 end
 
 """

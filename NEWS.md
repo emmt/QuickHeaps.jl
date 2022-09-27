@@ -10,7 +10,9 @@
 
 - The noun *node* is replaced by *value* for a binary-heap. The non-exported
   method `QuickHeaps.nodes(h)` has been renamed as `QuickHeaps.storage(h)` to
-  retrieve the object backing the storage of binary heap `h`.
+  retrieve the object backing the storage of the binary heap `h`.
+
+- `heapify_down!` and `heapify_up!` return the array.
 
 - Remove unused non-exported methods `unsafe_heapify!`,
   `require_one_based_indexing`, ...
