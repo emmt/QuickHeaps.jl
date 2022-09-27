@@ -18,6 +18,9 @@
   the priority values, `O` the type of the ordering, `T<:AbstractNode{K,V}` the
   type of the nodes, and `N` the number of dimensions.
 
+- `get(pq,key,def)` yields the value (was the node) associated with `key` in
+  priority queue `pq` or `def` if such a key does not exist.
+
 - `heapify_down!` and `heapify_up!` return the array.
 
 - Remove unused non-exported methods `unsafe_heapify!`,

@@ -104,11 +104,21 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     @test check(test_1, "`copy` yields same nodes")
 
     # Check `delete!` and result of addressing a non-existing key.
-    k = key_list[rand(1:n)]
-    delete!(B, k)
-    @test !haskey(B, k)
-    @test get(B, k, nothing) === nothing
-    @test_throws ArgumentError B[k]
+    test_1 = true
+    test_2 = true
+    for key in keys(B)
+        test_1 &= haskey(B, key)
+        test_2 &= get(B,key,undef) === B[key]
+    end
+    @test check(test_1, "`haskey(pq,key)` yields true for all existing keys")
+    @test check(test_2, "`get(pq,key,def)` yields key priority")
+
+    for key in (length(B) - 3, 2)
+        delete!(B, key)
+        @test !haskey(B, key)
+        @test get(B, key, undef) === undef
+        @test_throws ArgumentError B[key]
+    end
 
     # Check `isempty`, `empty!`, etc.
     empty!(B)

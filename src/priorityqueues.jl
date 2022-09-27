@@ -142,9 +142,32 @@ show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
     print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(V),
           "} with ", length(pq), " node(s)")
 
+"""
+    QuickHeaps.ordering(pq) -> o
+
+yields the object `o` specifying the ordering of priority values in the
+priority queue `pq`.
+
+"""
 ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
-nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
+
+"""
+    QuickHeaps.index(pq) -> I
+
+yields the object `I` storing the key-index association in priority queue `pq`.
+This object can be used as `I[key]` to yield , for a given key, the index in
+`QuickHeaps.nodes(pq)`, the associated binary heap.
+
+"""
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
+
+"""
+    QuickHeaps.nodes(pq)
+
+yields the array backing the storage of the nodes of priority queue `pq`.
+
+"""
+nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
 
 node_type(pq::AbstractPriorityQueue) = node_type(typeof(pq))
 node_type(::Type{<:PriorityQueue{K,V,O,T}}) where {K,V,O,T} = T
@@ -168,7 +191,7 @@ function get(pq::AbstractPriorityQueue, key, def)
         i = heap_index(pq, key)
         if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
             @inbounds x = getindex(nodes(pq), i)
-            return Tuple(x)
+            return getval(x)
         end
     end
     return def
