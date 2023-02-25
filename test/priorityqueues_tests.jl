@@ -242,6 +242,7 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
 end
 
 @testset "Priority queues       " begin
+    @test QuickHeaps.default_ordering(AbstractPriorityQueue) === SafeMin
     @test QuickHeaps.default_ordering(PriorityQueue) === SafeMin
     K, V, n = Int, Float64, 20
     key_list = map(K, 1:n)

@@ -1,8 +1,8 @@
-# User visible changes in QuickHeaps
+# User visible changes in `QuickHeaps`
 
 ## Version 0.2.0
 
-This version mainly provides a cleaner API where proprity queues behave more
+This version mainly provides a cleaner API where priority queues behave more
 like dictionaries.
 
 - Provide `dequeue_node!` which removes the root node from a priority queue and

@@ -31,7 +31,7 @@ ordering of values and type of nodes to store key-value pairs. Type parameters
 Having a specific node type may be useful to specialize the `Base.lt` method
 which is called to determine the order.
 
-If keys are analoguous to indices (linear or Cartesian) in an array,
+If keys are analoguous to array indices (linear or Cartesian),
 [`FastPriorityQueue`](@ref) may provide a faster alternative.
 
 """
@@ -285,7 +285,7 @@ end
 pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
 
 """
-    dequeue!(pq)
+    dequeue!(pq) -> key
 
 removes the root node from the priority queue `pq` and returns its key.
 
@@ -295,7 +295,7 @@ Also see [`dequeue_node!`](@ref) and [`dequeue_pair!`](@ref).
 dequeue!(pq::AbstractPriorityQueue) = get_key(dequeue_node!(pq))
 
 """
-    dequeue_node!(pq)
+    dequeue_node!(pq) -> node
 
 removes and returns the root node from the priority queue `pq`.
 
@@ -320,7 +320,7 @@ function dequeue_node!(pq::AbstractPriorityQueue)
 end
 
 """
-    dequeue_pair!(pq)
+    dequeue_pair!(pq) -> (key => val)
 
 removes the root node from the priority queue `pq` and returns it as a
 key-value `Pair`. This is the same as `pop!(pq)`.
@@ -332,10 +332,10 @@ dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
 
 # For AbstractDict, pushing pair(s) is already implemented via setindex!
 # Implement push! for 2-tuples and nodes in a similar way as for AbstractDict.
-push!(pq::AbstractPriorityQueue, a::AbstractNode) =
-    enqueue!(pq, get_key(a), get_val(a))
-push!(pq::AbstractPriorityQueue, a::Tuple{Any,Any}) =
-    enqueue!(pq, a[1], a[2])
+push!(pq::AbstractPriorityQueue, x::AbstractNode) =
+    enqueue!(pq, get_key(x), get_val(x))
+push!(pq::AbstractPriorityQueue, x::Tuple{Any,Any}) =
+    enqueue!(pq, x[1], x[2])
 for T in (AbstractNode, Tuple{Any,Any})
     @eval begin
         push!(pq::AbstractPriorityQueue, a::$T, b::$T) =
@@ -344,12 +344,6 @@ for T in (AbstractNode, Tuple{Any,Any})
             push!(push!(push!(pq, a), b), c...)
     end
 end
-
-getindex(pq::AbstractPriorityQueue, ::Tuple{}) = throw_missing_key()
-
-setindex!(pq::AbstractPriorityQueue, val, ::Tuple{}) = throw_missing_key()
-
-throw_missing_key() = throw_argument_error("missing key")
 
 function getindex(pq::PriorityQueue, key)
     i = heap_index(pq, key)
