@@ -30,3 +30,13 @@
 - Change `show` method for `AbstractPriorityQueue` to reflect that.
 
 - Allow for directly storing pairs in `AbstractPriorityQueue`?
+
+- Implement `merge`, `merge!`, and `reverse`:
+  ```julia
+  reverse(h::BinaryHeap) = BinaryHeap(copy(values(h), 1:lenght(h)), reverse(ordering(h)))
+  reverse(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
+      merge!(PriorityQueue{K,V}(reverse(ordering(pq)), T), pq)
+  reverse(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
+      merge!(FastPriorityQueue{V,N}(reverse(ordering(pq)), T), size(index(pq)); pq)
+  ...
+  ```
