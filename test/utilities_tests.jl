@@ -16,6 +16,7 @@ using QuickHeaps
     @test QuickHeaps.is_one_based_unit_range(1:2:5) == false
 
     let A = rand(Float32, 2)
+        @test_deprecated QuickHeaps.to_eltype(A, 11)
         @test QuickHeaps.to_eltype(A, 11) isa Float32
         @test QuickHeaps.to_eltype(A, π) isa Float32
     end

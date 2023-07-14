@@ -152,7 +152,7 @@ heap_parent(i::Int) = div(i, 2)
 end
 
 @inline @propagate_inbounds setindex!(h::AbstractBinaryHeap, x, i::Int) =
-    setindex!(h, to_eltype(h, x), i)
+    setindex!(h, as(eltype(h), x), i)
 
 @inline function setindex!(h::AbstractBinaryHeap{T},
                            x::T, i::Int) where {T}
@@ -199,7 +199,7 @@ function pop!(h::AbstractBinaryHeap)
 end
 
 # Implement push! in a similar way as for AbstractDict to force loop unrolling.
-push!(h::AbstractBinaryHeap, x) = push!(h, to_eltype(h, x))
+push!(h::AbstractBinaryHeap, x) = push!(h, as(eltype(h), x))
 push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
 push!(h::AbstractBinaryHeap, x, y, z...) = push!(push!(push!(h, x), y), z...)
 
@@ -216,7 +216,7 @@ replaces the value of the root note in heap `h` by `x`. This is similar to
 `h[1] = x` but a bit faster.
 
 """
-setroot!(h::AbstractBinaryHeap, x) = setroot!(h, to_eltype(h, x))
+setroot!(h::AbstractBinaryHeap, x) = setroot!(h, as(eltype(h), x))
 
 function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h)
@@ -225,7 +225,7 @@ function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
     return h
 end
 
-delete!(h::AbstractBinaryHeap, i::Integer) = delete!(h, to_int(i))
+delete!(h::AbstractBinaryHeap, i::Integer) = delete!(h, as(Int, i))
 
 function delete!(h::AbstractBinaryHeap, i::Int)
     n = length(h)
@@ -307,7 +307,7 @@ function heapify!(h::AbstractBinaryHeap)
     return h
 end
 
-heapify!(o::Ordering, A::AbstractArray, n::Integer) = heapify!(o, A, to_int(n))
+heapify!(o::Ordering, A::AbstractArray, n::Integer) = heapify!(o, A, as(Int, n))
 
 function heapify!(o::Ordering, A::AbstractArray, n::Int = length(A))
     # Heapify the n first elements of A.
@@ -326,7 +326,7 @@ structure of ordering specified by `o`. The storage of the returned heap is a
 different array than `A`. Arguments may be specified in any order.
 
 """
-heapify(o::Ordering, A::AbstractArray, n::Integer) = heapify(o, A, to_int(n))
+heapify(o::Ordering, A::AbstractArray, n::Integer) = heapify(o, A, as(Int, n))
 
 heapify(o::Ordering, A::AbstractArray{T}, n::Int = length(A)) where {T} =
     heapify!(o, copyto!(Vector{T}(undef, n), 1, A, 1, n))
@@ -344,7 +344,7 @@ internal structure of `obj` is checked; otherwise, the type of `obj` is trusted
 to determine whether it is a binary heap.
 
 """
-isheap(o::Ordering, A::AbstractArray, n::Integer) = isheap(o, A, to_int(n))
+isheap(o::Ordering, A::AbstractArray, n::Integer) = isheap(o, A, as(Int, n))
 
 function isheap(o::Ordering, A::AbstractArray, n::Int = length(A))
     check_heap_storage(A, n)
@@ -395,7 +395,7 @@ update the heap structure.
 """
 function heapify_down!(o::Ordering, A::AbstractArray,
                        i::Integer, x = A[i], n::Integer = length(A))
-    heapify_down!(o, A, to_int(i), to_eltype(A, x), to_int(n))
+    heapify_down!(o, A, as(Int, i), as(eltype(A), x), as(Int, n))
 end
 
 function heapify_down!(o::Ordering, A::AbstractArray{T},
@@ -441,7 +441,7 @@ value to maintain the heap structure.
 """
 function heapify_up!(o::Ordering, A::AbstractArray,
                      i::Integer, x = A[i])
-    heapify_up!(o, A, to_int(i), to_eltype(A, x))
+    heapify_up!(o, A, as(Int, i), as(eltype(A), x))
 end
 
 function heapify_up!(o::Ordering, A::AbstractArray{T}, i::Int, x::T) where {T}

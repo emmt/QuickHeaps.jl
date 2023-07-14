@@ -81,7 +81,9 @@ import DataStructures:
     # heapify!, heapify, isheap
     enqueue!, dequeue!, dequeue_pair!
 
-using ArrayTools
+using TypeUtils
+
+@deprecate to_eltype(A, x) as(eltype(A), x) false
 
 #------------------------------------------------------------------------------
 # In order to perform fast sorting (without taking care of NaN's), we

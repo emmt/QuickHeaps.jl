@@ -383,7 +383,7 @@ for keytype in (:Integer, :(FastIndex...))
     end
 end
 
-normalize_key(pq::FastPriorityQueue, key::Integer) = to_int(key)
+normalize_key(pq::FastPriorityQueue, key::Integer) = as(Int, key)
 normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}}) =
     to_indices(index(pq), key)
 
@@ -394,7 +394,7 @@ converts the key `k` to the type suitable for priority queue `pq`.
 
 """
 to_key(pq::AbstractPriorityQueue{K,V}, key::K) where {K,V} = key
-to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = to_type(K, key)
+to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = as(K, key)
 
 """
     Quickheaps.to_val(pq, v)
@@ -403,7 +403,7 @@ converts the value `v` to the type suitable for priority queue `pq`.
 
 """
 to_val(pq::AbstractPriorityQueue{K,V}, val::V) where {K,V} = val
-to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = to_type(V, val)
+to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = as(V, val)
 
 """
     Quickheaps.to_node(pq, k, v)
@@ -434,7 +434,7 @@ heap_index(pq::AbstractPriorityQueue, key) = 0
 heap_index(pq::PriorityQueue, key) = get(index(pq), key, 0)
 
 function heap_index(pq::FastPriorityQueue, key::Integer)
-    k = to_int(key)
+    k = as(Int, key)
     I = index(pq)
     in_range(k, I) || return 0
     @inbounds i = I[k]
@@ -471,8 +471,8 @@ by `to_indices`).  The current settings for bounds checking are used.
 """
 @inline @propagate_inbounds linear_index(pq::FastPriorityQueue, key::Integer) =
     # Convert to Int, then re-call linear_index for bound checking.  Note that
-    # the type assertion performed by `to_type` avoids infinite recursion.
-    linear_index(pq, to_type(Int, key))
+    # the type assertion performed by `as` avoids infinite recursion.
+    linear_index(pq, as(Int, key))
 
 @inline function linear_index(pq::FastPriorityQueue, key::Int)
     @boundscheck checkbounds(index(pq), key)

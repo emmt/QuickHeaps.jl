@@ -1,5 +1,12 @@
 # User visible changes in `QuickHeaps`
 
+## Version 0.2.1
+
+- Package `TypeUtils` replaces `ArrayTools`.
+
+- Unexported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use
+  `as(eltype(A), x)`.
+
 ## Version 0.2.0
 
 This version mainly provides a cleaner API where priority queues behave more
