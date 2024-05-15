@@ -1,10 +1,14 @@
 # User visible changes in `QuickHeaps`
 
+## Version 0.2.2
+
+- Update compatibility for `TypeUtils`.
+
 ## Version 0.2.1
 
 - Package `TypeUtils` replaces `ArrayTools`.
 
-- Unexported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use
+- Un-exported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use
   `as(eltype(A), x)`.
 
 ## Version 0.2.0

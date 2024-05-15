@@ -91,7 +91,6 @@ PriorityQueue{K}(o::Ordering, ::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
 PriorityQueue(o::Ordering, ::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
     PriorityQueue{K,V}(o, T)
 
-
 # Constructors for FastPriorityQueue instances.
 
 FastPriorityQueue{V}(dims::Integer...) where {V} =
