@@ -1,10 +1,9 @@
 """
     QuickHeaps.AbstractNode{K,V}
 
-is the super-type of nodes with a key of type `K` and a value of type `V`.
-Nodes can be used in binary heaps and priority queues to represent
-key-value pairs and specific ordering rules may be imposed by specializing the
-`Base.lt` method which is by default:
+is the super-type of nodes with a key of type `K` and a value of type `V`. Nodes can be used
+in binary heaps and priority queues to represent key-value pairs and specific ordering rules
+may be imposed by specializing the `Base.lt` method which is by default:
 
     Base.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.AbstractNode} =
         lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
@@ -15,11 +14,10 @@ abstract type AbstractNode{K,V} end
 """
     QuickHeaps.Node{K=typeof(k),V=typeof(v)}(k,v)
 
-yields a node storing key `k` and value `v`. Optional type parameters `K` and
-`V` are the respective types of the key and of the value.
+yields a node storing key `k` and value `v`. Optional type parameters `K` and `V` are the
+respective types of the key and of the value.
 
-See also [`QuickHeaps.AbstractNode`](@ref),
-[`QuickHeaps.AbstractPriorityQueue`](@ref).
+See also [`QuickHeaps.AbstractNode`](@ref), [`QuickHeaps.AbstractPriorityQueue`](@ref).
 
 """
 struct Node{K,V} <: AbstractNode{K,V}
@@ -33,8 +31,8 @@ Node(key::K, val::V) where {K,V} = Node{K,V}(key, val)
 """
     get_key(x::QuickHeaps.AbstractNode) -> k
 
-yields the key `k` of node `x`. This method may be specialized for any
-sub-types of [`QuickHeaps.AbstractNode`](@ref).
+yields the key `k` of node `x`. This method may be specialized for any sub-types of
+[`QuickHeaps.AbstractNode`](@ref).
 
 Also see [`QuickHeaps.get_val`](@ref).
 
@@ -44,8 +42,8 @@ get_key(x::Node) = getfield(x, :key)
 """
     QuickHeaps.get_val(x::QuickHeaps.AbstractNode) -> v
 
-yields the value `v` of node `x`. This method may be specialized for any
-sub-types of [`QuickHeaps.AbstractNode`](@ref).
+yields the value `v` of node `x`. This method may be specialized for any sub-types of
+[`QuickHeaps.AbstractNode`](@ref).
 
 Also see [`QuickHeaps.get_key`](@ref).
 

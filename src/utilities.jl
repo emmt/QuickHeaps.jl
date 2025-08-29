@@ -41,10 +41,9 @@ in_range(i::Integer, R::AbstractUnitRange{<:Integer}) = (i ∈ R)
 """
     has_bad_values(A[, isbad])
 
-yields whether array `A` has bad values according to predicate `isbad`. For
-arrays with floating-point values, `isbad` default to `isnan` if unspecified.
-For integer-valued arrays, this function always returns `false` if `isnan` is
-unspecified.
+yields whether array `A` has bad values according to predicate `isbad`. For arrays with
+floating-point values, `isbad` default to `isnan` if unspecified. For integer-valued arrays,
+this function always returns `false` if `isnan` is unspecified.
 
 """
 function has_bad_values(A::AbstractArray, isbad)
@@ -59,9 +58,9 @@ has_bad_values(A::AbstractArray{<:AbstractFloat}) = has_bad_values(A, isnan)
 
 """
     typename(x)
+    typename(typeof(x))
 
-yields a short string describing the type of object `x`.  Argument may also be
-the object type.
+yield a short string describing the type of object `x`.
 
 """
 typename(x::Any) = typename(typeof(x))

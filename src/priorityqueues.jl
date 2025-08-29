@@ -1,17 +1,17 @@
 """
     QuickHeaps.AbstractPriorityQueue{K,V,O}
 
-is the super type of priority queues with nodes consisting in pairs of keys of
-type `K`, priority values of type `V`, and ordering of type `O<:Base.Ordering`.
+is the super type of priority queues with nodes consisting in pairs of keys of type `K`,
+priority values of type `V`, and ordering of type `O<:Base.Ordering`.
 
-Priority queues implement an API similar to dictionaries with the additional
-feature of maintaining an ordered structure so that getting the node of highest
-priority costs `O(1)` while pushing a node costs `O(log(n))` with `n` the size
-of the queue. See online documentation for more details.
+Priority queues implement an API similar to dictionaries with the additional feature of
+maintaining an ordered structure so that getting the node of highest priority costs `O(1)`
+while pushing a node costs `O(log(n))` with `n` the size of the queue. See online
+documentation for more details.
 
-`QuickHeaps` provides two concrete types of priority queues:
-[`PriorityQueue`](@ref) for any kind of keys and [`FastPriorityQueue`](@ref)
-for keys which are analoguous to array indices.
+Package `QuickHeaps` provides two concrete types of priority queues: [`PriorityQueue`](@ref)
+for any kind of keys and [`FastPriorityQueue`](@ref) for keys which are analogous to array
+indices.
 
 """
 abstract type AbstractPriorityQueue{K,V,O<:Ordering} <: AbstractDict{K,V} end
@@ -23,16 +23,16 @@ typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
 """
     PriorityQueue{K,V}([o=Forward,] T=Node{K,V})
 
-yields a priority queue for keys of type `K` and priority values of type `V`.
-Optional arguments `o::Ordering` and `T<:AbstractNode{K,V}` are to specify the
-ordering of values and type of nodes to store key-value pairs. Type parameters
-`K` and `V` may be omitted if the node type `T` is specified.
+yields a priority queue for keys of type `K` and priority values of type `V`. Optional
+arguments `o::Ordering` and `T<:AbstractNode{K,V}` are to specify the ordering of values and
+type of nodes to store key-value pairs. Type parameters `K` and `V` may be omitted if the
+node type `T` is specified.
 
-Having a specific node type may be useful to specialize the `Base.lt` method
-which is called to determine the order.
+Having a specific node type may be useful to specialize the `Base.lt` method which is called
+to determine the order.
 
-If keys are analoguous to array indices (linear or Cartesian),
-[`FastPriorityQueue`](@ref) may provide a faster alternative.
+If keys are analogous to array indices (linear or Cartesian), [`FastPriorityQueue`](@ref)
+may provide a faster alternative.
 
 """
 struct PriorityQueue{K,V,O,T} <: AbstractPriorityQueue{K,V,O}
@@ -48,11 +48,11 @@ copy(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
 """
     FastPriorityQueue{V}([o=Forward,] [T=Node{Int,V},] dims...)
 
-yields a priority queue for keys analoguous of indices in an array of size
-`dims...` and priority values of type `V`. Optional arguments `o::Ordering` and
-`T<:AbstractNode{Int,V}` are to specify the ordering of values and type of
-nodes to store key-value pairs (the key is stored as a linear index of type
-`Int`). Type parameter `V` may be omitted if the node type `T` is specified.
+yields a priority queue for keys analogous of indices in an array of size `dims...` and
+priority values of type `V`. Optional arguments `o::Ordering` and `T<:AbstractNode{Int,V}`
+are to specify the ordering of values and type of nodes to store key-value pairs (the key is
+stored as a linear index of type `Int`). Type parameter `V` may be omitted if the node type
+`T` is specified.
 
 See [`PriorityQueue`](@ref) if keys cannot be assumed to be array indices.
 
@@ -144,8 +144,7 @@ show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
 """
     QuickHeaps.ordering(pq) -> o
 
-yields the object `o` specifying the ordering of priority values in the
-priority queue `pq`.
+yields the object `o` specifying the ordering of priority values in the priority queue `pq`.
 
 """
 ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
@@ -153,9 +152,9 @@ ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
 """
     QuickHeaps.index(pq) -> I
 
-yields the object `I` storing the key-index association in priority queue `pq`.
-This object can be used as `I[key]` to yield , for a given key, the index in
-`QuickHeaps.nodes(pq)`, the associated binary heap.
+yields the object `I` storing the key-index association in priority queue `pq`. This object
+can be used as `I[key]` to yield , for a given key, the index in `QuickHeaps.nodes(pq)`, the
+associated binary heap.
 
 """
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
@@ -206,11 +205,11 @@ function delete!(pq::AbstractPriorityQueue, key)
             A = nodes(pq)
             @inbounds k = get_key(A[i]) # key to be deleted
             if i < n
-                # Replace the deleted node by the last node in the heap and
-                # up-/down-heapify to restore the binary heap structure. We
-                # cannot assume that the deleted node data be accessible nor
-                # valid, so we explicitely replace it before deciding in which
-                # direction to go and reheapify. Also see `unsafe_enqueue!`.
+                # Replace the deleted node by the last node in the heap and up-/down-heapify
+                # to restore the binary heap structure. We cannot assume that the deleted
+                # node data be accessible nor valid, so we explicitely replace it before
+                # deciding in which direction to go and reheapify. Also see
+                # `unsafe_enqueue!`.
                 @inbounds x = A[n] # get last node
                 @inbounds A[i] = x # replace deleted node
                 o = ordering(pq)
@@ -266,8 +265,8 @@ IteratorSize(itr::PriorityQueueIterator) = IteratorSize(typeof(itr))
 IteratorSize(::Type{<:PriorityQueueIterator}) = HasLength()
 length(itr::PriorityQueueIterator) = length(itr.pq)
 
-# Unordered iterators. NOTE: All iterators shall however return the elements in
-# the same order.
+# Unordered iterators. NOTE: All iterators shall however return the elements in the same
+# order.
 function iterate(pq::AbstractPriorityQueue, i::Int = 1)
     in_range(i, length(pq)) || return nothing
     @inbounds x = getindex(nodes(pq), i)
@@ -308,8 +307,8 @@ function dequeue_node!(pq::AbstractPriorityQueue)
     A = nodes(pq)
     @inbounds x = A[1]
     if n > 1
-        # Peek the last node and down-heapify starting at the root of the
-        # binary heap to insert it.
+        # Peek the last node and down-heapify starting at the root of the binary heap to
+        # insert it.
         @inbounds y = A[n]
         unsafe_heapify_down!(pq, 1, y, n - 1)
     end
@@ -321,16 +320,16 @@ end
 """
     dequeue_pair!(pq) -> (key => val)
 
-removes the root node from the priority queue `pq` and returns it as a
-key-value `Pair`. This is the same as `pop!(pq)`.
+removes the root node from the priority queue `pq` and returns it as a key-value `Pair`.
+This is the same as `pop!(pq)`.
 
 Also see [`dequeue!`](@ref) and [`dequeue_node!`](@ref).
 
 """
 dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
 
-# For AbstractDict, pushing pair(s) is already implemented via setindex!
-# Implement push! for 2-tuples and nodes in a similar way as for AbstractDict.
+# For AbstractDict, pushing pair(s) is already implemented via setindex! Implement push! for
+# 2-tuples and nodes in a similar way as for AbstractDict.
 push!(pq::AbstractPriorityQueue, x::AbstractNode) =
     enqueue!(pq, get_key(x), get_val(x))
 push!(pq::AbstractPriorityQueue, x::Tuple{Any,Any}) =
@@ -358,8 +357,8 @@ setindex!(pq::PriorityQueue, val, key) = enqueue!(pq, key, val)
 # Union of types that can be used to index fast priority queues.
 const FastIndex = Union{Integer,CartesianIndex}
 
-# For indexing fast priority queues, we first convert the key into a linear
-# index (using the current bounds checking state).
+# For indexing fast priority queues, we first convert the key into a linear index (using the
+# current bounds checking state).
 for keytype in (:Integer, :(FastIndex...))
     @eval begin
         @inline @propagate_inbounds function getindex(pq::FastPriorityQueue,
@@ -417,13 +416,13 @@ to_node(pq::AbstractPriorityQueue, key, val) =
 """
     Quickheaps.heap_index(pq, k) -> i
 
-yields the index of the key `k` in the binary heap backing the storage of the
-nodes of the priority queue `pq`. If the key is not in priority queue, `i = 0`
-is returned, otherwise `i ∈ 1:n` with `n = length(pq)` is returned.
+yields the index of the key `k` in the binary heap backing the storage of the nodes of the
+priority queue `pq`. If the key is not in priority queue, `i = 0` is returned, otherwise `i
+∈ 1:n` with `n = length(pq)` is returned.
 
-The `heap_index` method is used to implement `haskey`, `get`, and `delete!`
-methods for priority queues.  The `heap_index` method shall be specialized for
-any concrete sub-types of `QuickHeaps.AbstractPriorityQueue`.
+The `heap_index` method is used to implement `haskey`, `get`, and `delete!` methods for
+priority queues. The `heap_index` method shall be specialized for any concrete sub-types of
+`QuickHeaps.AbstractPriorityQueue`.
 
 """ heap_index # NOTE: `heap_index` ~ `ht_keyindex` in `base/dict.jl`
 
@@ -463,14 +462,14 @@ end
 """
     QuickHeaps.linear_index(pq, k)
 
-converts key `k` into a linear index suitable for the fast priority queue `pq`.
-The key can be a linear index or a multi-dimensional index (anything accepted
-by `to_indices`).  The current settings for bounds checking are used.
+converts key `k` into a linear index suitable for the fast priority queue `pq`. The key can
+be a linear index or a multi-dimensional index (anything accepted by `to_indices`). The
+current settings for bounds checking are used.
 
 """
 @inline @propagate_inbounds linear_index(pq::FastPriorityQueue, key::Integer) =
-    # Convert to Int, then re-call linear_index for bound checking.  Note that
-    # the type assertion performed by `as` avoids infinite recursion.
+    # Convert to Int, then re-call linear_index for bound checking. Note that the type
+    # assertion performed by `as` avoids infinite recursion.
     linear_index(pq, as(Int, key))
 
 @inline function linear_index(pq::FastPriorityQueue, key::Int)
@@ -519,27 +518,25 @@ enqueue!(pq::FastPriorityQueue{V,N,O,T}, x::T) where {V,N,O,T} =
 """
     QuickHeaps.unsafe_enqueue!(pq, x, i) -> pq
 
-stores node `x` in priority queue `pq` at index `i` and returns the priority
-queue. The argument `i` is an index in the binary heap backing the storage of
-the nodes of the priority queue. Index `i` is determined by the key `k` of the
-node `x` and by the current state of the priority queue. If `i` is not a valid
-index in the binary heap, a new node is added; otherwise, the node at index `i`
-in the binary heap is replaced by `x`. In any cases, the binary heap is
-reordered as needed.
+stores node `x` in priority queue `pq` at index `i` and returns the priority queue. The
+argument `i` is an index in the binary heap backing the storage of the nodes of the priority
+queue. Index `i` is determined by the key `k` of the node `x` and by the current state of
+the priority queue. If `i` is not a valid index in the binary heap, a new node is added;
+otherwise, the node at index `i` in the binary heap is replaced by `x`. In any cases, the
+binary heap is reordered as needed.
 
-This function is *unsafe* because it assumes that the key `k` of the node `x`
-is valid (e.g. it is not out of bounds for fast priority queues) in the sense
-that `I[k]` is valid for the index `I` of the priority queue.
+This function is *unsafe* because it assumes that the key `k` of the node `x` is valid (e.g.
+it is not out of bounds for fast priority queues) in the sense that `I[k]` is valid for the
+index `I` of the priority queue.
 
 """
 function unsafe_enqueue!(pq::AbstractPriorityQueue, x, i::Int)
     A = nodes(pq)
     if in_range(i, A)
-        # The key alreay exists. Replace the node in the heap by the new node
-        # and up-/down-heapify to restore the binary heap structure. We cannot
-        # assume that the replaced node data be accessible nor valid, so we
-        # explicitely replace it before deciding in which direction to go and
-        # reheapify. Also see `delete!`.
+        # The key already exists. Replace the node in the heap by the new node and
+        # up-/down-heapify to restore the binary heap structure. We cannot assume that the
+        # replaced node data be accessible nor valid, so we explicitly replace it before
+        # deciding in which direction to go and re-heapify. Also see `delete!`.
         @inbounds A[i] = x # replace deleted node
         o = ordering(pq)
         if i ≤ 1 || lt(o, (@inbounds A[heap_parent(i)]), x)
@@ -548,8 +545,8 @@ function unsafe_enqueue!(pq::AbstractPriorityQueue, x, i::Int)
             unsafe_heapify_up!(pq, i, x)
         end
     else
-        # No such key already exists. Create a new slot at the end of the node
-        # list and up-heapify to fix the structure and insert the new node.
+        # No such key already exists. Create a new slot at the end of the node list and
+        # up-heapify to fix the structure and insert the new node.
         n = length(pq) + 1
         unsafe_heapify_up!(unsafe_grow!(pq, n), n, x)
     end
@@ -559,8 +556,8 @@ end
 """
     QuickHeaps.unsafe_grow!(pq, n) -> pq
 
-grows the size of the binary heap backing the storage of the nodes of the
-priority queue `pq` to be `n` and returns the priority queue object.
+grows the size of the binary heap backing the storage of the nodes of the priority queue
+`pq` to be `n` and returns the priority queue object.
 
 """
 unsafe_grow!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int) = begin
@@ -571,8 +568,8 @@ end
 """
     QuickHeaps.unsafe_shrink!(pq, n)
 
-shrinks the size of the binary heap backing the storage of the nodes of the
-priority queue `pq` to be `n`.
+shrinks the size of the binary heap backing the storage of the nodes of the priority queue
+`pq` to be `n`.
 
 """
 unsafe_shrink!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int) =
@@ -581,8 +578,7 @@ unsafe_shrink!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int) =
 """
     QuickHeaps.unsafe_delete_key!(pq, k)
 
-deletes key `k` from the index of the priority queue `pq` assuming `k`
-is valid.
+deletes key `k` from the index of the priority queue `pq` assuming `k` is valid.
 
 """
 unsafe_delete_key!(pq::AbstractPriorityQueue{K}, key::K) where {K} =

@@ -1,9 +1,8 @@
 # Reference
 
-The following reproduces the in-lined documentation about types and methods of
-the [`QuickHeaps`](https://github.com/emmt/QuickHeaps.jl) package. This
-documentation is also available from the REPL by typing `?` followed by the
-name of a method or a type.
+The following reproduces the in-lined documentation about types and methods of the
+[`QuickHeaps`](https://github.com/emmt/QuickHeaps.jl) package. This documentation is also
+available from the REPL by typing `?` followed by the name of a method or a type.
 
 ## Binary Heaps
 
@@ -51,9 +50,8 @@ QuickHeaps.default_ordering
 
 ## Miscellaneous
 
-The following unexported methods may be needed for implementing new types of
-binary heap or of priority queue. End-users probably not have to worry about
-these.
+The following unexported methods may be needed for implementing new types of binary heap or
+of priority queue. End-users probably not have to worry about these.
 
 ```@docs
 QuickHeaps.has_bad_values
