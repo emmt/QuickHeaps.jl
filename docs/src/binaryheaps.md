@@ -3,10 +3,12 @@
 [Binary heaps](https://en.wikipedia.org/wiki/Binary_heap) dynamically store values in a tree
 structure built according to a given ordering of these values. Thanks to this structure, a
 number of operations can be efficiently implemented. For a binary heap of `n` values,
-pushing a new value, extracting the least (or the greatest depending on the ordering) value
-out of the heap, deleting a value, and replacing a value all have a complexity of
-`O(log(n))` at worst. Just getting the least (or the greatest) value without extracting it
-out of the heap is an `O(1)` operation.
+pushing a new value, extracting the first value out of the heap, deleting a value, and
+replacing a value all have a complexity of `O(log(n))` at worst. Just getting the first
+value without extracting it out of the heap is an `O(1)` operation. Here, *values* means
+objects of any type that implement an ordering rule, not necessarily numeric values.
+Depending on the ordering chosen for the heap, the first value (also called the *root*
+value) may be the least or the greatest one.
 
 
 ## Basic usage
@@ -14,26 +16,25 @@ out of the heap is an `O(1)` operation.
 In `QuickHeaps`, a binary heap is created by the [`BinaryHeap`](@ref) constructor:
 
 ```julia
-h = BinaryHeap{T}(o = FastMin)
+h = BinaryHeap{T}(o = Forward)
 ```
 
 where `T` is the type of the values stored by the heap and `o::Ordering` is the ordering
-rule for sorting values. The default `FastMin` ordering yields a *min-heap* whose root entry
-is the smallest one. With `o = ReverseOrdering(FastMin)` or `o = FastMax`, a *max-heap* is
+rule for sorting values. The default `Forward` ordering yields a *min-heap* whose root entry
+is the smallest one. With `o = ReverseOrdering(Forward)` or `o = Reverse`, a *max-heap* is
 created. The root element of a min-heap (resp. a max-heap) is the smallest one (resp. the
 greatest one).
 
-!!! warning
-    Ordering `FastMin` (resp. `FastMax`) is like `Forward` (resp. `Reverse`) but much faster
-    for floating-point values. However, `FastMin` and `FastMax` are not consistent with NaN
-    (*Not a Number*) values. If your data may contains NaNs, use `Forward` or `Reverse`
-    instead of `FastMin` or `FastMax`. Aliases `SafeMin=Forward` (and `SafeMax=Reverse`) are
-    provided by the `QuickHeaps` package.
+For floating-point values, orderings `FastMin` or `FastMax` may be used, respectively,
+instead of `Forward` or `Reverse` for faster sorting of the heap. However, `FastMin` and
+`FastMax` are not consistent with NaN (*Not a Number*) values. If your data may contains
+NaNs, use `Forward` or `Reverse` instead of `FastMin` or `FastMax`. Aliases
+`SafeMin=Forward` (and `SafeMax=Reverse`) are provided by the `QuickHeaps` package.
 
 A vector `vals` storing the initial values of the binary heap can be specified:
 
 ```julia
-h = BinaryHeap{T}(vals, o = FastMin)
+h = BinaryHeap{T}(vals, o = Forward)
 ```
 
 to create a binary heap starting with the values in `vals`. Type parameter `T` can be
@@ -70,7 +71,8 @@ h[i] = x    # sets the i-th value of heap h and heapify h
 Note that `h[1]` is the value of the root entry of the heap `h` (the least heap values for a
 min-heap, the greatest heap value for a max-heap) and that setting a value in the heap may
 trigger reordering of the values stored by the heap to maintain the binary heap structure.
-In particular, after doing `h[i] = x`, do not assume that `h[i]` yields `x`.
+In particular, after doing `h[i] = x`, do not assume that `h[i]` yields `x` because the heap
+`h` is automatically (and efficiently) re-ordered so as to maintain its heap structure.
 
 To delete the `i`-th value from the heap `h`, call:
 
@@ -112,8 +114,8 @@ which yields `h`.
 The behavior of the binary heap types provided by `QuickHeaps` can be tweaked by using a
 particular instance of the ordering `o::Ordering` and by specializing the `Base.lt` method
 called as `Base.lt(o,x,y)` to decide whether value `x` occurs before value `y` according to
-ordering `o`. Note that in the implementation of binary heaps in the `QuickHeaps` package,
-`x` and `y` will always be both of type `T`, the type of the values stored by the heap.
+ordering `o`. In the implementation of binary heaps by the `QuickHeaps` package, `x` and `y`
+are always both of type `T`, the type of the values stored by the heap.
 
 If this is not sufficient, a custom binary heap type may be created that inherits from
 `AbstractBinaryHeap{T,O}` with `T` the type of the values stored by the heap and `O` the
@@ -126,8 +128,10 @@ for an instance `h` of the custom heap type, say `CustomBinaryHeap`:
 - [`QuickHeaps.storage`](@ref)`(h::CustomBinaryHeap)` yields the array backing the storage
   of values;
 - [`QuickHeaps.ordering`](@ref)`(h::CustomBinaryHeap)`] yields the ordering of the values;
-- [`QuickHeaps.unsafe_grow!`](@ref)`(h::CustomBinaryHeap)`
-- [`QuickHeaps.unsafe_shrink!`](@ref)`(h::CustomBinaryHeap)`
+- [`QuickHeaps.unsafe_grow!`](@ref)`(h::CustomBinaryHeap, n::Integer)` to grow the size of the
+  object backing the storage of `h` to have `n` elements;
+- [`QuickHeaps.unsafe_shrink!`](@ref)`(h::CustomBinaryHeap, n::Integer)` to shrink the size
+  of the object backing the storage of `h` to have `n` elements;
 
 to have a fully functional custom binary heap type.
 
@@ -147,7 +151,7 @@ for implementing new binary heap types:
 - [`QuickHeaps.unsafe_heapify_up!`](@ref)
 
 
-Note that the `heapify`, `heapify!`, and `isheap` methods which are exported by the
+Note that the `heapify`, `heapify!`, and `isheap` functions which are exported by the
 `QuickHeaps` package have the same behavior but are different than those in the
 [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl) package. If you
 are using both packages, you'll have to explicitly prefix these methods by the package

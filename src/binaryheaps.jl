@@ -68,9 +68,9 @@ end
     FastBinaryHeap{T}([o::Ordering = FastForward,][ vals::AbstractVector])
 
 yields a fast binary heap. Compared to `BinaryHeap{T}(...)`, the default ordering is
-`FastForward` and the array backing the storage of the heap values is never reduced to
-improve performances in some cases. You may call `resize!(h)` to explicitly reduce the
-storage of fast binary-heap `h` to its minimum.
+`FastForward` and the array backing the storage of the heap values is never automatically
+reduced to improve performances in some cases. You may call `resize!(h)` to explicitly
+reduce the storage of fast binary-heap `h` to its minimum.
 
 """
 mutable struct FastBinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
