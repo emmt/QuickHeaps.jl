@@ -25,8 +25,9 @@ QuickHeaps.Node((k, v)) # is the same as QuickHeaps.Node(k, v)
 QuickHeaps.Node(k => v) # is the same as QuickHeaps.Node(k, v)
 ```
 
-The `getkey` and (unexported) [`QuickHeaps.getval`](@ref) methods respectively retrieve the
-key and the value of a node. These two methods may be specialized for a given sub-type of
+The non-exported methods [`QuickHeaps.get_key(x)`](@ref QuickHeaps.get_key) and
+[`QuickHeaps.get_val(x)`](@ref QuickHeaps.get_val) methods respectively retrieve the key and
+the value of a node. These two methods may be specialized for a given sub-type of
 [`QuickHeaps.AbstractNode`](@ref). For example, a *key-only* node type can be fully
 implemented by:
 
@@ -34,8 +35,8 @@ implemented by:
 struct KeyOnlyNode{K} <: QuickHeaps.AbstractNode{K,Nothing}
     key::K
 end
-QuickHeaps.getkey(x::KeyOnlyNode) = getfield(x, :key)
-QuickHeaps.getval(x::KeyOnlyNode) = nothing
+QuickHeaps.get_key(x::KeyOnlyNode) = getfield(x, :key)
+QuickHeaps.get_val(x::KeyOnlyNode) = nothing
 KeyOnlyNode(x::Tuple{K,Nothing}) where {K} = KeyOnlyNode{K}(x[1])
 KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
 ```
@@ -45,5 +46,5 @@ to:
 
 ```julia
 Base.lt(o::Ordering, a::QuickHeaps.AbstractNode, b::QuickHeaps.AbstractNode) =
-    lt(o, QuickHeaps.getval(a), QuickHeaps.getval(b))
+    lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
 ```

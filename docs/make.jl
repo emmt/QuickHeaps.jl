@@ -13,7 +13,8 @@ makedocs(
     authors = "Éric Thiébaut and contributors",
     modules = [QuickHeaps],
     pages = ["index.md", "install.md", "binaryheaps.md",
-         "priorityqueues.md", "nodes.md", "library.md"]
+         "priorityqueues.md", "nodes.md", "library.md"],
+    checkdocs = :exports,
 )
 
 if DEPLOYDOCS

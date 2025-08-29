@@ -13,7 +13,7 @@ only costs `O(log(n))` operations with `n` the length of the queue.
 
 ## Building priority queues
 
-In `QuikHeaps`, priority queues combine a [binary heap](binaryheaps.html) to store the
+In `QuikHeaps`, priority queues combine a [binary heap](#Binary-heaps) to store the
 partially sorted list of nodes and another structure to associate keys and nodes. There are
 two possibilities depending on the kind of keys.
 
@@ -149,8 +149,8 @@ For the default node type, `QuickHeaps.Node{K,V}`, the implementation is:
 
 ```julia
 Base.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.Node} =
-    lt(o, QuickHeaps.getval(a), QuickHeaps.getval(b))
+    lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
 ```
 
-where [`QuickHeaps.getval(a)`](@ref) yields the value of node `a`. In other words, nodes are
-sorted by their value according to ordering `o`.
+where [`QuickHeaps.get_val(a)`](@ref QuickHeaps.get_val) yields the value of node `a`. In
+other words, nodes are sorted by their value according to ordering `o`.

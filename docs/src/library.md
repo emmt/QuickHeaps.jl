@@ -65,7 +65,6 @@ QuickHeaps.index
 QuickHeaps.storage
 QuickHeaps.ordering
 QuickHeaps.setroot!
-QuickHeaps.to_eltype
 QuickHeaps.to_key
 QuickHeaps.to_node
 QuickHeaps.to_val

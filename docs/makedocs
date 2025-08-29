@@ -1,0 +1,7 @@
+#! /bin/sh
+
+dir=$(dirname "$0")
+cd "$dir/.."
+test -e Manifest.toml || julia --startup-file=no --project=docs/ -e \
+    'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate();'
+julia --color=yes --startup-file=no --project=docs/ docs/make.jl
