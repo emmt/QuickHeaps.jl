@@ -2,3 +2,5 @@
 *.cov
 work/
 docs/build/
+/Manifest.toml
+/.Manifest-*.toml
