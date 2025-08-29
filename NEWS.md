@@ -1,5 +1,13 @@
 # User visible changes in `QuickHeaps`
 
+## Unreleased
+
+### Changed
+
+- Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
+  for non-exported public methods.
+
+
 ## Version 0.2.2
 
 - Update compatibility for `TypeUtils`.

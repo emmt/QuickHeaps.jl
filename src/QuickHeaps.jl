@@ -38,6 +38,35 @@ export
     # From DataStructures:
     enqueue!, dequeue!, dequeue_pair!
 
+using TypeUtils: @public
+@public heapify_down!
+@public heapify_up!
+@public unsafe_heapify_down!
+@public unsafe_heapify_up!
+@public unsafe_grow!
+@public unsafe_shrink!
+@public AbstractNode
+@public Node
+@public get_key
+@public get_val
+@public FastForwardOrdering
+@public default_ordering
+@public has_bad_values
+@public has_standard_linear_indexing
+@public heap_index
+@public in_range
+@public is_one_based_unit_range
+@public linear_index
+@public nodes
+@public index
+@public storage
+@public ordering
+@public to_eltype
+@public to_key
+@public to_node
+@public to_val
+@public typename
+
 import Base:
     IndexStyle,
     IteratorEltype,
