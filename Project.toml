@@ -9,6 +9,8 @@ TypeUtils = "c3b1956e-8857-4d84-9b79-890df85b1e67"
 
 [compat]
 DataStructures = "0.18, 0.19"
+Random = "<0.0.1, 1"
+Test = "<0.0.1, 1"
 TypeUtils = "1.5"
 julia = "1"
 
