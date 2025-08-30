@@ -39,6 +39,7 @@ export
     enqueue!, dequeue!, dequeue_pair!
 
 using TypeUtils: @public
+@public lt # FIXME write doc
 @public heapify_down!
 @public heapify_up!
 @public unsafe_heapify_down!
@@ -118,7 +119,6 @@ using TypeUtils
 # method for specialized ordering types. The ordering can be an instance or its type.
 
 using Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
-import Base.Order: lt
 
 """
     FastForwardOrdering
@@ -128,7 +128,8 @@ is the singleton type for fast *forward* ordering without considering NaN's.
 """
 struct FastForwardOrdering <: Ordering end
 
-lt(::FastForwardOrdering, a, b) = a < b
+lt(o::Ordering, x::T, y::T) where {T} = Base.Order.lt(o, x, y)
+Base.Order.lt(::FastForwardOrdering, x, y) = x < y
 
 const FastForward = FastForwardOrdering()
 const FastReverse = ReverseOrdering(FastForward)

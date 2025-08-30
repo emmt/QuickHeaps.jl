@@ -8,6 +8,10 @@
   for non-exported public methods.
 
 
+### Fixed
+
+- Ambiguities have been fixed.
+
 ## Version 0.2.2
 
 - Update compatibility for `TypeUtils`.

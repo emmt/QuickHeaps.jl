@@ -28,8 +28,8 @@ arguments `o::Ordering` and `T<:AbstractNode{K,V}` are to specify the ordering o
 type of nodes to store key-value pairs. Type parameters `K` and `V` may be omitted if the
 node type `T` is specified.
 
-Having a specific node type may be useful to specialize the `Base.lt` method which is called
-to determine the order.
+Having a specific node type may be useful to specialize the `QuickHeaps.lt` method which is
+called to determine the order.
 
 If keys are analogous to array indices (linear or Cartesian), [`FastPriorityQueue`](@ref)
 may provide a faster alternative.

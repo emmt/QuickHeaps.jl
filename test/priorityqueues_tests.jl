@@ -4,7 +4,7 @@ using Test
 
 using Random
 
-using Base: @propagate_inbounds, lt,
+using Base: @propagate_inbounds,
     ReverseOrdering, Reverse,
     IteratorEltype, HasEltype,
     IteratorSize, HasLength
@@ -13,7 +13,7 @@ using QuickHeaps
 using QuickHeaps:
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
     AbstractNode, get_key, get_val,
-    isheap, index, nodes, ordering, in_range, heap_index
+    isheap, index, nodes, ordering, in_range, heap_index, lt
 
 function test_queue!(A::AbstractPriorityQueue{K,V},
                      key_list::AbstractVector{K},

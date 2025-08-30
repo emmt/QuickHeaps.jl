@@ -2,15 +2,14 @@ module TestingBinaryHeaps
 
 using Test
 
-using Base: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse, lt
+using Base: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 
 using QuickHeaps
 using QuickHeaps:
     AbstractBinaryHeap,
     FastForwardOrdering, FastForward, FastReverse,
     FastMin, FastMax, SafeMin, SafeMax,
-    isheap, heapify, heapify!,
-    ordering, storage
+    ordering, storage, lt
 
 orientation(::Any) = 0
 orientation(h::AbstractBinaryHeap) = orientation(typeof(h))

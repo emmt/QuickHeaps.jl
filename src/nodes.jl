@@ -3,10 +3,10 @@
 
 is the super-type of nodes with a key of type `K` and a value of type `V`. Nodes can be used
 in binary heaps and priority queues to represent key-value pairs and specific ordering rules
-may be imposed by specializing the `Base.lt` method which is by default:
+may be imposed by specializing the `QuickHeaps.lt` method which is by default:
 
-    Base.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.AbstractNode} =
-        lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
+    QuickHeaps.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.AbstractNode} =
+        Base.Order.lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
 
 """
 abstract type AbstractNode{K,V} end
@@ -81,9 +81,4 @@ iterate(x::AbstractNode, ::typeof(first)) = (get_val(x), last)
 iterate(x::AbstractNode, ::typeof(last)) = nothing
 
 # Nodes are sorted according to their values.
-for O in (:Ordering, :ForwardOrdering, :ReverseOrdering, :FastForwardOrdering)
-    @eval begin
-        lt(o::$O, a::T, b::T) where {T<:AbstractNode} =
-            lt(o, get_val(a), get_val(b))
-    end
-end
+lt(o::Ordering, x::T, y::T) where {T<:AbstractNode} = lt(o, get_val(x), get_val(y))

@@ -2,11 +2,10 @@ module TestingQuickNodes
 
 using Test
 
-using Base: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse, lt
+using Base: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 
 using QuickHeaps
-using QuickHeaps:
-    AbstractNode, Node
+using QuickHeaps: AbstractNode, Node
 import QuickHeaps: get_key, get_val
 
 @testset "Standard nodes        " begin
