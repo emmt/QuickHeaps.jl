@@ -29,7 +29,7 @@ Node{K}(key, val::V) where {K,V} = Node{K,V}(key, val)
 Node(key::K, val::V) where {K,V} = Node{K,V}(key, val)
 
 """
-    get_key(x::QuickHeaps.AbstractNode) -> k
+    QuickHeaps.get_key(x::QuickHeaps.AbstractNode) -> k
 
 yields the key `k` of node `x`. This method may be specialized for any sub-types of
 [`QuickHeaps.AbstractNode`](@ref).

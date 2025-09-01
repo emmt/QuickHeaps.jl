@@ -388,7 +388,7 @@ normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}}) =
 """
     Quickheaps.to_key(pq, k)
 
-converts the key `k` to the type suitable for priority queue `pq`.
+converts the key `k` to the type of keys used by the priority queue `pq`.
 
 """
 to_key(pq::AbstractPriorityQueue{K,V}, key::K) where {K,V} = key
@@ -397,7 +397,7 @@ to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = as(K, key)
 """
     Quickheaps.to_val(pq, v)
 
-converts the value `v` to the type suitable for priority queue `pq`.
+converts the value `v` to the type of values stored by the priority queue `pq`.
 
 """
 to_val(pq::AbstractPriorityQueue{K,V}, val::V) where {K,V} = val
@@ -406,8 +406,7 @@ to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = as(V, val)
 """
     Quickheaps.to_node(pq, k, v)
 
-converts the the key `k` and the value `v` into a node type suitable for
-priority queue `pq`.
+converts the key `k` and the value `v` into a node type suitable for priority queue `pq`.
 
 """
 to_node(pq::AbstractPriorityQueue, (key, val)::Pair) = to_node(pq, key, val)
@@ -469,8 +468,8 @@ current settings for bounds checking are used.
 
 """
 @inline @propagate_inbounds linear_index(pq::FastPriorityQueue, key::Integer) =
-    # Convert to Int, then re-call linear_index for bound checking. Note that the type
-    # assertion performed by `as` avoids infinite recursion.
+    # Convert to Int, then re-call linear_index for bound checking. The type assertion
+    # performed by `as` avoids infinite recursion.
     linear_index(pq, as(Int, key))
 
 @inline function linear_index(pq::FastPriorityQueue, key::Int)
@@ -480,8 +479,8 @@ end
 
 @inline @propagate_inbounds function linear_index(pq::FastPriorityQueue,
                                                   key::Tuple{Vararg{FastIndex}})
-    # FIXME: Shall we store the linear_indices (a small object) in the priority
-    #        queue directly?
+    # FIXME: Shall we store the linear indices (a small object) in the priority queue
+    #        directly?
     return LinearIndices(index(pq))[key...] # also does the bound checking
 end
 
@@ -561,7 +560,7 @@ grows the size of the binary heap backing the storage of the nodes of the priori
 `pq` to be `n` and returns the priority queue object.
 
 """
-unsafe_grow!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int) = begin
+function unsafe_grow!(pq::Union{PriorityQueue,FastPriorityQueue}, n::Int)
     resize!(nodes(pq), n)
     return pq
 end
