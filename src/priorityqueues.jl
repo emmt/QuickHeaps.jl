@@ -410,6 +410,7 @@ converts the the key `k` and the value `v` into a node type suitable for
 priority queue `pq`.
 
 """
+to_node(pq::AbstractPriorityQueue, (key, val)::Pair) = to_node(pq, key, val)
 to_node(pq::AbstractPriorityQueue, key, val) =
     node_type(pq)(to_key(pq, key), to_val(pq, val))
 
@@ -494,17 +495,17 @@ linear_index(pq::FastPriorityQueue, key) = throw_invalid_key(pq, key)
     " expecting a linear index, an ", ndims(index(pq)),
     "-dimensional Cartesian index")
 
-# The following is to allow the syntax enqueue!(pq, key=>val)
-enqueue!(pq::AbstractPriorityQueue, pair::Pair) =
-    enqueue!(pq, pair.first, pair.second)
+enqueue!(pq::AbstractPriorityQueue, key, val) = enqueue!(pq, key=>val)
 
 # For a general purpose priority queue, build the node then enqueue.
-enqueue!(pq::PriorityQueue, key, val) = enqueue!(pq, to_node(pq, key, val))
+enqueue!(pq::PriorityQueue, (key, val)::Pair) = enqueue!(pq, to_node(pq, key, val))
 enqueue!(pq::PriorityQueue{K,V,O,T}, x::T) where {K,V,O,T} =
     unsafe_enqueue!(pq, x, get(index(pq), get_key(x), 0))
+enqueue!(pq::PriorityQueue{K,V,O,T}, x::Any) where {K,V,O,T} =
+    unsafe_enqueue!(pq, to_node(pq, get_key(x),  get_val(x))::T)
 
 # For a fast priority queue, converts the key into a linear index, then enqueue.
-@inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue, key, val)
+@inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue, (key, val)::Pair)
     k = linear_index(pq, key) # not to_key
     v = to_val(pq, val)
     x = to_node(pq, k, v)
