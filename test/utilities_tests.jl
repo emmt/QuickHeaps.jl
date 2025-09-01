@@ -47,7 +47,7 @@ using QuickHeaps
     @test QuickHeaps.has_bad_values([1.0,2.0]) == false
     @test QuickHeaps.has_bad_values([1.0,2.0,NaN]) == true
 
-    @test_throws ArgumentError QuickHeaps.throw_argument_error("invald ", "argument")
+    @test_throws ArgumentError QuickHeaps.throw_argument_error("invalid ", "argument")
     @test_throws DimensionMismatch QuickHeaps.throw_dimension_mismatch("not", " same dimensions")
 end
 

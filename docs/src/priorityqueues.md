@@ -135,10 +135,10 @@ of their priority. The order is however the same for these iterators.
 ## Priority order
 
 How are ordered the nodes is completely customizable by specializing the
-[`QuikHeaps.lt`](@ref) function with the following signature:
+[`QuickHeaps.lt`](@ref) function with the following signature:
 
 ```julia
-QuikHeaps.lt(o::OrderingType, x::T, y::T) where {T<:NodeType}
+QuickHeaps.lt(o::OrderingType, x::T, y::T) where {T<:NodeType}
 ```
 
 which shall yield whether node `x` has (strictly) higher priority than node `y` in the queue
