@@ -11,6 +11,9 @@
 - Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
   for non-exported public methods.
 
+- Deprecated and non-exported method `QuickHeaps.to_eltype(A, x)` has been suppressed, it
+  was equivalent to `as(eltype(A), x)` using the
+  [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
 
 ### Fixed
 
@@ -24,7 +27,7 @@
 
 - Package `TypeUtils` replaces `ArrayTools`.
 
-- Un-exported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use `as(eltype(A),
+- Non-exported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use `as(eltype(A),
   x)` instead.
 
 ## Version 0.2.0

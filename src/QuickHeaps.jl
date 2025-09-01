@@ -62,7 +62,6 @@ using TypeUtils: @public
 @public index
 @public storage
 @public ordering
-@public to_eltype
 @public to_key
 @public to_node
 @public to_val
@@ -111,8 +110,6 @@ import DataStructures:
     enqueue!, dequeue!, dequeue_pair!
 
 using TypeUtils
-
-@deprecate to_eltype(A, x) as(eltype(A), x) false
 
 #-------------------------------------------------------------------------------------------
 # In order to perform fast sorting (without taking care of NaN's), we extend `Base.Order.lt`
