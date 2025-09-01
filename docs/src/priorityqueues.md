@@ -134,23 +134,23 @@ of their priority. The order is however the same for these iterators.
 
 ## Priority order
 
-How are ordered the nodes is completely customizable by specializing the `Base.lt` method
-with the following signature:
+How are ordered the nodes is completely customizable by specializing the
+[`QuikHeaps.lt`](@ref) function with the following signature:
 
 ```julia
-Base.lt(o::OrderingType, a::T, b::T) where {T<:NodeType}
+QuikHeaps.lt(o::OrderingType, x::T, y::T) where {T<:NodeType}
 ```
 
-which shall yield whether node `a` has (strictly) higher priority than node `b` in the queue
+which shall yield whether node `x` has (strictly) higher priority than node `y` in the queue
 and where `OrderingType` and `NodeType <: [QuickHeaps.AbstractNode](@ref)` are the
 respective types of the ordering and of the nodes of the priority queue.
 
 For the default node type, `QuickHeaps.Node{K,V}`, the implementation is:
 
 ```julia
-Base.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.Node} =
-    lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
+QuickHeaps.lt(o::Ordering, x::T, y::T) where {T<:QuickHeaps.Node} =
+    Base.lt(o, QuickHeaps.get_val(x), QuickHeaps.get_val(y))
 ```
 
-where [`QuickHeaps.get_val(a)`](@ref QuickHeaps.get_val) yields the value of node `a`. In
+where [`QuickHeaps.get_val(x)`](@ref QuickHeaps.get_val) yields the value of node `x`. In
 other words, nodes are sorted by their value according to ordering `o`.

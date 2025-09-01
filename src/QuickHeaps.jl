@@ -39,7 +39,7 @@ export
     enqueue!, dequeue!, dequeue_pair!
 
 using TypeUtils: @public
-@public lt # FIXME write doc
+@public lt
 @public heapify_down!
 @public heapify_up!
 @public unsafe_heapify_down!
@@ -128,6 +128,15 @@ is the singleton type for fast *forward* ordering without considering NaN's.
 """
 struct FastForwardOrdering <: Ordering end
 
+"""
+    QuickHeaps.lt(o::Ordering, x::T, y::T)
+
+yields whether `x` is less than `y` according to ordering `o`. This function is called by
+`QuickHeaps` to build ordered structures like binary heaps and priority queues. For `T <:
+QuickHeaps.Node`, it compares the values of the nodes `x` and `y`. It may be specialized for
+custom node type `T`. By default, it calls `Base.Order.lt` to compare values.
+
+"""
 lt(o::Ordering, x::T, y::T) where {T} = Base.Order.lt(o, x, y)
 Base.Order.lt(::FastForwardOrdering, x, y) = x < y
 

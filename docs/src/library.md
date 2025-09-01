@@ -50,8 +50,8 @@ QuickHeaps.default_ordering
 
 ## Miscellaneous
 
-The following unexported methods may be needed for implementing new types of binary heap or
-of priority queue. End-users probably not have to worry about these.
+The following non-exported methods may be needed for implementing new types of binary heap
+or of priority queue. End-users probably not have to worry about these.
 
 ```@docs
 QuickHeaps.has_bad_values
@@ -60,6 +60,7 @@ QuickHeaps.heap_index
 QuickHeaps.in_range
 QuickHeaps.is_one_based_unit_range
 QuickHeaps.linear_index
+QuickHeaps.lt
 QuickHeaps.nodes
 QuickHeaps.index
 QuickHeaps.storage
