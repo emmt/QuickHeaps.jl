@@ -6,6 +6,7 @@
 [![Build Status][github-ci-img]][github-ci-url]
 [![Build Status][appveyor-img]][appveyor-url]
 [![Coverage][codecov-img]][codecov-url]
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 `QuickHeaps` is a small [Julia][julia-url] package providing versatile [binary
 heaps](https://en.wikipedia.org/wiki/Binary_heap) and [priority

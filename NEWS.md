@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Pass all tests with [`Aqua.jl`](https://github.com/JuliaTesting/Aqua.jl).
+
 ### Changed
 
 - Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
@@ -21,7 +25,7 @@
 - Package `TypeUtils` replaces `ArrayTools`.
 
 - Un-exported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use `as(eltype(A),
-  x)`.
+  x)` instead.
 
 ## Version 0.2.0
 
