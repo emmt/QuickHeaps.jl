@@ -76,9 +76,9 @@ Base.convert(::Type{T}, x::AbstractNode) where {T<:AbstractNode} = T(x)
 Base.convert(::Type{T}, x::Tuple{Any,Any}) where {T<:AbstractNode} = T(x)
 Base.convert(::Type{T}, x::Pair) where {T<:AbstractNode} = T(x)
 
-iterate(x::AbstractNode) = (get_key(x), first)
-iterate(x::AbstractNode, ::typeof(first)) = (get_val(x), last)
-iterate(x::AbstractNode, ::typeof(last)) = nothing
+@inline iterate(x::AbstractNode, state::Int = 0) =
+    state === 0 ? (get_key(x), 1) :
+    state === 1 ? (get_val(x), 2) : nothing
 
 # Nodes are sorted according to their values.
 lt(o::Ordering, x::T, y::T) where {T<:AbstractNode} = lt(o, get_val(x), get_val(y))
