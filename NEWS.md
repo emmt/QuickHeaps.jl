@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Deprecated and non-exported method `QuickHeaps.to_eltype(A, x)` has been suppressed, it
+  was equivalent to `as(eltype(A), x)` using the
+  [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
+
 ### Added
 
 - Pass all tests with [`Aqua.jl`](https://github.com/JuliaTesting/Aqua.jl).
@@ -10,10 +16,6 @@
 
 - Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
   for non-exported public methods.
-
-- Deprecated and non-exported method `QuickHeaps.to_eltype(A, x)` has been suppressed, it
-  was equivalent to `as(eltype(A), x)` using the
-  [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
 
 - Syntax `peek(T::Type, pq::AbstractPriorityQueue)` is deprecated in favor of `peek(pq,T)`
   to specify the type `T` of the returned object.
