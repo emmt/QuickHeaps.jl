@@ -109,14 +109,6 @@ Base.show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
           "} with ", length(pq), " node(s)")
 
 """
-    QuickHeaps.ordering(pq) -> o
-
-yields the object `o` specifying the ordering of priority values in the priority queue `pq`.
-
-"""
-ordering(pq::AbstractPriorityQueue) = getfield(pq, :order)
-
-"""
     QuickHeaps.index(pq) -> I
 
 yields the object `I` storing the key-index association in priority queue `pq`. This object

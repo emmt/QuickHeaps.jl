@@ -47,16 +47,6 @@ This method may be specialized for custom binary heap types.
 """
 storage(h::AbstractBinaryHeap) = getfield(h, :data)
 
-"""
-    QuickHeaps.ordering(h)
-
-yields the ordering of the values in the binary heap `h`.
-
-This method may be specialized for custom binary heap types.
-
-"""
-ordering(h::AbstractBinaryHeap) = getfield(h, :order)
-
 Base.length(h::FastBinaryHeap) = getfield(h, :count)
 Base.length(h::BinaryHeap) = length(storage(h))
 Base.size(h::AbstractBinaryHeap) = (length(h),)

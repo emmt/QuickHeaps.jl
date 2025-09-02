@@ -19,6 +19,18 @@ lt(o::Ordering, x::T, y::T) where {T<:AbstractNode} = lt(o, get_val(x), get_val(
 Base.Order.lt(::FastForwardOrdering, x, y) = x < y
 
 """
+    QuickHeaps.ordering(A) -> o
+
+Return the object `o` specifying the ordering of the values in the object `A`, a binary heap
+or a priority queue.
+
+This method may be specialized for custom types.
+
+"""
+ordering(h::AbstractBinaryHeap) = getfield(h, :order)
+ordering(pq::AbstractPriorityQueue) = getfield(pq, :order)
+
+"""
     QuickHeaps.default_ordering(A)
     QuickHeaps.default_ordering(typeof(A))
 
