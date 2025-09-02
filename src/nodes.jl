@@ -48,19 +48,19 @@ Node{K,V}(x::AbstractNode) where {K,V} = Node{K,V}(get_key(x), get_val(x))
 Node(x::Tuple{Any,Any}) = Node(x[1], x[2])
 Node{K}(x::Tuple{Any,Any}) where {K} = Node{K}(x[1], x[2])
 Node{K,V}(x::Tuple{Any,Any}) where {K,V} = Node{K,V}(x[1], x[2])
-Tuple(x::AbstractNode) = (get_key(x), get_val(x))
+Base.Tuple(x::AbstractNode) = (get_key(x), get_val(x))
 
 # Build a node from a pair and conversely.
 Node(x::Pair) = Node(x.first, x.second)
 Node{K}(x::Pair) where {K} = Node{K}(x.first, x.second)
 Node{K,V}(x::Pair) where {K,V} = Node{K,V}(x.first, x.second)
-Pair(x::AbstractNode) = get_key(x) => get_val(x)
+Base.Pair(x::AbstractNode) = get_key(x) => get_val(x)
 
 Base.convert(::Type{T}, x::T) where {T<:AbstractNode} = x
 Base.convert(::Type{T}, x::AbstractNode) where {T<:AbstractNode} = T(x)
 Base.convert(::Type{T}, x::Tuple{Any,Any}) where {T<:AbstractNode} = T(x)
 Base.convert(::Type{T}, x::Pair) where {T<:AbstractNode} = T(x)
 
-@inline iterate(x::AbstractNode, state::Int = 0) =
+@inline Base.iterate(x::AbstractNode, state::Int = 0) =
     state === 0 ? (get_key(x), 1) :
     state === 1 ? (get_val(x), 2) : nothing

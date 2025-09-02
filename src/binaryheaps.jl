@@ -57,19 +57,19 @@ This method may be specialized for custom binary heap types.
 """
 ordering(h::AbstractBinaryHeap) = getfield(h, :order)
 
-length(h::FastBinaryHeap) = getfield(h, :count)
-length(h::BinaryHeap) = length(storage(h))
-size(h::AbstractBinaryHeap) = (length(h),)
-IndexStyle(::Type{<:AbstractBinaryHeap}) = IndexLinear()
-sizehint!(h::AbstractBinaryHeap, n::Integer) = begin
+Base.length(h::FastBinaryHeap) = getfield(h, :count)
+Base.length(h::BinaryHeap) = length(storage(h))
+Base.size(h::AbstractBinaryHeap) = (length(h),)
+Base.IndexStyle(::Type{<:AbstractBinaryHeap}) = IndexLinear()
+function Base.sizehint!(h::AbstractBinaryHeap, n::Integer)
     sizehint!(storage(h), n)
     return h
 end
-isempty(h::AbstractBinaryHeap) = length(h) < 1
+Base.isempty(h::AbstractBinaryHeap) = length(h) < 1
 
 # Call `resize!(h)` with no other arguments to reduce the storage size.
-resize!(h::AbstractBinaryHeap) = h # do nothing by default
-resize!(h::FastBinaryHeap) = begin
+Base.resize!(h::AbstractBinaryHeap) = h # do nothing by default
+function Base.resize!(h::FastBinaryHeap)
     resize!(storage(h), length(h))
     return h
 end
@@ -80,17 +80,17 @@ heap_left(i::Int) = 2*i
 heap_right(i::Int) = 2*i + 1
 heap_parent(i::Int) = div(i, 2)
 
-@inline function getindex(h::AbstractBinaryHeap, i::Int)
+@inline function Base.getindex(h::AbstractBinaryHeap, i::Int)
     @boundscheck checkbounds(h, i)
     @inbounds r = getindex(storage(h), i)
     return r
 end
 
-@inline @propagate_inbounds setindex!(h::AbstractBinaryHeap, x, i::Int) =
+@inline @propagate_inbounds Base.setindex!(h::AbstractBinaryHeap, x, i::Int) =
     setindex!(h, as(eltype(h), x), i)
 
-@inline function setindex!(h::AbstractBinaryHeap{T},
-                           x::T, i::Int) where {T}
+@inline function Base.setindex!(h::AbstractBinaryHeap{T},
+                                x::T, i::Int) where {T}
     @boundscheck checkbounds(h, i)
     A = storage(h)
     @inbounds y = A[i] # replaced value
@@ -107,18 +107,19 @@ end
     return h
 end
 
-first(h::AbstractBinaryHeap) = peek(h)
+Base.first(h::AbstractBinaryHeap) = peek(h)
 
+# NOTE QuickHeaps.peek is Base.peek if it is defined.
 function peek(h::AbstractBinaryHeap)
     isempty(h) && throw_argument_error(typename(h), " is empty")
     @inbounds r = getindex(storage(h), 1)
     return r
 end
 
-empty!(h::FastBinaryHeap) = (setfield!(h, :count, 0); h)
-empty!(h::BinaryHeap) = (empty!(storage(h)); h)
+Base.empty!(h::FastBinaryHeap) = (setfield!(h, :count, 0); h)
+Base.empty!(h::BinaryHeap) = (empty!(storage(h)); h)
 
-function pop!(h::AbstractBinaryHeap)
+function Base.pop!(h::AbstractBinaryHeap)
     n = length(h)
     n ≥ 1 || throw_argument_error(typename(h), " is empty")
     A = storage(h)
@@ -134,11 +135,11 @@ function pop!(h::AbstractBinaryHeap)
 end
 
 # Implement push! in a similar way as for AbstractDict to force loop unrolling.
-push!(h::AbstractBinaryHeap, x) = push!(h, as(eltype(h), x))
-push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
-push!(h::AbstractBinaryHeap, x, y, z...) = push!(push!(push!(h, x), y), z...)
+Base.push!(h::AbstractBinaryHeap, x) = push!(h, as(eltype(h), x))
+Base.push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
+Base.push!(h::AbstractBinaryHeap, x, y, z...) = push!(push!(push!(h, x), y), z...)
 
-function push!(h::AbstractBinaryHeap{T}, x::T) where {T}
+function Base.push!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h) + 1
     unsafe_heapify_up!(ordering(h), unsafe_grow!(h, n), n, x)
     return h
@@ -160,9 +161,9 @@ function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
     return h
 end
 
-delete!(h::AbstractBinaryHeap, i::Integer) = delete!(h, as(Int, i))
+Base.delete!(h::AbstractBinaryHeap, i::Integer) = delete!(h, as(Int, i))
 
-function delete!(h::AbstractBinaryHeap, i::Int)
+function Base.delete!(h::AbstractBinaryHeap, i::Int)
     n = length(h)
     in_range(i, n) || throw_argument_error("out of range index")
     if i < n

@@ -67,43 +67,12 @@ using TypeUtils: @public
 @public to_val
 @public typename
 
-import Base:
-    IndexStyle,
-    IteratorEltype,
-    IteratorSize,
-    Pair,
-    Tuple,
-    copy,
-    delete!,
-    eltype,
-    empty!,
-    first,
-    get,
-    getindex,
-    getkey,
-    haskey,
-    isempty,
-    iterate,
-    keytype,
-    keys,
-    length,
-    peek,
-    pop!,
-    push!,
-    resize!,
-    setindex!,
-    show,
-    size,
-    sizehint!,
-    valtype,
-    values
-
 # The `peek` method appeared in Julia 1.5.
 @static if isdefined(Base, :peek)
     import Base: peek
 end
 
-using Base: @propagate_inbounds, OneTo, has_offset_axes, HasEltype, HasLength
+using Base: @propagate_inbounds, OneTo, has_offset_axes
 
 import DataStructures:
     # heapify!, heapify, isheap

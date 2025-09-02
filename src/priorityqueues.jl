@@ -89,10 +89,10 @@ FastPriorityQueue(o::O, T::Type{<:AbstractNode{Int,V}}, dims::NTuple{N,Integer})
 
 # Copy constructors. The copy is independent from the original.
 
-copy(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
+Base.copy(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
     PriorityQueue{K,V,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
 
-copy(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
+Base.copy(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
     FastPriorityQueue{V,N,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
 
 
@@ -100,11 +100,11 @@ copy(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
 #    print(io, "priority queue of type ", nameof(typeof(pq)),
 #          " with ", length(pq), " node(s)")
 
-show(io::IO, ::MIME"text/plain", pq::PriorityQueue{K,V}) where {K,V} =
+Base.show(io::IO, ::MIME"text/plain", pq::PriorityQueue{K,V}) where {K,V} =
     print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(K),
           ",", nameof(V), "} with ", length(pq), " node(s)")
 
-show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
+Base.show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
     print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(V),
           "} with ", length(pq), " node(s)")
 
@@ -138,20 +138,22 @@ node_type(pq::AbstractPriorityQueue) = node_type(typeof(pq))
 node_type(::Type{<:PriorityQueue{K,V,O,T}}) where {K,V,O,T} = T
 node_type(::Type{<:FastPriorityQueue{V,N,O,T}}) where {V,N,O,T} = T
 
-length(pq::AbstractPriorityQueue) = length(nodes(pq))
+# Implement abstract dictionary API for priority queues.
 
-isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
+Base.length(pq::AbstractPriorityQueue) = length(nodes(pq))
 
-keytype(pq::AbstractPriorityQueue) = keytype(typeof(pq))
-keytype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = K
+Base.isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
 
-valtype(pq::AbstractPriorityQueue) = valtype(typeof(pq))
-valtype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = V
+Base.keytype(pq::AbstractPriorityQueue) = keytype(typeof(pq))
+Base.keytype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = K
 
-haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
+Base.valtype(pq::AbstractPriorityQueue) = valtype(typeof(pq))
+Base.valtype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = V
+
+Base.haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
 
 for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
-    @eval function $func(pq::AbstractPriorityQueue, key, def)
+    @eval function Base.$func(pq::AbstractPriorityQueue, key, def)
         n = length(pq)
         if n > 0
             i = heap_index(pq, key)
@@ -164,7 +166,7 @@ for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
     end
 end
 
-function delete!(pq::AbstractPriorityQueue, key)
+function Base.delete!(pq::AbstractPriorityQueue, key)
     n = length(pq)
     if n > 0
         i = heap_index(pq, key)
@@ -193,23 +195,23 @@ function delete!(pq::AbstractPriorityQueue, key)
     return pq
 end
 
-first(pq::AbstractPriorityQueue) = peek(pq)
-peek(pq::AbstractPriorityQueue) = peek(Pair, pq)
+Base.first(pq::AbstractPriorityQueue) = peek(pq)
 
-# FIXME: Same code as for binary heaps.
+# NOTE QuickHeaps.peek is Base.peek if it is defined.
+peek(pq::AbstractPriorityQueue) = peek(Pair, pq)
 function peek(T::Type, pq::AbstractPriorityQueue)
     isempty(pq) && throw_argument_error(typename(pq), " is empty")
     @inbounds x = getindex(nodes(pq), 1)
     return T(x)
 end
 
-function empty!(pq::PriorityQueue)
+function Base.empty!(pq::PriorityQueue)
     empty!(nodes(pq))
     empty!(index(pq))
     return pq
 end
 
-function empty!(pq::FastPriorityQueue)
+function Base.empty!(pq::FastPriorityQueue)
     empty!(nodes(pq))
     fill!(index(pq), 0)
     return pq
@@ -221,33 +223,33 @@ struct PriorityQueueIterator{F,Q<:AbstractPriorityQueue}
     pq::Q
 end
 
-IteratorEltype(itr::PriorityQueueIterator) = IteratorEltype(typeof(itr))
-IteratorEltype(::Type{<:PriorityQueueIterator}) = HasEltype()
-eltype(itr::PriorityQueueIterator) = eltype(typeof(itr))
-eltype(::Type{<:PriorityQueueIterator{typeof(get_key),Q}}) where {Q} = keytype(Q)
-eltype(::Type{<:PriorityQueueIterator{typeof(get_val),Q}}) where {Q} = valtype(Q)
-eltype(::Type{<:PriorityQueueIterator{F,Q}}) where {F,Q} = Any
+Base.IteratorEltype(itr::PriorityQueueIterator) = Base.IteratorEltype(typeof(itr))
+Base.IteratorEltype(::Type{<:PriorityQueueIterator}) = Base.HasEltype()
+Base.eltype(itr::PriorityQueueIterator) = eltype(typeof(itr))
+Base.eltype(::Type{<:PriorityQueueIterator{typeof(get_key),Q}}) where {Q} = keytype(Q)
+Base.eltype(::Type{<:PriorityQueueIterator{typeof(get_val),Q}}) where {Q} = valtype(Q)
+Base.eltype(::Type{<:PriorityQueueIterator{F,Q}}) where {F,Q} = Any
 
-IteratorSize(itr::PriorityQueueIterator) = IteratorSize(typeof(itr))
-IteratorSize(::Type{<:PriorityQueueIterator}) = HasLength()
-length(itr::PriorityQueueIterator) = length(itr.pq)
+Base.IteratorSize(itr::PriorityQueueIterator) = Base.IteratorSize(typeof(itr))
+Base.IteratorSize(::Type{<:PriorityQueueIterator}) = Base.HasLength()
+Base.length(itr::PriorityQueueIterator) = length(itr.pq)
 
 # Unordered iterators. NOTE: All iterators shall however return the elements in the same
 # order.
-function iterate(pq::AbstractPriorityQueue, i::Int = 1)
+function Base.iterate(pq::AbstractPriorityQueue, i::Int = 1)
     in_range(i, length(pq)) || return nothing
     @inbounds x = getindex(nodes(pq), i)
     return Pair(x), i + 1
 end
-keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_key, pq)
-values(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_val, pq)
+Base.keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_key, pq)
+Base.values(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_val, pq)
 function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
     in_range(i, length(itr.pq)) || return nothing
     @inbounds x = getindex(nodes(itr.pq), i)
     return itr.f(x), i + 1
 end
 
-pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
+Base.pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
 
 """
     dequeue!(pq) -> key
@@ -295,22 +297,22 @@ Also see [`dequeue!`](@ref) and [`dequeue_node!`](@ref).
 """
 dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
 
-# For AbstractDict, pushing pair(s) is already implemented via setindex! Implement push! for
-# 2-tuples and nodes in a similar way as for AbstractDict.
-push!(pq::AbstractPriorityQueue, x::AbstractNode) =
+# For AbstractDict, pushing pair(s) is already implemented via setindex!. Implement push!
+# for 2-tuples and nodes in a similar way as for AbstractDict.
+Base.push!(pq::AbstractPriorityQueue, x::AbstractNode) =
     enqueue!(pq, get_key(x), get_val(x))
-push!(pq::AbstractPriorityQueue, x::Tuple{Any,Any}) =
+Base.push!(pq::AbstractPriorityQueue, x::Tuple{Any,Any}) =
     enqueue!(pq, x[1], x[2])
 for T in (AbstractNode, Tuple{Any,Any})
     @eval begin
-        push!(pq::AbstractPriorityQueue, a::$T, b::$T) =
+        Base.push!(pq::AbstractPriorityQueue, a::$T, b::$T) =
             push!(push!(pq, a), b)
-        push!(pq::AbstractPriorityQueue, a::$T, b::$T, c::$T...) =
+        Base.push!(pq::AbstractPriorityQueue, a::$T, b::$T, c::$T...) =
             push!(push!(push!(pq, a), b), c...)
     end
 end
 
-function getindex(pq::PriorityQueue, key)
+function Base.getindex(pq::PriorityQueue, key)
     i = heap_index(pq, key)
     # FIXME: Testing that i > 0 should be sufficient.
     in_range(i, length(pq)) || throw_argument_error(
@@ -319,7 +321,7 @@ function getindex(pq::PriorityQueue, key)
     return get_val(r)
 end
 
-setindex!(pq::PriorityQueue, val, key) = enqueue!(pq, key, val)
+Base.setindex!(pq::PriorityQueue, val, key) = enqueue!(pq, key, val)
 
 # Union of types that can be used to index fast priority queues.
 const FastIndex = Union{Integer,CartesianIndex}
@@ -328,8 +330,8 @@ const FastIndex = Union{Integer,CartesianIndex}
 # current bounds checking state).
 for keytype in (:Integer, :(FastIndex...))
     @eval begin
-        @inline @propagate_inbounds function getindex(pq::FastPriorityQueue,
-                                                      key::$keytype)
+        @inline @propagate_inbounds function Base.getindex(pq::FastPriorityQueue,
+                                                           key::$keytype)
             k = linear_index(pq, key)
             @inbounds i = getindex(index(pq), k)
             A = nodes(pq)
@@ -340,9 +342,9 @@ for keytype in (:Integer, :(FastIndex...))
             throw_argument_error(typename(pq), " has no node with key ",
                                  normalize_key(pq, key))
         end
-        @inline @propagate_inbounds function setindex!(pq::FastPriorityQueue,
-                                                       val,
-                                                       key::$keytype)
+        @inline @propagate_inbounds function Base.setindex!(pq::FastPriorityQueue,
+                                                            val,
+                                                            key::$keytype)
             return enqueue!(pq, key, val)
         end
     end

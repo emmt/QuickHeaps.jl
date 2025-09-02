@@ -22,7 +22,7 @@ Base.Order.lt(::FastForwardOrdering, x, y) = x < y
     QuickHeaps.default_ordering(A)
     QuickHeaps.default_ordering(typeof(A))
 
-yield the default ordering for the ordered data structure `A`. By default, this method
+yield the default ordering for the ordered data structure `A`. By default, this function
 yields `QuickHeaps.SafeMin` which is an alias to `Base.Order.Forward`. This method may be
 specialized for specific ordered data structure.
 
