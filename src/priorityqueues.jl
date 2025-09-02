@@ -330,8 +330,8 @@ const FastIndex = Union{Integer,CartesianIndex}
 # current bounds checking state).
 for keytype in (:Integer, :(FastIndex...))
     @eval begin
-        @inline @propagate_inbounds function Base.getindex(pq::FastPriorityQueue,
-                                                           key::$keytype)
+        @propagate_inbounds function Base.getindex(pq::FastPriorityQueue,
+                                                   key::$keytype)
             k = linear_index(pq, key)
             @inbounds i = getindex(index(pq), k)
             A = nodes(pq)
@@ -342,9 +342,8 @@ for keytype in (:Integer, :(FastIndex...))
             throw_argument_error(typename(pq), " has no node with key ",
                                  normalize_key(pq, key))
         end
-        @inline @propagate_inbounds function Base.setindex!(pq::FastPriorityQueue,
-                                                            val,
-                                                            key::$keytype)
+        @propagate_inbounds function Base.setindex!(pq::FastPriorityQueue, val,
+                                                    key::$keytype)
             return enqueue!(pq, key, val)
         end
     end
@@ -433,8 +432,8 @@ current settings for bounds checking are used.
     return k
 end
 
-@inline @propagate_inbounds function linear_index(pq::FastPriorityQueue,
-                                                  key::Tuple{Vararg{FastIndex}})
+@propagate_inbounds function linear_index(pq::FastPriorityQueue,
+                                          key::Tuple{Vararg{FastIndex}})
     # FIXME: Shall we store the linear indices (a small object) in the priority queue
     #        directly?
     return LinearIndices(index(pq))[key...] # also does the bound checking
@@ -460,7 +459,7 @@ enqueue!(pq::PriorityQueue{K,V,O,T}, x::Any) where {K,V,O,T} =
     unsafe_enqueue!(pq, to_node(pq, get_key(x),  get_val(x))::T)
 
 # For a fast priority queue, converts the key into a linear index, then enqueue.
-@inline @propagate_inbounds function enqueue!(pq::FastPriorityQueue, (key, val)::Pair)
+@propagate_inbounds function enqueue!(pq::FastPriorityQueue, (key, val)::Pair)
     k = linear_index(pq, key) # not to_key
     v = to_val(pq, val)
     x = to_node(pq, k, v)

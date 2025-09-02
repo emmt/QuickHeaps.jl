@@ -86,7 +86,7 @@ heap_parent(i::Int) = div(i, 2)
     return r
 end
 
-@inline @propagate_inbounds Base.setindex!(h::AbstractBinaryHeap, x, i::Int) =
+@propagate_inbounds Base.setindex!(h::AbstractBinaryHeap, x, i::Int) =
     setindex!(h, as(eltype(h), x), i)
 
 @inline function Base.setindex!(h::AbstractBinaryHeap{T},
