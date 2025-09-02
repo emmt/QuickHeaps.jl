@@ -158,7 +158,7 @@ for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
         if n > 0
             i = heap_index(pq, key)
             if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
-                @inbounds x = getindex(nodes(pq), i)
+                x = @inbounds nodes(pq)[i]
                 return $getter(x)
             end
         end
@@ -201,7 +201,7 @@ Base.first(pq::AbstractPriorityQueue) = peek(pq)
 peek(pq::AbstractPriorityQueue) = peek(Pair, pq)
 function peek(T::Type, pq::AbstractPriorityQueue)
     isempty(pq) && throw_argument_error(typename(pq), " is empty")
-    @inbounds x = getindex(nodes(pq), 1)
+    x = @inbounds nodes(pq)[1]
     return T(x)
 end
 
@@ -238,14 +238,14 @@ Base.length(itr::PriorityQueueIterator) = length(itr.pq)
 # order.
 function Base.iterate(pq::AbstractPriorityQueue, i::Int = 1)
     in_range(i, length(pq)) || return nothing
-    @inbounds x = getindex(nodes(pq), i)
+    x = @inbounds nodes(pq)[i]
     return Pair(x), i + 1
 end
 Base.keys(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_key, pq)
 Base.values(pq::AbstractPriorityQueue) = PriorityQueueIterator(get_val, pq)
 function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
     in_range(i, length(itr.pq)) || return nothing
-    @inbounds x = getindex(nodes(itr.pq), i)
+    x = @inbounds nodes(itr.pq)[i]
     return itr.f(x), i + 1
 end
 
@@ -317,7 +317,7 @@ function Base.getindex(pq::PriorityQueue, key)
     # FIXME: Testing that i > 0 should be sufficient.
     in_range(i, length(pq)) || throw_argument_error(
         typename(pq), " has no node with key ", key)
-    @inbounds r = getindex(nodes(pq), i)
+    r = @inbounds nodes(pq)[i]
     return get_val(r)
 end
 
@@ -333,14 +333,12 @@ for keytype in (:Integer, :(FastIndex...))
         @propagate_inbounds function Base.getindex(pq::FastPriorityQueue,
                                                    key::$keytype)
             k = linear_index(pq, key)
-            @inbounds i = getindex(index(pq), k)
+            i = @inbounds index(pq)[k]
             A = nodes(pq)
-            if in_range(i, A)
-                @inbounds x = A[i]
-                return get_val(x)
-            end
-            throw_argument_error(typename(pq), " has no node with key ",
-                                 normalize_key(pq, key))
+            in_range(i, A) || throw_argument_error(
+                typename(pq), " has no node with key ", normalize_key(pq, key))
+            x = @inbounds A[i]
+            return get_val(x)
         end
         @propagate_inbounds function Base.setindex!(pq::FastPriorityQueue, val,
                                                     key::$keytype)

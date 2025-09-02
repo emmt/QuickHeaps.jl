@@ -82,8 +82,7 @@ heap_parent(i::Int) = div(i, 2)
 
 @inline function Base.getindex(h::AbstractBinaryHeap, i::Int)
     @boundscheck checkbounds(h, i)
-    @inbounds r = getindex(storage(h), i)
-    return r
+    return @inbounds storage(h)[i]
 end
 
 @propagate_inbounds Base.setindex!(h::AbstractBinaryHeap, x, i::Int) =
@@ -112,8 +111,7 @@ Base.first(h::AbstractBinaryHeap) = peek(h)
 # NOTE QuickHeaps.peek is Base.peek if it is defined.
 function peek(h::AbstractBinaryHeap)
     isempty(h) && throw_argument_error(typename(h), " is empty")
-    @inbounds r = getindex(storage(h), 1)
-    return r
+    return @inbounds storage(h)[1]
 end
 
 Base.empty!(h::FastBinaryHeap) = (setfield!(h, :count, 0); h)
