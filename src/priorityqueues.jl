@@ -138,18 +138,11 @@ node_type(pq::AbstractPriorityQueue) = node_type(typeof(pq))
 node_type(::Type{<:PriorityQueue{K,V,O,T}}) where {K,V,O,T} = T
 node_type(::Type{<:FastPriorityQueue{V,N,O,T}}) where {V,N,O,T} = T
 
-# Implement abstract dictionary API for priority queues.
+# Implement abstract dictionary API for priority queues. NOTE `keytype` and `valtype` are
+# already provided for any type inheriting from `AbstractDict`.
 
 Base.length(pq::AbstractPriorityQueue) = length(nodes(pq))
-
 Base.isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
-
-Base.keytype(pq::AbstractPriorityQueue) = keytype(typeof(pq))
-Base.keytype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = K
-
-Base.valtype(pq::AbstractPriorityQueue) = valtype(typeof(pq))
-Base.valtype(::Type{<:AbstractPriorityQueue{K,V}}) where {K,V} = V
-
 Base.haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
 
 for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
