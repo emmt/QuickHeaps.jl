@@ -11,18 +11,19 @@ priority of a node is based on its value, but this may be changed by using custo
 and/or ordering types.
 
 Having a specific node type different than, say, `Pair{K,V}` is to allow customizing how the
-nodes are compared for ordering by specializing `Base.lt` without
+nodes are compared for ordering by specializing `QuickHeaps.lt` without
 [type-piracy](https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-type-piracy).
 
-A node `x` can be iterated and converted into a pair or a 2-tuple of its key `k` and its
-value `v` and conversely:
+A node `x` can be iterated and converted into a pair or a 2-tuple of its `key` and its value
+`val` and conversely:
 
 ```julia
-k, v = x                # extract key and value of a node
-Pair(x)                 # yields k=>v
-Tuple(x)                # yields (k,v)
-QuickHeaps.Node((k, v)) # is the same as QuickHeaps.Node(k, v)
-QuickHeaps.Node(k => v) # is the same as QuickHeaps.Node(k, v)
+x = QuickHeaps.Node(key, val)   # builds a node
+x = QuickHeaps.Node((key, val)) # idem
+x = QuickHeaps.Node(key => val) # idem
+key, val = x                    # extract key and value of a node
+Pair(x)                         # yields key=>val
+Tuple(x)                        # yields (key,val)
 ```
 
 The non-exported methods [`QuickHeaps.get_key(x)`](@ref QuickHeaps.get_key) and
@@ -37,14 +38,14 @@ struct KeyOnlyNode{K} <: QuickHeaps.AbstractNode{K,Nothing}
 end
 QuickHeaps.get_key(x::KeyOnlyNode) = getfield(x, :key)
 QuickHeaps.get_val(x::KeyOnlyNode) = nothing
-KeyOnlyNode(x::Tuple{K,Nothing}) where {K} = KeyOnlyNode{K}(x[1])
-KeyOnlyNode(x::Pair{K,Nothing}) where {K} = KeyOnlyNode{K}(x.first)
+KeyOnlyNode(key::K, ::Nothing) where {K} = KeyOnlyNode{K}(key)
+KeyOnlyNode((key, _)::Union{Tuple{K,V},Pair{K,V}}) where {K,V<:Nothing} = KeyOnlyNode{K}(key)
 ```
 
-To provide your own ordering rules, you may specialize `Base.lt` which otherwise defaults
-to:
+To provide your own ordering rules, you may specialize [`QuickHeaps.lt`](@ref) which
+otherwise defaults to:
 
 ```julia
-Base.lt(o::Ordering, a::QuickHeaps.AbstractNode, b::QuickHeaps.AbstractNode) =
-    lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
+QuickHeaps.lt(o::Ordering, x::QuickHeaps.AbstractNode, y::QuickHeaps.AbstractNode) =
+    Base.Order.lt(o, QuickHeaps.get_val(x), QuickHeaps.get_val(y))
 ```

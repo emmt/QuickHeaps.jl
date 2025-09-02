@@ -97,7 +97,7 @@ end
 
 Base.first(h::AbstractBinaryHeap) = peek(h)
 
-# NOTE QuickHeaps.peek is Base.peek if it is defined.
+# NOTE `QuickHeaps.peek` is `Base.peek` if this symbol is defined in base Julia.
 function peek(h::AbstractBinaryHeap)
     isempty(h) && throw_argument_error(typename(h), " is empty")
     return @inbounds storage(h)[1]

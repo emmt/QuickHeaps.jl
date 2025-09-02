@@ -99,17 +99,48 @@ end
 """
     QuickHeaps.AbstractPriorityQueue{K,V,O}
 
-is the super type of priority queues with nodes consisting in pairs of keys of type `K`,
-priority values of type `V`, and ordering of type `O<:Base.Ordering`.
-
-Priority queues implement an API similar to dictionaries with the additional feature of
-maintaining an ordered structure so that getting the node of highest priority costs `O(1)`
-while pushing a node costs `O(log(n))` with `n` the size of the queue. See online
-documentation for more details.
+is the super type of priority queues with ordering of type `O<:Base.Ordering` and storing
+nodes associating a key of type `K` with a priority value of type `V`.
 
 Package `QuickHeaps` provides two concrete types of priority queues: [`PriorityQueue`](@ref)
-for any kind of keys and [`FastPriorityQueue`](@ref) for keys which are analogous to array
+for any kind of keys and [`FastPriorityQueue`](@ref) for which keys are analogous to array
 indices.
+
+Priority queues behave like dictionaries with the additional feature of automatically
+maintaining an ordered structure according to the priority queue ordering and the node
+values. For a priority queue `pq`, retrieving the *root* node (i.e., the one of highest
+priority) without removing it costs `O(1)` and is done by:
+
+    peek(pq, T=Pair) -> T(key, val)
+
+with `T` the type of the expected result. Retrieving the value of a node given its `key` has
+also an `O(1)` complexity and is done by one of:
+
+    pq[key...] -> val
+    getindex(pq, key...) -> val
+    get(pq, key, def) -> val_at_key_or_def
+
+Changing the content of the priority queue has a complexity of `O(log(n))` with `n =
+length(pq)` the number of nodes in the queue. This includes removing the node at `key`
+by:
+
+    delete!(pq, key) -> pq
+
+or removing the root node by:
+
+    pop!(pq)          # -> root node as a `key=>val` pair
+    dequeue!(pq)      # -> key of root node
+    dequeue_pair!(pq) # -> root node as a `key=>val` pair
+    dequeue_node!(pq) # -> root node as stored in priority queue
+
+or setting a node `x` with a given `key` and value `val` by one of:
+
+    pq[key] = val
+    enqueue!(pq, key, val)
+    enqueue!(pq, key => val)
+    push!(pq, key => val)
+    push!(pq, (key, val))
+    push!(pq, x) # x is a node with a key and a value
 
 """
 abstract type AbstractPriorityQueue{K,V,O<:Ordering} <: AbstractDict{K,V} end

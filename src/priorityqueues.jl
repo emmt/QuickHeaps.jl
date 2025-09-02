@@ -111,9 +111,8 @@ Base.show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
 """
     QuickHeaps.index(pq) -> I
 
-yields the object `I` storing the key-index association in priority queue `pq`. This object
-can be used as `I[key]` to yield , for a given key, the index in `QuickHeaps.nodes(pq)`, the
-associated binary heap.
+Yield the *key to index* mapping of priority queue `pq` such that `I[key]` is the index of
+the node associated with `key` in the binary heap `QuickHeaps.nodes(pq)`.
 
 """
 index(pq::AbstractPriorityQueue) = getfield(pq, :index)
@@ -121,7 +120,8 @@ index(pq::AbstractPriorityQueue) = getfield(pq, :index)
 """
     QuickHeaps.nodes(pq)
 
-yields the array backing the storage of the nodes of priority queue `pq`.
+Yield the vector backing the storage of the nodes of priority queue `pq`. This vector has a
+binary-heap structure.
 
 """
 nodes(pq::AbstractPriorityQueue) = getfield(pq, :nodes)
@@ -239,9 +239,10 @@ Base.pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
 """
     dequeue!(pq) -> key
 
-removes the root node from the priority queue `pq` and returns its key.
+Remove the root node from the priority queue `pq` and return its key.
 
-Also see [`dequeue_node!`](@ref) and [`dequeue_pair!`](@ref).
+You may call_node!(pq)`](@ref dequeue_node!) or [`dequeue_pair!(pq)`](@ref dequeue_pair!) to
+dequeue the root node as stored in `pq` or as a key-value pair.
 
 """
 dequeue!(pq::AbstractPriorityQueue) = get_key(dequeue_node!(pq))
@@ -249,7 +250,7 @@ dequeue!(pq::AbstractPriorityQueue) = get_key(dequeue_node!(pq))
 """
     dequeue_node!(pq) -> node
 
-removes and returns the root node from the priority queue `pq`.
+Removes and return the root node from the priority queue `pq`.
 
 Also see [`dequeue!`](@ref) and [`dequeue_pair!`](@ref).
 
@@ -330,30 +331,31 @@ normalize_key(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}}) =
     to_indices(index(pq), key)
 
 """
-    Quickheaps.to_key(pq, k)
+    QuickHeaps.to_key(pq, key)
 
-converts the key `k` to the type of keys used by the priority queue `pq`.
+Convert `key` to the type of keys used by the priority queue `pq`.
 
 """
 to_key(pq::AbstractPriorityQueue{K,V}, key::K) where {K,V} = key
 to_key(pq::AbstractPriorityQueue{K,V}, key) where {K,V} = as(K, key)
 
 """
-    Quickheaps.to_val(pq, v)
+    QuickHeaps.to_val(pq, val)
 
-converts the value `v` to the type of values stored by the priority queue `pq`.
+Convert value `val` to the type of values stored by the priority queue `pq`.
 
 """
 to_val(pq::AbstractPriorityQueue{K,V}, val::V) where {K,V} = val
 to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = as(V, val)
 
 """
-    Quickheaps.to_node(pq, k, v)
+    QuickHeaps.to_node(pq, key => val)
+    QuickHeaps.to_node(pq, key, val)
 
-converts the key `k` and the value `v` into a node type suitable for priority queue `pq`.
+Convert the association of `key` and value `val` into a node of the type stored by the priority queue
+`pq`.
 
 """
-to_node(pq::AbstractPriorityQueue, x) = to_node(pq, get_key(x), get_val(x))
 to_node(pq::AbstractPriorityQueue, (key, val)::Pair) = to_node(pq, key, val)
 function to_node(pq::AbstractPriorityQueue, key, val)
     T = node_type(pq)
@@ -361,11 +363,21 @@ function to_node(pq::AbstractPriorityQueue, key, val)
 end
 
 """
-    Quickheaps.heap_index(pq, k) -> i::Int
+    QuickHeaps.to_node(pq, x)
 
-yields the index of the key `k` in the binary heap backing the storage of the nodes of the
-priority queue `pq`. If the key is not in priority queue, `i = 0` is returned, otherwise `i
-∈ 1:n` with `n = length(pq)` is returned.
+Convert `x` into a node of the type stored by the priority queue `pq`. Methods
+[`QuickHeaps.get_key(x)`](@ref QuickHeaps.get_key) and [`QuickHeaps.get_val(x)`](@ref
+QuickHeaps.get_val) must be implemented for object `x`,
+
+"""
+to_node(pq::AbstractPriorityQueue, x) = to_node(pq, get_key(x), get_val(x))
+
+"""
+    QuickHeaps.heap_index(pq, key) -> i::Int
+
+Return the index `i` corresponding to `key` in the binary heap backing the storage of the
+nodes of the priority queue `pq`. If the `key` is not in priority queue, `i = 0` is
+returned, otherwise `i ∈ 1:n` with `n = length(pq)` is returned.
 
 The `heap_index` method is used to implement `haskey`, `get`, and `delete!` methods for
 priority queues. The `heap_index` method shall be specialized for any concrete sub-types of
@@ -395,9 +407,9 @@ function heap_index(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}})
 end
 
 """
-    QuickHeaps.linear_index(pq, k)
+    QuickHeaps.linear_index(pq, key) -> k::Int
 
-converts key `k` into a linear index suitable for the fast priority queue `pq`. The key can
+Convert `key` into a linear index suitable for the fast priority queue `pq`. The `key` can
 be a linear index or a multi-dimensional index (anything accepted by `to_indices`). The
 current settings for bounds checking are used.
 
@@ -425,6 +437,24 @@ linear_index(pq::FastPriorityQueue, key) = throw_invalid_key(pq, key)
     " expecting a linear index, an ", ndims(index(pq)),
     "-dimensional Cartesian index")
 
+"""
+    pq[key...] = val
+    setindex!(pq, val, key...) -> pq
+    enqueue!(pq, key, val) -> pq
+    enqueue!(pq, key=>val) -> pq
+    push!(pq, key=>val) -> pq
+
+Set the value `val` stored by the priority queue `pq` at index `key` automatically
+maintaining the partial ordering of `pq`.
+
+If `x` is an object which has a key and a value retrievable by
+[`QuickHeaps.get_key(x)`](@ref QuickHeaps.get_key) and [`QuickHeaps.get_val(x)`](@ref
+QuickHeaps.get_val), then the following calls are other possibilities:
+
+    enqueue!(pq, x) -> pq
+    push!(pq, x) -> pq
+
+"""
 enqueue!(pq::AbstractPriorityQueue, key, val) = enqueue!(pq, key=>val)
 
 # For a general purpose priority queue, build the node then enqueue.
