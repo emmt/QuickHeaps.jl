@@ -1,6 +1,7 @@
 SOURCES = \
     make.jl \
     src/binaryheaps.md \
+    src/customize.md \
     src/index.md \
     src/install.md \
     src/library.md \

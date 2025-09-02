@@ -30,6 +30,7 @@ QuickHeaps.FastPriorityQueue
 dequeue!(::QuickHeaps.AbstractPriorityQueue)
 dequeue_node!
 dequeue_pair!
+enqueue!(::QuickHeaps.AbstractPriorityQueue, ::Any, ::Any)
 ```
 
 ## Nodes

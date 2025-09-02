@@ -12,8 +12,8 @@ makedocs(
     ),
     authors = "Éric Thiébaut and contributors",
     modules = [QuickHeaps],
-    pages = ["index.md", "install.md", "binaryheaps.md",
-         "priorityqueues.md", "nodes.md", "library.md"],
+    pages = ["index.md", "install.md", "binaryheaps.md", "priorityqueues.md",
+             "nodes.md", "customize.md", "library.md"],
     checkdocs = :exports,
 )
 
