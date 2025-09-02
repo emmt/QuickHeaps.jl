@@ -147,13 +147,13 @@ abstract type AbstractPriorityQueue{K,V,O<:Ordering} <: AbstractDict{K,V} end
 
 struct PriorityQueue{K,V,O,T} <: AbstractPriorityQueue{K,V,O}
     order::O
-    nodes::Vector{T}
-    index::Dict{K,Int}
+    nodes::Vector{T}   # heap of nodes
+    index::Dict{K,Int} # key -> heap index mapping
 end
 
 struct FastPriorityQueue{V,N,O,
                          T<:AbstractNode{Int,V}} <: AbstractPriorityQueue{Int,V,O}
     order::O
-    nodes::Vector{T}
-    index::Array{Int,N}
+    nodes::Vector{T}    # heap of nodes
+    index::Array{Int,N} # key -> heap index mapping
 end

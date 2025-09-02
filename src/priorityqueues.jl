@@ -134,8 +134,8 @@ node_type(::Type{<:FastPriorityQueue{V,N,O,T}}) where {V,N,O,T} = T
 # already provided for any type inheriting from `AbstractDict`.
 
 Base.length(pq::AbstractPriorityQueue) = length(nodes(pq))
-Base.isempty(pq::AbstractPriorityQueue) = (length(pq) ≤ 0)
-Base.haskey(pq::AbstractPriorityQueue, key) = (heap_index(pq, key) != 0)
+Base.isempty(pq::AbstractPriorityQueue) = length(pq) < 1
+Base.haskey(pq::AbstractPriorityQueue, key) = heap_index(pq, key) != 0
 
 for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
     @eval function Base.$func(pq::AbstractPriorityQueue, key, def)
@@ -234,8 +234,6 @@ function Base.iterate(itr::PriorityQueueIterator, i::Int = 1)
     return itr.f(x), i + 1
 end
 
-Base.pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
-
 """
     dequeue!(pq) -> key
 
@@ -258,9 +256,9 @@ Also see [`dequeue!`](@ref) and [`dequeue_pair!`](@ref).
 function dequeue_node!(pq::AbstractPriorityQueue)
     # The code is almost the same as pop! for a binary heap.
     n = length(pq)
-    n ≥ 1 || throw_argument_error(typename(pq), " is empty")
+    n > 0 || throw_argument_error(typename(pq), " is empty")
     A = nodes(pq)
-    x = @inbounds A[1]
+    x = @inbounds A[1] # get root node
     if n > 1
         # Peek the last node and down-heapify starting at the root of the binary heap to
         # insert it.
@@ -282,6 +280,9 @@ Also see [`dequeue!`](@ref) and [`dequeue_node!`](@ref).
 
 """
 dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
+
+# Implement `pop!` as for any dictionary.
+Base.pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
 
 # Implement `push!` for priority queues. NOTE Multi-push is already implemented for any
 # collection; for `AbstractDict`, pushing pair(s) via `setindex!` is also already
@@ -549,8 +550,8 @@ unsafe_delete_key!(pq::AbstractPriorityQueue{K}, key::K) where {K} =
 unsafe_delete_key!(I::Array{Int}, key::Int) = @inbounds I[key] = 0
 unsafe_delete_key!(I::AbstractDict, key) = delete!(I, key)
 
-@inline function unsafe_heapify_down!(pq::AbstractPriorityQueue, i::Int,
-                                      x, n::Int = length(pq))
+@inline function unsafe_heapify_down!(pq::AbstractPriorityQueue, i::Int, x,
+                                      n::Int = length(pq))
     o = ordering(pq)
     A = nodes(pq)
     I = index(pq)
