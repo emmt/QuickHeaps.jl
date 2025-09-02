@@ -396,7 +396,7 @@ The `heap_index` method is used to implement `haskey`, `get`, and `delete!` meth
 priority queues. The `heap_index` method shall be specialized for any concrete sub-types of
 `QuickHeaps.AbstractPriorityQueue`.
 
-""" heap_index # NOTE: `heap_index` ~ `ht_keyindex` in `base/dict.jl`
+""" heap_index # NOTE: `heap_index` is like `ht_keyindex` in `base/dict.jl`
 
 # By default, pretend that the key is missing.
 heap_index(pq::AbstractPriorityQueue, key) = 0
@@ -406,29 +406,17 @@ heap_index(pq::PriorityQueue, key) = get(index(pq), key, 0)
 function heap_index(pq::FastPriorityQueue, key::Integer)
     k = as(Int, key)
     I = index(pq)
-    in_range(k, I) || return 0
-    @inbounds i = I[k]
-    return i
+    return in_range(k, I) ? (@inbounds I[k]) : 0
 end
 
-function heap_index(pq::FastPriorityQueue,
-                    key::CartesianIndex)
+function heap_index(pq::FastPriorityQueue, key::CartesianIndex)
     I = index(pq)
-    if checkbounds(Bool, I, key)
-        @inbounds i = I[key]
-        return i
-    end
-    return 0
+    return checkbounds(Bool, I, key) ? (@inbounds I[key]) : 0
 end
 
-function heap_index(pq::FastPriorityQueue,
-                    key::Tuple{Vararg{FastIndex}})
+function heap_index(pq::FastPriorityQueue, key::Tuple{Vararg{FastIndex}})
     I = index(pq)
-    if checkbounds(Bool, I, key...)
-        @inbounds i = I[key...]
-        return i
-    end
-    return 0
+    return checkbounds(Bool, I, key...) ? (@inbounds I[key...]) : 0
 end
 
 """
@@ -439,14 +427,10 @@ be a linear index or a multi-dimensional index (anything accepted by `to_indices
 current settings for bounds checking are used.
 
 """
-@inline @propagate_inbounds linear_index(pq::FastPriorityQueue, key::Integer) =
-    # Convert to Int, then re-call linear_index for bound checking. The type assertion
-    # performed by `as` avoids infinite recursion.
-    linear_index(pq, as(Int, key))
-
-@inline function linear_index(pq::FastPriorityQueue, key::Int)
-    @boundscheck checkbounds(index(pq), key)
-    return key
+@inline function linear_index(pq::FastPriorityQueue, key::Integer)
+    k = as(Int, key)
+    @boundscheck checkbounds(index(pq), k)
+    return k
 end
 
 @inline @propagate_inbounds function linear_index(pq::FastPriorityQueue,
@@ -480,7 +464,7 @@ enqueue!(pq::PriorityQueue{K,V,O,T}, x::Any) where {K,V,O,T} =
     k = linear_index(pq, key) # not to_key
     v = to_val(pq, val)
     x = to_node(pq, k, v)
-    @inbounds i = getindex(index(pq), k)
+    i = @inbounds index(pq)[k]
     return unsafe_enqueue!(pq, x, i)
 end
 
