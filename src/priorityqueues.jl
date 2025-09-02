@@ -172,14 +172,14 @@ function Base.delete!(pq::AbstractPriorityQueue, key)
         i = heap_index(pq, key)
         if in_range(i, n) # FIXME: Testing that i > 0 should be sufficient.
             A = nodes(pq)
-            @inbounds k = get_key(A[i]) # key to be deleted
+            k = @inbounds get_key(A[i]) # key to be deleted
             if i < n
                 # Replace the deleted node by the last node in the heap and up-/down-heapify
                 # to restore the binary heap structure. We cannot assume that the deleted
-                # node data be accessible nor valid, so we explicitely replace it before
-                # deciding in which direction to go and reheapify. Also see
+                # node data be accessible nor valid, so we explicitly replace it before
+                # deciding in which direction to go and re-heapify. Also see
                 # `unsafe_enqueue!`.
-                @inbounds x = A[n] # get last node
+                x = @inbounds A[n] # get last node
                 @inbounds A[i] = x # replace deleted node
                 o = ordering(pq)
                 if i ≤ 1 || lt(o, (@inbounds A[heap_parent(i)]), x)
@@ -274,11 +274,11 @@ function dequeue_node!(pq::AbstractPriorityQueue)
     n = length(pq)
     n ≥ 1 || throw_argument_error(typename(pq), " is empty")
     A = nodes(pq)
-    @inbounds x = A[1]
+    x = @inbounds A[1]
     if n > 1
         # Peek the last node and down-heapify starting at the root of the binary heap to
         # insert it.
-        @inbounds y = A[n]
+        y = @inbounds A[n]
         unsafe_heapify_down!(pq, 1, y, n - 1)
     end
     unsafe_delete_key!(pq, get_key(x))

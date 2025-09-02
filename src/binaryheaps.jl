@@ -88,11 +88,10 @@ end
 @propagate_inbounds Base.setindex!(h::AbstractBinaryHeap, x, i::Int) =
     setindex!(h, as(eltype(h), x), i)
 
-@inline function Base.setindex!(h::AbstractBinaryHeap{T},
-                                x::T, i::Int) where {T}
+@inline function Base.setindex!(h::AbstractBinaryHeap{T}, x::T, i::Int) where {T}
     @boundscheck checkbounds(h, i)
     A = storage(h)
-    @inbounds y = A[i] # replaced value
+    y = @inbounds A[i] # replaced value
     o = ordering(h)
     if lt(o, y, x)
         # Heap structure _above_ replaced entry will remain valid, down-heapify to fix the
@@ -121,11 +120,11 @@ function Base.pop!(h::AbstractBinaryHeap)
     n = length(h)
     n ≥ 1 || throw_argument_error(typename(h), " is empty")
     A = storage(h)
-    @inbounds x = A[1]
+    x = @inbounds A[1]
     if n > 1
         # Peek the last value and down-heapify starting at the root of the binary heap to
         # insert it.
-        @inbounds y = A[n]
+        y = @inbounds A[n]
         unsafe_heapify_down!(ordering(h), A, 1, y, n - 1)
     end
     unsafe_shrink!(h, n - 1)
@@ -169,8 +168,8 @@ function Base.delete!(h::AbstractBinaryHeap, i::Int)
         # restore the binary heap structure.
         A = storage(h)
         o = ordering(h)
-        @inbounds x = A[n] # value to replace deleted value
-        @inbounds y = A[i] # deleted value
+        x = @inbounds A[n] # value to replace deleted value
+        y = @inbounds A[i] # deleted value
         if lt(o, y, x)
             # Heap structure _above_ deleted entry will remain valid, down-heapify to fix
             # the heap structure at and _below_ the entry.
