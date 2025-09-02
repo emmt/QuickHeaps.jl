@@ -282,20 +282,13 @@ Also see [`dequeue!`](@ref) and [`dequeue_node!`](@ref).
 """
 dequeue_pair!(pq::AbstractPriorityQueue) = Pair(dequeue_node!(pq))
 
-# For AbstractDict, pushing pair(s) is already implemented via setindex!. Implement push!
-# for 2-tuples and nodes in a similar way as for AbstractDict.
+# Implement `push!` for priority queues. NOTE Multi-push is already implemented for any
+# collection; for `AbstractDict`, pushing pair(s) via `setindex!` is also already
+# implemented.
 Base.push!(pq::AbstractPriorityQueue, x::AbstractNode) =
     enqueue!(pq, get_key(x), get_val(x))
 Base.push!(pq::AbstractPriorityQueue, x::Tuple{Any,Any}) =
     enqueue!(pq, x[1], x[2])
-for T in (AbstractNode, Tuple{Any,Any})
-    @eval begin
-        Base.push!(pq::AbstractPriorityQueue, a::$T, b::$T) =
-            push!(push!(pq, a), b)
-        Base.push!(pq::AbstractPriorityQueue, a::$T, b::$T, c::$T...) =
-            push!(push!(push!(pq, a), b), c...)
-    end
-end
 
 function Base.getindex(pq::PriorityQueue, key)
     i = heap_index(pq, key)

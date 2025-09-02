@@ -1,4 +1,4 @@
-module TestingQuicjPriorityQueues
+module TestingQuickPriorityQueues
 
 using Test
 
