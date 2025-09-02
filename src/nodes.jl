@@ -1,17 +1,4 @@
 """
-    QuickHeaps.AbstractNode{K,V}
-
-is the super-type of nodes with a key of type `K` and a value of type `V`. Nodes can be used
-in binary heaps and priority queues to represent key-value pairs and specific ordering rules
-may be imposed by specializing the `QuickHeaps.lt` method which is by default:
-
-    QuickHeaps.lt(o::Ordering, a::T, b::T) where {T<:QuickHeaps.AbstractNode} =
-        Base.Order.lt(o, QuickHeaps.get_val(a), QuickHeaps.get_val(b))
-
-"""
-abstract type AbstractNode{K,V} end
-
-"""
     QuickHeaps.Node{K=typeof(k),V=typeof(v)}(k,v)
 
 yields a node storing key `k` and value `v`. Optional type parameters `K` and `V` are the
@@ -19,12 +6,8 @@ respective types of the key and of the value.
 
 See also [`QuickHeaps.AbstractNode`](@ref), [`QuickHeaps.AbstractPriorityQueue`](@ref).
 
-"""
-struct Node{K,V} <: AbstractNode{K,V}
-    key::K
-    val::V
-    Node{K,V}(key, val) where {K,V} = new{K,V}(key, val)
-end
+""" Node
+
 Node{K}(key, val::V) where {K,V} = Node{K,V}(key, val)
 Node(key::K, val::V) where {K,V} = Node{K,V}(key, val)
 
@@ -61,11 +44,13 @@ Node(x::AbstractNode) = Node(get_key(x), get_val(x))
 Node{K}(x::AbstractNode) where {K} = Node{K}(get_key(x), get_val(x))
 Node{K,V}(x::AbstractNode) where {K,V} = Node{K,V}(get_key(x), get_val(x))
 
+# Build a node from a tuple and conversely.
 Node(x::Tuple{Any,Any}) = Node(x[1], x[2])
 Node{K}(x::Tuple{Any,Any}) where {K} = Node{K}(x[1], x[2])
 Node{K,V}(x::Tuple{Any,Any}) where {K,V} = Node{K,V}(x[1], x[2])
 Tuple(x::AbstractNode) = (get_key(x), get_val(x))
 
+# Build a node from a pair and conversely.
 Node(x::Pair) = Node(x.first, x.second)
 Node{K}(x::Pair) where {K} = Node{K}(x.first, x.second)
 Node{K,V}(x::Pair) where {K,V} = Node{K,V}(x.first, x.second)
@@ -79,6 +64,3 @@ Base.convert(::Type{T}, x::Pair) where {T<:AbstractNode} = T(x)
 @inline iterate(x::AbstractNode, state::Int = 0) =
     state === 0 ? (get_key(x), 1) :
     state === 1 ? (get_val(x), 2) : nothing
-
-# Nodes are sorted according to their values.
-lt(o::Ordering, x::T, y::T) where {T<:AbstractNode} = lt(o, get_val(x), get_val(y))

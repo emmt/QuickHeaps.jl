@@ -1,27 +1,5 @@
 """
-    QuickHeaps.AbstractPriorityQueue{K,V,O}
-
-is the super type of priority queues with nodes consisting in pairs of keys of type `K`,
-priority values of type `V`, and ordering of type `O<:Base.Ordering`.
-
-Priority queues implement an API similar to dictionaries with the additional feature of
-maintaining an ordered structure so that getting the node of highest priority costs `O(1)`
-while pushing a node costs `O(log(n))` with `n` the size of the queue. See online
-documentation for more details.
-
-Package `QuickHeaps` provides two concrete types of priority queues: [`PriorityQueue`](@ref)
-for any kind of keys and [`FastPriorityQueue`](@ref) for keys which are analogous to array
-indices.
-
-"""
-abstract type AbstractPriorityQueue{K,V,O<:Ordering} <: AbstractDict{K,V} end
-
-default_ordering(::Type{<:AbstractPriorityQueue}) = Forward
-
-typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
-
-"""
-    PriorityQueue{K,V}([o=Forward,] T=Node{K,V})
+    PriorityQueue{K,V}([o=SafeMin,] T=Node{K,V})
 
 yields a priority queue for keys of type `K` and priority values of type `V`. Optional
 arguments `o::Ordering` and `T<:AbstractNode{K,V}` are to specify the ordering of values and
@@ -34,42 +12,9 @@ called to determine the order.
 If keys are analogous to array indices (linear or Cartesian), [`FastPriorityQueue`](@ref)
 may provide a faster alternative.
 
-"""
-struct PriorityQueue{K,V,O,T} <: AbstractPriorityQueue{K,V,O}
-    order::O
-    nodes::Vector{T}
-    index::Dict{K,Int}
-end
+""" PriorityQueue
 
-# Copy constructor. The copy is independent from the original.
-copy(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
-    PriorityQueue{K,V,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
-
-"""
-    FastPriorityQueue{V}([o=Forward,] [T=Node{Int,V},] dims...)
-
-yields a priority queue for keys analogous of indices in an array of size `dims...` and
-priority values of type `V`. Optional arguments `o::Ordering` and `T<:AbstractNode{Int,V}`
-are to specify the ordering of values and type of nodes to store key-value pairs (the key is
-stored as a linear index of type `Int`). Type parameter `V` may be omitted if the node type
-`T` is specified.
-
-See [`PriorityQueue`](@ref) if keys cannot be assumed to be array indices.
-
-"""
-struct FastPriorityQueue{V,N,O,
-                         T<:AbstractNode{Int,V}} <: AbstractPriorityQueue{Int,V,O}
-    order::O
-    nodes::Vector{T}
-    index::Array{Int,N}
-end
-
-# Copy constructor.  The copy is independent from the original.
-copy(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
-    FastPriorityQueue{V,N,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
-
-# Constructors for PriorityQueue instances.
-
+# Constructors of PriorityQueue instances.
 function PriorityQueue{K,V}(o::O = default_ordering(PriorityQueue),
                             ::Type{T} = Node{K,V}) where {K,V,O<:Ordering,
                                                           T<:AbstractNode{K,V}}
@@ -91,7 +36,20 @@ PriorityQueue{K}(o::Ordering, ::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
 PriorityQueue(o::Ordering, ::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
     PriorityQueue{K,V}(o, T)
 
-# Constructors for FastPriorityQueue instances.
+"""
+    FastPriorityQueue{V}([o=FastMin,] [T=Node{Int,V},] dims...)
+
+yields a priority queue for keys analogous of indices in an array of size `dims...` and
+priority values of type `V`. Optional arguments `o::Ordering` and `T<:AbstractNode{Int,V}`
+are to specify the ordering of values and type of nodes to store key-value pairs (the key is
+stored as a linear index of type `Int`). Type parameter `V` may be omitted if the node type
+`T` is specified.
+
+See [`PriorityQueue`](@ref) if keys cannot be assumed to be array indices.
+
+""" FastPriorityQueue
+
+# Constructors of FastPriorityQueue instances.
 
 FastPriorityQueue{V}(dims::Integer...) where {V} =
     FastPriorityQueue{V}(dims)
@@ -129,6 +87,15 @@ FastPriorityQueue(T::Type{<:AbstractNode{Int,V}}, dims::Tuple{Vararg{Integer}}) 
 FastPriorityQueue(o::O, T::Type{<:AbstractNode{Int,V}}, dims::NTuple{N,Integer}) where {O<:Ordering,V,N} =
     FastPriorityQueue{V,N,O,T}(o, T[], zeros(Int, dims))
 
+# Copy constructors. The copy is independent from the original.
+
+copy(pq::PriorityQueue{K,V,O,T}) where {K,V,O,T} =
+    PriorityQueue{K,V,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
+
+copy(pq::FastPriorityQueue{V,N,O,T}) where {V,N,O,T} =
+    FastPriorityQueue{V,N,O,T}(ordering(pq), copy(nodes(pq)), copy(index(pq)))
+
+
 #show(io::IO, ::MIME"text/plain", pq::AbstractPriorityQueue) =
 #    print(io, "priority queue of type ", nameof(typeof(pq)),
 #          " with ", length(pq), " node(s)")
@@ -147,7 +114,7 @@ show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
 yields the object `o` specifying the ordering of priority values in the priority queue `pq`.
 
 """
-ordering(pq::AbstractPriorityQueue)  = getfield(pq, :order)
+ordering(pq::AbstractPriorityQueue) = getfield(pq, :order)
 
 """
     QuickHeaps.index(pq) -> I
@@ -409,12 +376,15 @@ to_val(pq::AbstractPriorityQueue{K,V}, val) where {K,V} = as(V, val)
 converts the key `k` and the value `v` into a node type suitable for priority queue `pq`.
 
 """
+to_node(pq::AbstractPriorityQueue, x) = to_node(pq, get_key(x), get_val(x))
 to_node(pq::AbstractPriorityQueue, (key, val)::Pair) = to_node(pq, key, val)
-to_node(pq::AbstractPriorityQueue, key, val) =
-    node_type(pq)(to_key(pq, key), to_val(pq, val))
+function to_node(pq::AbstractPriorityQueue, key, val)
+    T = node_type(pq)
+    return T(to_key(pq, key), to_val(pq, val))::T
+end
 
 """
-    Quickheaps.heap_index(pq, k) -> i
+    Quickheaps.heap_index(pq, k) -> i::Int
 
 yields the index of the key `k` in the binary heap backing the storage of the nodes of the
 priority queue `pq`. If the key is not in priority queue, `i = 0` is returned, otherwise `i

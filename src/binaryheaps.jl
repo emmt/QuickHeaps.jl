@@ -1,44 +1,4 @@
 """
-    QuickHeaps.AbstractBinaryHeap{T,O}
-
-is the super-type of binary heaps in `QuickHeaps` whose values have type `T` and whose
-ordering has type `O`.
-
-The following methods are available for a binary heap `h` (those which modify the heap
-contents re-order heap values as needed to maintain the heap structure):
-
-    pop!(h)        # deletes and returns root value of heap h
-    push!(h, x)    # pushes value x in heap h
-    empty!(h)      # empties heap h
-    isempty(h)     # yields whether heap h is empty
-    delete!(h, i)  # deletes i-th value from heap h
-    peek(h)        # yields root value of heap h without deleting it
-    first(h)       # idem
-    setroot!(h, x) # same as h[1] = x, replaces root value of heap h by x
-
-A binary heap `h` behaves like an abstract vector (with 1-based linear indices), in
-particular:
-
-    length(h)   # the number of values in heap h
-    h[i]        # the i-th value of heap h
-    h[i] = x    # set the i-th value of heap h and heapify h
-
-Note that `h[1]` is the root value of the heap `h` and that setting a value in the heap may
-trigger reordering of the values to maintain the binary heap structure. In other words,
-after doing `h[i] = x`, do not assume that `h[i]` yields `x`.
-
-Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by `h[i] = x`,
-pushing by `push!(h,x)`, and extracting by `pop!(h)` are of complexity `O(1)` in the best
-case, `O(log(n))` in the worst case, with `n = length(h)` the number of values in the heap
-`h`. Retrieving a given value with `peek(h)`, `first(h)`, or `h[i]` is always of complexity
-`O(1)`.
-
-"""
-abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
-
-typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
-
-"""
     BinaryHeap{T}([o::Ordering = Forward,][ vals::AbstractVector])
 
 yields an empty binary heap whose values have type `T` and with ordering specified by `o`.
@@ -54,15 +14,7 @@ Arguments `o` and `vals` may be specified in any order.
 
 Method `sizehint!(h,n)` may be called to anticipate that the heap may contains `n` values.
 
-"""
-struct BinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
-    order::O        # ordering of values
-    data::Vector{T} # storage for the values
-    BinaryHeap{T}(o::O=default_ordering(BinaryHeap)) where {T,O<:Ordering} =
-        new{T,O}(o, Vector{T}(undef, 0))
-    BinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
-        heapify!(new{T,O}(o, vals))
-end
+""" BinaryHeap
 
 """
     FastBinaryHeap{T}([o::Ordering = FastForward,][ vals::AbstractVector])
@@ -72,19 +24,7 @@ yields a fast binary heap. Compared to `BinaryHeap{T}(...)`, the default orderin
 reduced to improve performances in some cases. You may call `resize!(h)` to explicitly
 reduce the storage of fast binary-heap `h` to its minimum.
 
-"""
-mutable struct FastBinaryHeap{T,O} <: AbstractBinaryHeap{T,O}
-    order::O        # ordering of values
-    data::Vector{T} # storage for the values
-    count::Int      # current number of values
-    FastBinaryHeap{T}(o::O=default_ordering(FastBinaryHeap)) where {T,O<:Ordering} =
-        new{T,O}(o, Vector{T}(undef, 0), 0)
-    FastBinaryHeap{T}(o::O, vals::AbstractVector) where {T,O<:Ordering} =
-        heapify!(new{T,O}(o, vals, length(vals)))
-end
-
-default_ordering(::Type{<:AbstractBinaryHeap}) = Forward
-default_ordering(::Type{<:FastBinaryHeap}) = FastForward
+""" FastBinaryHeap
 
 # Outer constructors.
 for type in (:BinaryHeap, :FastBinaryHeap)

@@ -111,53 +111,7 @@ import DataStructures:
 
 using TypeUtils
 
-#-------------------------------------------------------------------------------------------
-# In order to perform fast sorting (without taking care of NaN's), we extend `Base.Order.lt`
-# method for specialized ordering types. The ordering can be an instance or its type.
-
-using Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
-
-"""
-    FastForwardOrdering
-
-is the singleton type for fast *forward* ordering without considering NaN's.
-
-"""
-struct FastForwardOrdering <: Ordering end
-
-"""
-    QuickHeaps.lt(o::Ordering, x::T, y::T)
-
-yields whether `x` is less than `y` according to ordering `o`. This function is called by
-`QuickHeaps` to build ordered structures like binary heaps and priority queues. For `T <:
-QuickHeaps.Node`, it compares the values of the nodes `x` and `y`. It may be specialized for
-custom node type `T`. By default, it calls `Base.Order.lt` to compare values.
-
-"""
-lt(o::Ordering, x::T, y::T) where {T} = Base.Order.lt(o, x, y)
-Base.Order.lt(::FastForwardOrdering, x, y) = x < y
-
-const FastForward = FastForwardOrdering()
-const FastReverse = ReverseOrdering(FastForward)
-
-const FastMin = FastForward
-const FastMax = FastReverse
-
-const SafeMin = Forward
-const SafeMax = Reverse
-
-"""
-    default_ordering(T)
-
-yields the default ordering for an ordered data structure of type `T`. This method shall be
-specialized for each ordered data structure.
-
-"""
-default_ordering(x::Any) = default_ordering(typeof(x))
-default_ordering(::Type) = Forward
-
-#-------------------------------------------------------------------------------------------
-
+include("types.jl")
 include("utilities.jl")
 include("binaryheaps.jl")
 include("nodes.jl")
