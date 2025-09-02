@@ -182,12 +182,12 @@ end
 
 Base.first(pq::AbstractPriorityQueue) = peek(pq)
 
-# NOTE QuickHeaps.peek is Base.peek if it is defined.
-peek(pq::AbstractPriorityQueue) = peek(Pair, pq)
-function peek(T::Type, pq::AbstractPriorityQueue)
+# NOTE `QuickHeaps.peek` is `Base.peek` if this symbol is defined in base Julia.
+@deprecate(peek(::Type{T}, pq::AbstractPriorityQueue) where {T}, peek(pq, T), false)
+function peek(pq::AbstractPriorityQueue, ::Type{T}=Pair) where {T}
     isempty(pq) && throw_argument_error(typename(pq), " is empty")
     x = @inbounds nodes(pq)[1]
-    return T(x)
+    return T(x)::T
 end
 
 function Base.empty!(pq::PriorityQueue)

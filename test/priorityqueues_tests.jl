@@ -66,9 +66,15 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     @test v == (isa(o, ReverseOrdering) ? maximum : minimum)(values(A))
     @test v == first(values(A))
     @test k == first(keys(A))
-    x = peek(AbstractNode, A)
-    @test v == get_val(x)
+    x = @inferred peek(A, AbstractNode)
+    @test (@test_deprecated peek(AbstractNode, A)) === x
+    @test x isa AbstractNode
     @test k == get_key(x)
+    @test v == get_val(x)
+    y = @inferred peek(A)
+    @test y isa Pair{typeof(k),typeof(v)}
+    @test first(y) == k
+    @test last(y) == v
 
     # Check `getindex` in random order.
     test_1 = true

@@ -15,6 +15,9 @@
   was equivalent to `as(eltype(A), x)` using the
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
 
+- Syntax `peek(T::Type, pq::AbstractPriorityQueue)` is deprecated in favor of `peek(pq,T)`
+  to specify the type `T` of the returned object.
+
 ### Fixed
 
 - Ambiguities have been fixed.
