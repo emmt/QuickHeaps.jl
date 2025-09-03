@@ -100,49 +100,61 @@ As an illustration of the above discussion, below is the output of a small bench
 julia --project test/benchmarks.jl
 ```
 
-with Julia 1.6.3 on an AMD Ryzen Threadripper 2950X 16-Core Processor:
+with Julia 1.11.g on an Intel Core i7-13800H processor:
 
 ```
 Timings for "DataStructures" methods (T=Float64, n=1000):
- - DataStructures.heapify!(..., Base.Forward) ---------------------> 7.478 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., Base.Reverse) ---------------------> 7.268 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., DataStructures.FasterForward()) ---> 3.444 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., DataStructures.FasterReverse()) ---> 3.428 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., QuickHeaps.FastMin) ---------------> 3.413 μs (0 allocations: 0 bytes)
- - DataStructures.heapify!(..., QuickHeaps.FastMax) ---------------> 3.428 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., Base.Order.Forward) --------------->  2.172 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., Base.Order.Reverse) --------------->  2.166 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., DataStructures.FasterForward()) --->  1.210 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., DataStructures.FasterReverse()) --->  1.368 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., QuickHeaps.FastMin) --------------->  1.150 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., QuickHeaps.FastMax) --------------->  1.438 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., QuickHeaps.TotalMin) -------------->  1.696 μs (0 allocations: 0 bytes)
+ - DataStructures.heapify!(..., QuickHeaps.TotalMax) -------------->  1.634 μs (0 allocations: 0 bytes)
 
 Timings for "QuickHeaps" methods (T=Float64, n=1000):
- - QuickHeaps.heapify!(..., Base.Forward) -------------------------> 4.852 μs (0 allocations: 0 bytes)
- - QuickHeaps.heapify!(..., Base.Reverse) -------------------------> 4.506 μs (0 allocations: 0 bytes)
- - QuickHeaps.heapify!(..., DataStructures.FasterForward()) -------> 1.655 μs (0 allocations: 0 bytes)
- - QuickHeaps.heapify!(..., DataStructures.FasterReverse()) -------> 1.658 μs (0 allocations: 0 bytes)
- - QuickHeaps.heapify!(..., QuickHeaps.FastMin) -------------------> 1.637 μs (0 allocations: 0 bytes)
- - QuickHeaps.heapify!(..., QuickHeaps.FastMax) -------------------> 1.658 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., Base.Order.Forward) ------------------->  2.046 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., Base.Order.Reverse) ------------------->  2.039 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., DataStructures.FasterForward()) ------->  1.192 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., DataStructures.FasterReverse()) ------->  1.205 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., QuickHeaps.FastMin) ------------------->  1.044 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., QuickHeaps.FastMax) ------------------->  1.283 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., QuickHeaps.TotalMin) ------------------>  1.456 μs (0 allocations: 0 bytes)
+ - QuickHeaps.heapify!(..., QuickHeaps.TotalMax) ------------------>  1.439 μs (0 allocations: 0 bytes)
 
 Timings for "DataStructures" methods (T=Float64, n=1000):
- - DataStructures.isheap(..., Base.Forward) -----------------------> 1.910 μs (0 allocations: 0 bytes)
- - DataStructures.isheap(..., Base.Reverse) -----------------------> 1.932 μs (0 allocations: 0 bytes)
- - DataStructures.isheap(..., DataStructures.FasterForward()) -----> 563.027 ns (0 allocations: 0 bytes)
- - DataStructures.isheap(..., DataStructures.FasterReverse()) -----> 575.110 ns (0 allocations: 0 bytes)
- - DataStructures.isheap(..., QuickHeaps.FastMin) -----------------> 575.087 ns (0 allocations: 0 bytes)
- - DataStructures.isheap(..., QuickHeaps.FastMax) -----------------> 573.750 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., Base.Order.Forward) ----------------->  1.082 μs (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., Base.Order.Reverse) ----------------->  1.082 μs (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., DataStructures.FasterForward()) ----->  542.782 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., DataStructures.FasterReverse()) ----->  540.011 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., QuickHeaps.FastMin) ----------------->  538.524 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., QuickHeaps.FastMax) ----------------->  537.704 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., QuickHeaps.TotalMin) ---------------->  810.920 ns (0 allocations: 0 bytes)
+ - DataStructures.isheap(..., QuickHeaps.TotalMax) ---------------->  811.851 ns (0 allocations: 0 bytes)
 
 Timings for "QuickHeaps" methods (T=Float64, n=1000):
- - QuickHeaps.isheap(..., Base.Forward) ---------------------------> 1.820 μs (0 allocations: 0 bytes)
- - QuickHeaps.isheap(..., Base.Reverse) ---------------------------> 1.821 μs (0 allocations: 0 bytes)
- - QuickHeaps.isheap(..., DataStructures.FasterForward()) ---------> 381.527 ns (0 allocations: 0 bytes)
- - QuickHeaps.isheap(..., DataStructures.FasterReverse()) ---------> 383.847 ns (0 allocations: 0 bytes)
- - QuickHeaps.isheap(..., QuickHeaps.FastMin) ---------------------> 378.627 ns (0 allocations: 0 bytes)
- - QuickHeaps.isheap(..., QuickHeaps.FastMax) ---------------------> 384.631 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., Base.Order.Forward) --------------------->  980.067 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., Base.Order.Reverse) --------------------->  989.667 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., DataStructures.FasterForward()) --------->  412.432 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., DataStructures.FasterReverse()) --------->  413.347 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., QuickHeaps.FastMin) --------------------->  412.472 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., QuickHeaps.FastMax) --------------------->  412.749 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., QuickHeaps.TotalMin) -------------------->  680.993 ns (0 allocations: 0 bytes)
+ - QuickHeaps.isheap(..., QuickHeaps.TotalMax) -------------------->  681.757 ns (0 allocations: 0 bytes)
 ```
 
-These timings show the gain in speed for `heapify!` by using `<` instead of `isless` by a
-factor of 2.3 for the binary heap implemented by `DataStructures` and by a factor of 3.2 for
-the binary heap implemented by `QuickHeaps`.
+These timings show the gain in speed for `heapify!` by using `<` (i.e.
+`DataStructures.FasterForward()` or `QuickHeaps.FastMin`) instead of `isless` (i.e.
+`Base.Order.Forward`) by nearly a factor of 2 to the cost of leaving the order of `NaN`
+values undefined. The total order implemented by `QuickHeaps.TotalMin` fixes this issue
+while being nearly as fast as `QuickHeaps.FastMin` or `DataStructures.FasterForward()` and
+faster than `Base.Order.Forward`.
 
-These timings also show that `heapify!` in `QuickHeaps` is faster than in `DataStructures`
-by a factor greater than 1.5 with standard orderings and by a factor better than 2 with
-faster orderings.
+These timings also show that `heapify!` and `isheap` in `QuickHeaps` are always faster than
+these functions in `DataStructures`. This is achieved by proper use of `@inline`,
+`@inbounds` and `@propagate_inbounds` macros in the code implementing the algorithms in
+[`QuickHeaps`](https://github.com/emmt/QuickHeaps.jl).
 
 
 [julia-url]: https://julialang.org/
