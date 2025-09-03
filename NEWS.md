@@ -71,18 +71,18 @@ matter for the end-user.
   new default implements the same order as `Base.Order.Forward` (the former default for
   other ordered structures) but is about twice faster.
 
-## Version 0.2.2
+## Version 0.2.2 (2024-05-15)
 
 - Update compatibility for `TypeUtils`.
 
-## Version 0.2.1
+## Version 0.2.1 (2023-07-14)
 
 - Package `TypeUtils` replaces `ArrayTools`.
 
 - Non-exported method `QuickHeaps.to_eltype(A, x)` has been deprecated, use `as(eltype(A),
   x)` instead.
 
-## Version 0.2.0
+## Version 0.2.0 (2023-02-25)
 
 This version mainly provides a cleaner API where priority queues behave more like
 dictionaries.
@@ -110,8 +110,7 @@ dictionaries.
 
 - Remove unused non-exported methods `unsafe_heapify!`, `require_one_based_indexing`, ...
 
-
-## Version 0.1.2
+## Version 0.1.2 (2022-09-26)
 
 - Fix a few bugs.
 - provide docs.
