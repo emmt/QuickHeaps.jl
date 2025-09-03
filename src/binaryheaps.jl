@@ -123,14 +123,17 @@ function Base.pop!(h::AbstractBinaryHeap)
     return x
 end
 
-# Implement `push!` for binary heaps. NOTE Multi-push is already implemented for any
-# collection.
+# Implement `push!` for binary heaps. Multi-push is already implemented for any collection
+# but the implementation for abstract vectors is not suitable for our binary heaps. So we
+# provide our own version.
 Base.push!(h::AbstractBinaryHeap, x) = push!(h, as(eltype(h), x))
 function Base.push!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h) + 1
     unsafe_heapify_up!(ordering(h), unsafe_grow!(h, n), n, x)
     return h
 end
+Base.push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
+Base.push!(h::AbstractBinaryHeap, x, y, z...) = push!(push!(h, x, y), z...)
 
 """
     setroot!(h, x) -> h
