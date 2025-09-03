@@ -176,7 +176,7 @@ end
         # Do not repeat the following tests for default ordering.
         o === nil && continue
 
-        # Fill empty heap vith values.
+        # Fill empty heap with values.
         isodd(pass) && sizehint!(h1, n)
         for i in 1:n
             if T <: Integer
@@ -233,7 +233,13 @@ end
         end
         @test same_entries(h3, A)
 
-        # Perturbate heap in different ways.
+        # Unsupported methods.
+        @test_throws Exception append!(h3, 1)
+        @test_throws Exception append!(h3, 1, 2)
+        @test_throws Exception prepend!(h3, 1)
+        @test_throws Exception prepend!(h3, 1, 2)
+
+        # Perturb heap in different ways.
         vmax = maximum(vals(h4))
         for i in 1:n
             vi = convert(other_type(eltype(h4)), vmax - h4[i])

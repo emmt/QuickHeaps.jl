@@ -135,6 +135,12 @@ end
 Base.push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
 Base.push!(h::AbstractBinaryHeap, x, y, z...) = push!(push!(h, x, y), z...)
 
+# Some methods implemented by abstract vectors are purposely not supported for binary heaps.
+for func in (:(prepend!), :(append!))
+    mesg = "Binary heap `h` do not implement `$func(h, x...)` method, call `push!(h, x...)` instead"
+    @eval Base.$func(h::AbstractBinaryHeap, x...) = error($mesg)
+end
+
 """
     setroot!(h, x) -> h
 

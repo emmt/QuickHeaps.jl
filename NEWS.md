@@ -62,6 +62,8 @@ matter for the end-user.
   logical operators, `QuickHeaps.FastMin` is much faster than `isless` while being nearly as
   fast as `<`.
 
+- Methods `append!` and `prepend` are purposely not supported by binary heaps.
+
 ### Fixed
 
 - Ambiguities have been fixed.
