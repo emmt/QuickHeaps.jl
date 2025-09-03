@@ -16,25 +16,25 @@ value) may be the least or the greatest one.
 In `QuickHeaps`, a binary heap is created by the [`BinaryHeap`](@ref) constructor:
 
 ```julia
-h = BinaryHeap{T}(o = Forward)
+h = BinaryHeap{T}(o = TotalMin)
 ```
 
 where `T` is the type of the values stored by the heap and `o::Ordering` is the ordering
-rule for sorting values. The default `Forward` ordering yields a *min-heap* whose root entry
-is the smallest one. With `o = ReverseOrdering(Forward)` or `o = Reverse`, a *max-heap* is
-created. The root element of a min-heap (resp. a max-heap) is the smallest one (resp. the
-greatest one).
+rule for sorting values. The default `TotalMin` ordering yields a *min-heap* whose root
+entry is the smallest one. With `o = TotalMax`, a *max-heap* is created. A min-heap (resp. a
+max-heap) sorts its values in increasing (resp. decreasing) order, followed by `NaN` then
+`missing` values.
 
 For floating-point values, orderings `FastMin` or `FastMax` may be used, respectively,
-instead of `Forward` or `Reverse` for faster sorting of the heap. However, `FastMin` and
-`FastMax` are not consistent with NaN (*Not a Number*) values. If your data may contains
-NaNs, use `Forward` or `Reverse` instead of `FastMin` or `FastMax`. Aliases
-`SafeMin=Forward` (and `SafeMax=Reverse`) are provided by the `QuickHeaps` package.
+instead of `TotalMin` or `TotalMax` for faster sorting of the heap. However, `FastMin` and
+`FastMax` do not define the order of `NaN` values and fail on `missing` values. If your data
+may contains `NaN` or `missing` values, use `TotalMin` or `TotalMax` instead of `FastMin` or
+`FastMax`.
 
 A vector `vals` storing the initial values of the binary heap can be specified:
 
 ```julia
-h = BinaryHeap{T}(vals, o = Forward)
+h = BinaryHeap{T}(vals, o = TotalMin)
 ```
 
 to create a binary heap starting with the values in `vals`. Type parameter `T` can be

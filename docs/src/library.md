@@ -45,8 +45,10 @@ QuickHeaps.get_val
 ## Orderings
 
 ```@docs
-QuickHeaps.FastForwardOrdering
-QuickHeaps.default_ordering
+QuickHeaps.FastMin
+QuickHeaps.FastMax
+QuickHeaps.TotalMin
+QuickHeaps.TotalMax
 ```
 
 ## Miscellaneous

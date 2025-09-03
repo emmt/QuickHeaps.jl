@@ -8,11 +8,10 @@
 [![Coverage][codecov-img]][codecov-url]
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-`QuickHeaps` is a small [Julia][julia-url] package providing versatile [binary
+`QuickHeaps` is a [Julia][julia-url] package providing versatile [binary
 heaps](https://en.wikipedia.org/wiki/Binary_heap) and [priority
 queues](https://en.wikipedia.org/wiki/Priority_queue). These data structures are more
-flexible and may be quite significantly faster than those provided by
-[`DataStructures`][datastructures-url].
+flexible and are faster than those provided by [`DataStructures`][datastructures-url].
 
 ## Installation
 
@@ -39,7 +38,8 @@ The sorting algorithms in Julia are very powerful but have some issues (for me):
 
 1. Sorting algorithms involve lots of comparisons and could be much faster if we know that
    there are no NaN's in the arrays to sort or if we assume (at our own risk) that they can
-   be ignored.
+   be ignored. A better and less radical solution is to implement similar but faster
+   functions to compare values.
 
 2. Some non-exported methods may be very useful if they can be safely called.
 
@@ -48,12 +48,12 @@ This short note is bout dealing with these two points.
 
 ### Speed up sorting
 
-Sorting algorithms in Julia rely on `Base.Order.lt(o,x,y)` to check whether `x` is *before*
-`y` according to the ordering specified in `o` (the letters `lt` stands for *less than*).
-Most (all?) Julia sorting methods have an `order` keyword to specify the ordering. By
-default, ordering is `Base.Order.Forward` which is the singleton of type
+Sorting algorithms in Julia rely on `Base.Order.lt(o,x,y)` to check whether `x` is *strictly
+before* `y` according to the ordering specified in `o` (the letters `lt` stands for *less
+than*). Most (all?) Julia sorting methods have an `order` keyword to specify the ordering.
+By default, ordering is `Base.Order.Forward` which is the singleton of type
 `Base.Order.ForwardOrdering`. Another usual choice is to take `Base.Order.Reverse`. In
-short, when sorting, you are using the following definitions:
+short, when sorting, you are using the following definitions in module `Base.Order`:
 
 ```julia
 const Forward = ForwardOrdering()
@@ -65,67 +65,34 @@ lt(o::ReverseOrdering, a, b) = lt(o.fwd,b,a)
 So it turns out that, `isless` is eventually called, not the operator `<`. For integers
 `isless(x,y)` and `x < y` are the same (at least as far as execution time is concerned) but
 for floating-point values, `isless` takes care of NaN's which involves overheads and this
-may strongly impact the execution time of sorting algorithms.
-
-Simple means to ignore NaN's in sorting consists in defining your own ordering types and
-extend the `Base.Order.lt` method, this is pretty simple:
-
-```julia
-using Base: Ordering, ReverseOrdering
-struct FastForwardOrdering <: Ordering end
-const FastForward = FastForwardOrdering()
-const FastReverse = ReverseOrdering(FastForward)
-
-import Base: lt
-lt(::FastForwardOrdering, a, b) = a < b
-```
-
-Then just use keyword `order=FastForward` or `order=FastReverse` in calls to sort methods to
-benefit from a speed-up factor between 2 or 3. Almost for free! The very same trick has been
-implemented in the [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl)
-package with `DataStructures.FasterForward()` and `DataStructures.FasterReverse()`.
-
-Checking that an array has NaN's can be checked in linear time, that is `O(n)`, for arrays
-of `n` floating-point values by the following method:
+may strongly impact the execution time of sorting algorithms. A simple mean to speedup these
+comparisons consists in avoiding branching by replacing logical operators (`&&` and `||`) by
+bitwise operators (`&` and `|`). This trick is exploited by `TotalMin`, the order used by
+default in `QuickHeaps`, which yields the same [*total
+order*](https://en.wikipedia.org/wiki/Total_order) as `Base.Order.Forward` but about twice
+faster. `QuickHeaps` also provides `FastMin` order which is a bit faster than `TotalMin` but
+which leaves the order of `NaN` values undefined. For numbers, the implementation of
+`TotalMin` and `FastMin` is pretty simple:
 
 ```julia
-function has_nans(A::AbstractArray{<:AbstractFloat})
-    flag = false
-    @inbounds @simd for i in eachindex(A)
-        flag |= isnan(A[i])
-    end
-    return flag
-end
+struct TotalMinOrdering <: Base.Order.Ordering end
+const TotalMin = TotalMinOrdering()
+Base.Order.lt(::TotalMin, a::T, b::T) where {T<:Number} =
+    (! isnan(a)) & (isnan(b) | (a < b))
 ```
 
-where short-circuit has been purposely avoided to exploit SIMD optimization. The rationale
-is that if you are mostly interested in arrays with no NaN's, you expect that the entire
-array be checked. A simple benchmark follows:
+Then just use keyword `order=TotalMin` in calls to Julia sort methods to benefit from a
+speed-up factor of almost 2, for free! Other orders to consider are `TotalMax`,
+`reverse(TotalMin)`, and `reverse(TotalMax)`. Before Julia 1.8, replace `reverse(o)` by
+`Base.Order.ReverserOrdering(o)` for order `o`.
 
-```julia
-using BenchmarkTools
-x = rand(1000);
-@btime has_nans($x) # ----> 119.054 ns (0 allocations: 0 bytes)
-```
-
-which is much shorter than the time it takes to heapify the array. This test could be
-applied to arrays of floating-point values to choose between fast/slow ordering. This would
-not change the behavior of the sorting methods but would significantly reduce the execution
-time most of the time.
-
-For integer-valued arrays, it takes `O(1)` time to check for NaN's:
-
-```julia
-has_nans(A::AbstractArray{<:Integer}) = false
-```
-
-An additional speed-up by a factor between 1.5 and 2 is achievable by proper use of
-`@inline`, `@inbounds` and `@propagate_inbounds` macros in the code implementing the sorting
-algorithms. This however requires to modify existing code. This is what is done in
-[`QuickHeaps`](https://github.com/emmt/QuickHeaps.jl).
+Package [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl) provides
+`DataStructures.FasterForward()` and `DataStructures.FasterReverse()` orders which are the
+same as `QuickHeaps.FastMin` and `QuickHeaps.FastMax`. Hence, fast for floating-point values
+but leaving undefined the order `NaN` values.
 
 
-### Application to binary heaps
+### Benchmarking binary heaps
 
 As an illustration of the above discussion, below is the output of a small benchmark ran by:
 

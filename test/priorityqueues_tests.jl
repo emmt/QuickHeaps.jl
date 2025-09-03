@@ -5,15 +5,15 @@ using Test
 using Random
 
 using Base: @propagate_inbounds,
-    ReverseOrdering, Reverse,
     IteratorEltype, HasEltype,
     IteratorSize, HasLength
+using Base.Order: ReverseOrdering, Reverse
 
 using QuickHeaps
 using QuickHeaps:
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
     AbstractNode, get_key, get_val,
-    isheap, index, nodes, ordering, in_range, heap_index, lt
+    index, nodes, ordering, in_range, heap_index, lt
 
 function test_queue!(A::AbstractPriorityQueue{K,V},
                      key_list::AbstractVector{K},
@@ -248,8 +248,8 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
 end
 
 @testset "Priority queues       " begin
-    @test QuickHeaps.default_ordering(AbstractPriorityQueue) === SafeMin
-    @test QuickHeaps.default_ordering(PriorityQueue) === SafeMin
+    @test QuickHeaps.default_ordering(AbstractPriorityQueue) === TotalMin
+    @test QuickHeaps.default_ordering(PriorityQueue) === TotalMin
     K, V, n = Int, Float64, 20
     key_list = map(K, 1:n)
     val_list = rand(V, n)
@@ -258,7 +258,7 @@ end
 end
 
 @testset "Fast priority queues  " begin
-    @test QuickHeaps.default_ordering(FastPriorityQueue) === SafeMin
+    @test QuickHeaps.default_ordering(FastPriorityQueue) === TotalMin
     V, dims = Float32, (2,3,4)
     n = prod(dims)
     m = div(9n + 5, 10) # keep ~90% of indices

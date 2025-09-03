@@ -1,10 +1,11 @@
 """
     QuickHeaps.lt(o::Ordering, x::T, y::T)
 
-yields whether `x` is less than `y` according to ordering `o`. This function is called by
-`QuickHeaps` to build ordered structures like binary heaps and priority queues. For `T <:
-QuickHeaps.Node`, it compares the values of the nodes `x` and `y`. It may be specialized for
-custom node type `T`. By default, it calls `Base.Order.lt` to compare values.
+Return whether `x` is less than `y` according to ordering `o`.
+
+`QuickHeaps.lt` is called by `QuickHeaps` to build ordered structures like binary heaps and
+priority queues. For `T <: QuickHeaps.AbstractNode`, `QuickHeaps.lt` compares the values of
+the nodes `x` and `y`; otherwise, `QuickHeaps.lt` calls `Base.Order.lt` to compare values.
 
 """ lt
 
@@ -14,9 +15,28 @@ lt(o::Ordering, x::T, y::T) where {T} = Base.Order.lt(o, x, y)
 # Nodes are sorted according to their values.
 lt(o::Ordering, x::T, y::T) where {T<:AbstractNode} = lt(o, get_val(x), get_val(y))
 
-# In order to perform fast sorting (without taking care of NaN's), we extend the
-# `Base.Order.lt` function for specialized ordering types.
-Base.Order.lt(::FastForwardOrdering, x, y) = x < y
+# In order to perform fast sorting (taking care of NaN's), we extend the `Base.Order.lt`
+# function for specialized ordering types.
+Base.Order.lt(::FastMinOrdering, x, y) = x < y
+Base.Order.lt(::TotalMinOrdering, x, y) = total_min(x, y)
+Base.Order.lt(::TotalMaxOrdering, x, y) = total_max(x, y)
+
+# Predicates `total_min(x, y)` and `total_max(x, y)` implements the `lt` function for `TotalMin`
+# and `TotalMax` orderings. They both leave `NaN` followed by `missing` values last.
+total_min(x::T, y::T) where {T<:Number} = (! isnan(x)) & (isnan(y) | (x < y))
+total_min(x, y) = isless(x, y)
+#
+total_max(x::T, y::T) where {T<:Number} = (! isnan(x)) & (isnan(y) | (y < x))
+total_max(x, y) = isless(y, x)
+
+for func in (:total_min, :total_max)
+    @eval begin
+        $func(x::Number, y::Number) = $func(promote(x, y)...)
+        $func(::Missing, ::Missing) = false
+        $func(::Missing, ::Any) = false
+        $func(::Any, ::Missing) = true
+    end
+end
 
 """
     QuickHeaps.ordering(A) -> o
@@ -35,15 +55,15 @@ ordering(pq::AbstractPriorityQueue) = getfield(pq, :order)
     QuickHeaps.default_ordering(typeof(A))
 
 yield the default ordering for the ordered data structure `A`. By default, this function
-yields `QuickHeaps.SafeMin` which is an alias to `Base.Order.Forward`. This method may be
-specialized for specific ordered data structure.
+yields `QuickHeaps.TotalMin`. This method may be specialized for specific ordered data
+structure.
 
 """
 default_ordering(x::Any) = default_ordering(typeof(x))
-default_ordering(::Type) = SafeMin
-default_ordering(::Type{<:AbstractBinaryHeap}) = SafeMin
-default_ordering(::Type{<:FastBinaryHeap}) = FastMin
-default_ordering(::Type{<:AbstractPriorityQueue}) = SafeMin
+default_ordering(::Type) = TotalMin
+default_ordering(::Type{<:AbstractBinaryHeap}) = TotalMin
+default_ordering(::Type{<:FastBinaryHeap}) = TotalMin
+default_ordering(::Type{<:AbstractPriorityQueue}) = TotalMin
 
 """
     QuickHeaps.has_standard_linear_indexing(A)

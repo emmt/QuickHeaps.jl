@@ -2,26 +2,23 @@ module TestingBinaryHeaps
 
 using Test
 
-using Base: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
+using Base.Order: Ordering, Forward, Reverse
 
 using QuickHeaps
-using QuickHeaps:
-    AbstractBinaryHeap,
-    FastForwardOrdering, FastForward, FastReverse,
-    FastMin, FastMax, SafeMin, SafeMax,
-    ordering, storage, lt
+using QuickHeaps: ordering, storage, lt
 
 orientation(::Any) = 0
 orientation(h::AbstractBinaryHeap) = orientation(typeof(h))
 orientation(::Type{<:AbstractBinaryHeap{T,O}}) where {T,O} = orientation(O)
 orientation(o::Ordering) = orientation(typeof(o))
-orientation(::Type{<:Union{ForwardOrdering,FastForwardOrdering}}) = +1
-orientation(::Type{<:ReverseOrdering{O}}) where {O} = -orientation(O)
+orientation(::Type{<:Union{typeof(Forward),typeof(TotalMin),typeof(FastMin)}}) = +1
+orientation(::Type{typeof(TotalMax)}) = -1
+orientation(::Type{<:Base.Order.ReverseOrdering{O}}) where {O} = -orientation(O)
 
 is_min_ordering(x) = orientation(x) > 0
 is_max_ordering(x) = orientation(x) < 0
 
-function is_sorted(o::Base.Ordering, x::AbstractVector)
+function is_sorted(o::Ordering, x::AbstractVector)
     flag = false
     for i in 2:length(x)
         flag |= lt(o, x[i], x[i-1])
@@ -76,7 +73,7 @@ const A2 = [3.0, 6.4, 1.1, 9.2, 1.2, 8.2, 1.3, 7.9, 9.1, 2.3, 8.2];
             success &= (flag == isheap(A, np))
         end
         @test success
-        for o in (Forward, FastForward, Reverse, FastReverse)
+        for o in (Forward, TotalMin, FastMin, Reverse, TotalMax, FastMax)
             flag = (dir*orientation(o) > 0)
             @test flag == isheap(A, o)
             @test flag == isheap(o, A)
@@ -120,16 +117,16 @@ const A2 = [3.0, 6.4, 1.1, 9.2, 1.2, 8.2, 1.3, 7.9, 9.1, 2.3, 8.2];
 end
 
 @testset "Binary heaps          " begin
-    @test QuickHeaps.default_ordering(AbstractBinaryHeap) === SafeMin
-    @test QuickHeaps.default_ordering(FastBinaryHeap) === FastMin
+    @test QuickHeaps.default_ordering(AbstractBinaryHeap) === TotalMin
+    @test QuickHeaps.default_ordering(FastBinaryHeap) === TotalMin
     pass = 0
-    for o in (nil, SafeMin, SafeMax, FastMin, FastMax),
+    for o in (nil, TotalMin, TotalMax, FastMin, FastMax),
         B in (BinaryHeap, FastBinaryHeap), A in (A1, A2)
         pass += 1
         n = length(A)
         T = eltype(A)
         S = other_type(T)
-        expected_ordering = (o !== nil ? o : B <: FastBinaryHeap ? FastMin : SafeMin)
+        expected_ordering = (o === nil ? TotalMin : o)
 
         # Build an empty binary-heap and fill it.
         h1 = (o === nil ? B{T}() : B{T}(o))

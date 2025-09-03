@@ -2,7 +2,35 @@
 
 ## Unreleased
 
+This new version uses better [*total order*](https://en.wikipedia.org/wiki/Total_order) by
+default. As a consequence, there are a few breaking changes but these should only weakly
+matter for the end-user.
+
 ### Breaking changes
+
+- Default ordering for binary heaps and priority queues is always `TotalMin` instead of
+  `Base.Order.Forward` or `FastMin` (depending on the kind of the ordered structure). With
+  `TotalMin`, values are sorted in increasing order followed by `NaN` then `missing` values.
+  Compared to `FastMin`, `TotalMin` is a bit slower (on floating-point values) but
+  implements a [*total min order*](https://en.wikipedia.org/wiki/Total_order) while
+  `FastMin` leaves the order of `NaN` values undefined and fails on `missing` values.
+  `TotalMin` yields the same order as `Base.Order.Forward` which is the default order in
+  Julia sorting algorithms. On floating-point values, `TotalMin` is faster by almost a
+  factor of 2 than `Base.Order.Forward`.
+
+- `SafeMin` and `SafeMax` are no longer available. They were respectively aliases to
+  `Base.Order.Forward` and `Base.Order.Reverse`. `TotalMin` is equivalent to but faster than
+  `Base.Order.Forward`.
+
+- Aliases `FastForward`, `FastReverse` and non-exported public symbol
+  `QuickHeaps.FastForwardOrdering` are no longer available. `FastForward` and `FastReverse`
+  are respectively equivalent to `FastMin` and `FastMax` but are not recommended, for
+  reasons given above.
+
+- For a custom priority queue `pq` inheriting from `QuickHeaps.AbstractPriorityQueue`, the
+  2-argument method `QuickHeaps.enqueue!(pq,key=>val)` have to be specialized instead of the
+  3-argument method `QuickHeaps.enqueue!(pq,key,val)`. This change is to simplify avoiding
+  ambiguities.
 
 - Deprecated and non-exported method `QuickHeaps.to_eltype(A, x)` has been suppressed, it
   was equivalent to `as(eltype(A), x)` using the
@@ -12,6 +40,10 @@
 
 - Pass all tests with [`Aqua.jl`](https://github.com/JuliaTesting/Aqua.jl).
 
+- New `TotalMin` and `TotalMax` now implement a [*total
+  order*](https://en.wikipedia.org/wiki/Total_order) where values are respectively sorted in
+  increasing and decreasing order followed by `NaN` then `missing` values.
+
 ### Changed
 
 - Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
@@ -20,9 +52,21 @@
 - Syntax `peek(T::Type, pq::AbstractPriorityQueue)` is deprecated in favor of `peek(pq,T)`
   to specify the type `T` of the returned object.
 
+- The default ordering is `QuickHeaps.FastMin` for all structures. It behaves like `isless`
+  which implements the default ordered of most sorting algorithms in Julia: NaN's are
+  considered as being greater than any other floating-point value, and `missing` to be
+  greater than anything else. However, by using non-branching bitwise operators instead of
+  logical operators, `QuickHeaps.FastMin` is much faster than `isless` while being nearly as
+  fast as `<`.
+
 ### Fixed
 
 - Ambiguities have been fixed.
+
+- Default `TotalMin` order fixes the behavior of `FastMin` (the former default for
+  `FastBinaryHeaps`) which leaves undefined the order of `NaN` and `missing` values. This
+  new default implements the same order as `Base.Order.Forward` (the former default for
+  other ordered structures) but is about twice faster.
 
 ## Version 0.2.2
 

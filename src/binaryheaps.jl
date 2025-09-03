@@ -1,9 +1,11 @@
 """
-    BinaryHeap{T}([o::Ordering = Forward,][ vals::AbstractVector])
+    h = BinaryHeap{T}([o::Base.Order.Ordering = TotalMin,][ vals::AbstractVector])
 
-yields an empty binary heap whose values have type `T` and with ordering specified by `o`.
-For example, a min-heap (resp. a max-heap) is built if `o` specifies forward (resp. reverse)
-ordering.
+Build an empty binary heap whose values have type `T` and with ordering specified by `o`.
+
+The method [`QuickHeaps.lt(o,x::T,y::T)`](@ref QuickHeaps.lt) is called to determine the
+order of values `x` and `y` in the heap. The default ordering, [`TotalMin`](@ref), yields a
+*min-heap* object; with [`TotalMax`](@ref) ordering, a *max-heap* object is returned.
 
 An optional vector `vals` storing the initial values of the binary heap can be specified.
 These values in `vals` need not be ordered, the `BinaryHeap` constructor automatically takes
@@ -17,12 +19,12 @@ Method `sizehint!(h,n)` may be called to anticipate that the heap may contains `
 """ BinaryHeap
 
 """
-    FastBinaryHeap{T}([o::Ordering = FastForward,][ vals::AbstractVector])
+    h = FastBinaryHeap{T}([o::Base.Order.Ordering = TotalMin,][ vals::AbstractVector])
 
-yields a fast binary heap. Compared to `BinaryHeap{T}(...)`, the default ordering is
-`FastForward` and the array backing the storage of the heap values is never automatically
-reduced to improve performances in some cases. You may call `resize!(h)` to explicitly
-reduce the storage of fast binary-heap `h` to its minimum.
+Build a fast binary heap. Compared to [`BinaryHeap{T}(...)`](@ref BinaryHeap), the array
+backing the storage of the heap values is never automatically reduced to improve
+performances in some cases. You may call `resize!(h)` to explicitly reduce the storage of
+fast binary-heap `h` to its minimum.
 
 """ FastBinaryHeap
 
@@ -214,7 +216,7 @@ methods than `pop!` or `push!`.
 The method can be called at a lower level to heapify (part of) an array storing the heap
 values:
 
-    heapify!([o=Base.Forward,] A, n=length(A)) -> A
+    heapify!([o=TotalMin,] A, n=length(A)) -> A
 
 reorders the `n` first elements of array `A` in-place to form a binary heap according to the
 ordering specified by `o`. The array `A` must have 1-based linear indexing. Arguments may be
@@ -238,7 +240,7 @@ function heapify!(o::Ordering, A::AbstractArray, n::Int = length(A))
 end
 
 """
-    heapify([o=Base.Forward,] A, n=length(A))
+    heapify([o=TotalMin,] A, n=length(A))
 
 yields an array with the `n` first values of array `A` stored in a binary heap structure of
 ordering specified by `o`. The storage of the returned heap is a different array than `A`.
@@ -251,7 +253,7 @@ heapify(o::Ordering, A::AbstractArray{T}, n::Int = length(A)) where {T} =
     heapify!(o, copyto!(Vector{T}(undef, n), 1, A, 1, n))
 
 """
-    isheap([o=Base.Forward,], A, n=length(A))
+    isheap([o=TotalMin,], A, n=length(A))
 
 yields whether the `n` first elements of array `A` have a binary heap structure ordered as
 specified by `o`. Arguments may be specified in any order.

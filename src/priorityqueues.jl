@@ -1,5 +1,5 @@
 """
-    PriorityQueue{K,V}([o=SafeMin,] T=Node{K,V})
+    PriorityQueue{K,V}([o=TotalMin,] T=Node{K,V})
 
 yields a priority queue for keys of type `K` and priority values of type `V`. Optional
 arguments `o::Ordering` and `T<:AbstractNode{K,V}` are to specify the ordering of values and
@@ -37,7 +37,7 @@ PriorityQueue(o::Ordering, ::Type{T}) where {K,V,T<:AbstractNode{K,V}} =
     PriorityQueue{K,V}(o, T)
 
 """
-    FastPriorityQueue{V}([o=FastMin,] [T=Node{Int,V},] dims...)
+    FastPriorityQueue{V}([o=TotalMin,] [T=Node{Int,V},] dims...)
 
 yields a priority queue for keys analogous of indices in an array of size `dims...` and
 priority values of type `V`. Optional arguments `o::Ordering` and `T<:AbstractNode{Int,V}`

@@ -1,23 +1,77 @@
 # Type and constant definitions.
 
-using Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
+struct TotalMinOrdering <: Ordering end
+struct TotalMaxOrdering <: Ordering end
+struct FastMinOrdering <: Ordering end
 
 """
-    FastForwardOrdering
+    TotalMin
 
-is the singleton type for fast *forward* ordering without considering NaN's.
+Singleton for *total min ordering* considering NaN's as greater than any other
+floating-point value, and `missing` to be greater than anything else. With this ordering,
+values are sorted in ascending order, followed by `NaN` then `missing` values.
+
+`TotalMin` is similar to the default ordering in most Julia algorithms and which is
+implemented by `isless`. However, for arrays of floating-point values with 50% of NaN's,
+`TotalMin` is nearly as fast as (19%) using `<` and is almost twice faster (82%) than
+`isless`. This speed-up is obtained by using non-branching bitwise operators instead of
+logical operators.
+
+`QuickHeaps.TotalMinOrdering` is the type of `TotalMin`.
+
+Also see [`TotalMax`](@ref).
 
 """
-struct FastForwardOrdering <: Ordering end
+const TotalMin = TotalMinOrdering()
+@doc @doc(TotalMin) TotalMinOrdering
 
-const FastForward = FastForwardOrdering()
-const FastReverse = ReverseOrdering(FastForward)
+"""
+    TotalMax
 
-const FastMin = FastForward
-const FastMax = FastReverse
+Singleton for *total max ordering*. With this ordering, values are sorted in decreasing
+order, followed by `NaN` then `missing` values.
 
-const SafeMin = Forward
-const SafeMax = Reverse
+`QuickHeaps.TotalMaxOrdering` is the type of `TotalMax`.
+
+!!! note
+    `TotalMax` and `reverse(TotalMin)` both sort regular values in decreasing order but the
+    latter puts `missing` then `NaN` values *first*.
+
+Also see [`TotalMin`](@ref).
+
+"""
+const TotalMax = TotalMaxOrdering()
+@doc @doc(TotalMax) TotalMaxOrdering
+
+"""
+    QuickHeaps.FastMinOrdering <: Base.Order.Ordering
+    const FastMin = QuickHeaps.FastMinOrdering()
+
+Singleton for *min ordering*. This ordering is faster than [`TotalMin`](@ref) but leaves
+indefinite the order of `NaN` values.
+
+`QuickHeaps.FastMinOrdering` is the type of `FastMin`.
+
+Also see [`FastMax`](@ref).
+
+"""
+const FastMin = FastMinOrdering()
+@doc @doc(FastMin) FastMinOrdering
+
+"""
+    FastMax
+
+Singleton for *max ordering*. This ordering is faster than [`TotalMax`](@ref) but leaves
+indefinite the order of `NaN` values.
+
+`QuickHeaps.FastMaxOrdering` is an alias to the type of `FastMax`.
+
+Also see [`FastMin`](@ref).
+
+"""
+const FastMax = Base.Order.ReverseOrdering(FastMin)
+const FastMaxOrdering = typeof(FastMax)
+@doc @doc(FastMax) FastMaxOrdering
 
 """
     QuickHeaps.AbstractNode{K,V}
@@ -27,7 +81,7 @@ in binary heaps and priority queues to represent key-value pairs and specific or
 may be imposed by specializing the `QuickHeaps.lt` function which, for abstract nodes, is by
 default:
 
-    QuickHeaps.lt(o::Ordering, x::T, y::T) where {T<:QuickHeaps.AbstractNode} =
+    QuickHeaps.lt(o::Base.Order.Ordering, x::T, y::T) where {T<:QuickHeaps.AbstractNode} =
         Base.Order.lt(o, QuickHeaps.get_val(x), QuickHeaps.get_val(y))
 
 """
@@ -99,8 +153,8 @@ end
 """
     QuickHeaps.AbstractPriorityQueue{K,V,O}
 
-is the super type of priority queues with ordering of type `O<:Base.Ordering` and storing
-nodes associating a key of type `K` with a priority value of type `V`.
+is the super type of priority queues with ordering of type `O<:Base.Order.Ordering` and
+storing nodes associating a key of type `K` with a priority value of type `V`.
 
 Package `QuickHeaps` provides two concrete types of priority queues: [`PriorityQueue`](@ref)
 for any kind of keys and [`FastPriorityQueue`](@ref) for which keys are analogous to array

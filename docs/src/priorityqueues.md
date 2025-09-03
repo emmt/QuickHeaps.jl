@@ -24,7 +24,7 @@ nodes and thus impose no restrictions on the type of the keys. To build a versat
 queue, call the [`PriorityQueue`](@ref) constructor:
 
 ```julia
-Q = PriorityQueue{K,V}([o=Forward,] T=Node{K,V})
+Q = PriorityQueue{K,V}([o=TotalMin,] T=Node{K,V})
 ```
 
 where optional parameter `o::Ordering` specifies the ordering for deciding the priority of
@@ -41,7 +41,7 @@ build a fast priority queue with keys indexing an array of dimensions `dims...`,
 [`FastPriorityQueue`](@ref) constructor:
 
 ```julia
-Q = FastPriorityQueue{V}([o=Forward,] [T=Node{Int,V},] dims...)
+Q = FastPriorityQueue{V}([o=TotalMin,] [T=Node{Int,V},] dims...)
 ```
 
 where `o::Ordering` specifies the ordering of values in the priority queue,

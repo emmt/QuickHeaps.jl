@@ -24,8 +24,7 @@ export
     Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse,
 
     # From this package:
-    FastForward, FastReverse,
-    FastMin, FastMax, SafeMin, SafeMax,
+    FastMin, FastMax, TotalMin, TotalMax,
     AbstractBinaryHeap, BinaryHeap, FastBinaryHeap,
     AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
     heapify, heapify!, isheap,
@@ -50,7 +49,10 @@ using TypeUtils: @public
 @public Node
 @public get_key
 @public get_val
-@public FastForwardOrdering
+@public FastMaxOrdering
+@public FastMinOrdering
+@public TotalMaxOrdering
+@public TotalMinOrdering
 @public default_ordering
 @public has_bad_values
 @public has_standard_linear_indexing
@@ -73,6 +75,7 @@ using TypeUtils: @public
 end
 
 using Base: @propagate_inbounds, OneTo, has_offset_axes
+using Base.Order: Ordering
 
 import DataStructures:
     # heapify!, heapify, isheap

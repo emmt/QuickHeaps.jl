@@ -4,6 +4,31 @@ using Test
 
 using QuickHeaps
 
+@testset "Orders                " begin
+    vals = (-Inf, -1, 0, 2, π, +Inf, NaN, missing)
+    @testset "Base.Order.lt(TotalMin, $x, $y)" for x in vals, y in vals
+        @test Base.Order.lt(TotalMin, x, y) == isless(x, y)
+    end
+    @testset "Base.Order.lt(TotalMax, $x, $y)" for x in vals, y in vals
+        if x === missing || isnan(x) || y === missing || isnan(y)
+            @test Base.Order.lt(TotalMax, x, y) == Base.Order.lt(TotalMin, x, y)
+        else
+            @test Base.Order.lt(TotalMax, x, y) == Base.Order.lt(TotalMin, y, x)
+            @test Base.Order.lt(FastMax, x, y) == (x > y)
+        end
+    end
+    @testset "Base.Order.lt(FastMin, $x, $y)" for x in vals, y in vals
+        if !(x === missing || isnan(x) || y === missing || isnan(y))
+            @test Base.Order.lt(FastMin, x, y) == (x < y)
+        end
+    end
+    @testset "Base.Order.lt(FastMax, $x, $y)" for x in vals, y in vals
+        if !(x === missing || isnan(x) || y === missing || isnan(y))
+            @test Base.Order.lt(FastMax, x, y) == (x > y)
+        end
+    end
+end
+
 @testset "Utilities             " begin
     let A = rand(Float32, 6)
         @test QuickHeaps.has_standard_linear_indexing(A) == true
