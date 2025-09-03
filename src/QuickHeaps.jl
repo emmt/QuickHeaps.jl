@@ -20,9 +20,6 @@ number of improvements:
 module QuickHeaps
 
 export
-    # Form Base.Order:
-    Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse,
-
     # From this package:
     FastMin, FastMax, TotalMin, TotalMax,
     AbstractBinaryHeap, BinaryHeap, FastBinaryHeap,
@@ -77,9 +74,9 @@ end
 using Base: @propagate_inbounds, OneTo, has_offset_axes
 using Base.Order: Ordering
 
-import DataStructures:
-    # heapify!, heapify, isheap
-    enqueue!, dequeue!, dequeue_pair!
+# NOTE `heapify!`, `heapify`, and `isheap` are different functions in `DataStructures`
+# and in this package. Hence they are not imported from `DataStructures`.
+import DataStructures: enqueue!, dequeue!, dequeue_pair!
 
 using TypeUtils
 

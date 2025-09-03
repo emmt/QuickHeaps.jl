@@ -32,6 +32,9 @@ matter for the end-user.
   3-argument method `QuickHeaps.enqueue!(pq,key,val)`. This change is to simplify avoiding
   ambiguities.
 
+- `Base.Order.Ordering`, `Base.Order.ForwardOrdering`, `Base.Order.ReverseOrdering`,
+  `Base.Order.Forward`, and `Base.Order.Reverse` are no longer exported by `QuickHeaps`.
+
 - Deprecated and non-exported method `QuickHeaps.to_eltype(A, x)` has been suppressed, it
   was equivalent to `as(eltype(A), x)` using the
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
