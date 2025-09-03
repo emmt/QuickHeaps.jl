@@ -26,10 +26,10 @@ max-heap) sorts its values in increasing (resp. decreasing) order, followed by `
 `missing` values.
 
 For floating-point values, orderings `FastMin` or `FastMax` may be used, respectively,
-instead of `TotalMin` or `TotalMax` for faster sorting of the heap. However, `FastMin` and
-`FastMax` do not define the order of `NaN` values and fail on `missing` values. If your data
-may contains `NaN` or `missing` values, use `TotalMin` or `TotalMax` instead of `FastMin` or
-`FastMax`.
+instead of `TotalMin` or `TotalMax` for (slightly) faster sorting of the heap. However,
+`FastMin` and `FastMax` do not define the order of `NaN` values and fail on `missing`
+values. If your data may contain `NaN` or `missing` values, use `TotalMin` or `TotalMax`
+instead of `FastMin` or `FastMax`.
 
 A vector `vals` storing the initial values of the binary heap can be specified:
 
@@ -65,7 +65,7 @@ particular:
 ```julia
 length(h)   # yields the number of values in heap h
 h[i]        # yields the i-th value of heap h
-h[i] = x    # sets the i-th value of heap h and heapify h
+h[i] = x    # replaces the i-th value of heap h and heapify h
 ```
 
 Note that `h[1]` is the value of the root entry of the heap `h` (the least heap values for a
@@ -91,7 +91,7 @@ whether `h` is empty.
     always of complexity `O(1)`.
 
 
-### Advanced usage
+## Advanced usage
 
 Instances of [`BinaryHeap`](@ref) store their values in a Julia vector whose length is
 always equal to the number of stored values. Slightly faster binary heaps are created by the
@@ -109,7 +109,7 @@ sizehint!(h, n)
 which yields `h`.
 
 
-### Customize binary heaps
+## Customize binary heaps
 
 The behavior of the binary heap types provided by `QuickHeaps` can be tweaked by using a
 particular instance of the ordering `o::Ordering` and by specializing the `Base.lt` method
@@ -165,26 +165,31 @@ queue](https://en.wikipedia.org/wiki/Priority_queue) with keys of type `K` and v
 type `V` as follows:
 
 ```julia
-struct Node{K,V}
+struct MyNode{K,V}
    key::K
    val::V
 end
-Base.lt(o::Base.Ordering, a::T, b::T) where {T<:Node} = lt(o, a.val, b.val)
-Q = FastBinaryHeap{Node}()
+QuickHeaps.lt(o::Base.Order.Ordering, a::T, b::T) where {T<:MyNode} =
+    QuickHeaps.lt(o, a.val, b.val)
+Q = FastBinaryHeap{MyNode}()
 ```
 
-This simple priority queue is a binary heap (a *min-heap* in that case) of nodes storing
-key-value pairs which as sorted according to their values. The same `Node` structure as the
-one defined above and with the same specialization of `Base.lt` is provided (but not
-exported) by `QuickHeaps`, so a simplified version of the above example is:
+A structure `QuickHeaps.Node` similar to `MyNode` above and with the same specialization of
+`QuickHeaps.lt` is provided (but not exported) by `QuickHeaps`, so a simplified version of
+the above example is:
 
 ```julia
 using QuickHeaps: Node
 Q = FastBinaryHeap{Node}()
 ```
 
-Such a priority queue is faster than `DataStructures.PriorityQueue` but it provides no means
-to re-queue a node nor to ensure that keys are unique. An auxiliary array, a dictionary, or
-a set can be used for that, this is implemented by [`QuickHeaps.PriorityQueue`](@ref) and
-[`QuickHeaps.FastPriorityQueue`](@ref) which are more flexible and offer more capabilities
-than the simple implementation in the above example.
+This simple priority queue is a binary heap of nodes storing key-value pairs sorted
+according to their values and indexed as a vector. This is useful if you are mainly
+interested in accessing the *root node*. Such a priority queue is faster than
+`DataStructures.PriorityQueue` but it provides no means to access a node by its key (`Q` is
+indexed by an integer linear index which depends on the position of the node in the heap,
+hence, on its value not on its key) nor to ensure that keys are unique (an auxiliary array,
+dictionary, or set must be used for that). The `QuickHeaps` package provides more advanced
+[priority queues](@ref Priority-queues) which are sorted by value but indexed by
+key. [`QuickHeaps.PriorityQueue`](@ref) and [`QuickHeaps.FastPriorityQueue`](@ref) are
+concrete implementations of these priority queues.
