@@ -1,5 +1,9 @@
 # User visible changes in `QuickHeaps`
 
+## Version 0.2.3 (2025-09-17)
+
+- Fix compatibility with `DataStructures`.
+
 ## Version 0.2.2
 
 - Update compatibility for `TypeUtils`.
