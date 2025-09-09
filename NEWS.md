@@ -73,6 +73,10 @@ matter for the end-user.
   new default implements the same order as `Base.Order.Forward` (the former default for
   other ordered structures) but is about twice faster.
 
+## Version 0.2.3 (2025-09-17)
+
+- Fix compatibility with `DataStructures`.
+
 ## Version 0.2.2 (2024-05-15)
 
 - Update compatibility for `TypeUtils`.
