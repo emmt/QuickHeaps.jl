@@ -47,7 +47,6 @@ using TypeUtils: @public
 @public default_ordering
 @public has_bad_values
 @public heap_index
-@public linear_index
 @public storage
 
 # The `peek` method appeared in Julia 1.5.

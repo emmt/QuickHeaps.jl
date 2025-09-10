@@ -40,9 +40,10 @@ these should only weakly matter for the end-user.
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
 
 - Documented but non-exported functions `QuickHeaps.has_standard_linear_indexing`,
-  `QuickHeaps.index`, `QuickHeaps.is_one_based_unit_range`, `QuickHeaps.nodes`,
-  `QuickHeaps.ordering`, and `QuickHeaps.typename`, have been suppressed. Call
-  `Base.Order.Ordering(A)` to query the order in binary heap or priority queue `A`.
+  `QuickHeaps.index`, `QuickHeaps.is_one_based_unit_range`, `QuickHeaps.linear_index`,
+  `QuickHeaps.nodes`, `QuickHeaps.ordering`, and `QuickHeaps.typename` have been suppressed
+  or are now considered as private. Call `Base.Order.Ordering(A)` to query the order in
+  binary heap or priority queue `A`.
 
 - `getindex` throws `KeyError` (was `ArgumentError`) for non-existing keys in priority
   queues.
