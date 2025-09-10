@@ -1,65 +1,73 @@
 # Priority queues
 
 [Priority queues](https://en.wikipedia.org/wiki/Priority_queue) are partially ordered
-dynamic lists of so-called *nodes* which are key-value pairs. Priority queues are designed
-so that updating the list of stored nodes while maintaining the ordering and retrieving or
-extracting the node of highest priority are efficient operations.
+dynamic lists whose entries are key-value pairs. Priority queues are designed so that
+updating the list of stored entries while maintaining the ordering and retrieving or
+extracting the entry of highest priority are efficient operations.
 
 Priority queues provided by `QuikHeaps` are similar to dictionaries (or to arrays) with the
-additional feature of maintaining an ordered structure so that getting the node of highest
-priority costs `O(1)` operations while changing the priority of a node or pushing a node
-only costs `O(log(n))` operations with `n` the length of the queue.
+additional feature of maintaining an ordered structure so that getting the entry of highest
+priority costs `O(1)` operations while changing the priority of an entry or pushing an entry
+only costs `O(log(n))` operations with `n` the number of entries in the queue.
 
 
 ## Building priority queues
 
 In `QuikHeaps`, priority queues combine a [binary heap](#Binary-heaps) to store the
-partially sorted list of nodes and another structure to associate keys and nodes. There are
-two possibilities depending on the kind of keys.
+partially sorted list of entries and another structure to associate keys and entries. There
+are two possibilities depending on the kind of keys.
 
 ### Versatile priority queues
 
 `QuikHeaps` provides versatile priority queues which use a dictionary to associate keys with
-nodes and thus impose no restrictions on the type of the keys. To build a versatile priority
+values and thus impose no restrictions on the type of the keys. To build a versatile priority
 queue, call the [`PriorityQueue`](@ref) constructor:
 
 ```julia
-Q = PriorityQueue{K,V}([o=TotalMin,] T=Node{K,V})
+Q = PriorityQueue{K,V}(o=TotalMin)
 ```
 
-where optional parameter `o::Ordering` specifies the ordering for deciding the priority of
-values while optional parameter `T<:AbstractNode{K,V}` specifies the type of the nodes with
-`K` and `V` the respective types of the keys and of the values. Type parameters `K` and `V`
-may be omitted if the node type `T` is specified.
+where type parameters `K` and `V` are the respective types of the keys and of the values
+while optional parameter `o::Ordering` specifies the ordering for deciding the priority of
+values.
 
 
 ### Fast priority queues
 
-If keys are analogous to indices in some array, the key-node association can be realized by
+If keys are analogous to indices in some array, the key-value association can be realized by
 a regular array which is faster than a dictionary as used by versatile priority queues. To
 build a fast priority queue with keys indexing an array of dimensions `dims...`, call the
 [`FastPriorityQueue`](@ref) constructor:
 
 ```julia
-Q = FastPriorityQueue{V}([o=TotalMin,] [T=Node{Int,V},] dims...)
+Q = FastPriorityQueue{V}([o=TotalMin,] dims...)
 ```
 
-where `o::Ordering` specifies the ordering of values in the priority queue,
-`T<:AbstractNode{Int,V}` is the type of the nodes depending on `V` the type of the values
-encoding the priority. Type parameter `V` may be omitted if the node type `T` is specified.
+where type parameter `V` is the type of the values, optional `o::Ordering` specifies the
+ordering of values in the priority queue, and arguments `dims...` specify the array shape.
 
 The keys in this kind of priority queue are the linear or Cartesian indices in an array of
-size `dims...`. For example, if `dims = (3,4,5)`, then all the following expressions refer
+size. For example, if `dims = (3,4,5)`, then all the following expressions refer
 to the same key:
 
 ```julia
 Q[44]
 Q[2,3,4]
 Q[CartesianIndex(2,3,4)]
+Q[CartesianIndex(2,3),4]
 ```
 
-The storage of a fast priority queue requires `prod(dims...)*sizeof(Int) + n*sizeof(T)`
-bytes with `n` enqueued nodes.
+The keys of fast priority queues are however stored as linear indices, hence:
+
+```julia
+getkey(Q, 44, missing)
+getkey(Q, CartesianIndex(2,3,4), missing)
+```
+
+would both yield `44` if this key is defined or `missing` otherwise.
+
+For `n` enqueued entries, the storage of a fast priority queue requires about
+`sizeof(Int)*(n + prod(dims...)) + n*sizeof(V)` bytes.
 
 
 ## Common methods for priority queues
@@ -81,40 +89,41 @@ key is updated and the queue reordered if necessary in, at worse, `O(log(n))` op
 This is generally faster than first deleting the key and then enqueuing the key with the new
 priority.
 
-To extract the node of highest priority out of the queue `Q` and get its key `k` and,
-possibly, its priority `v`, call one of:
+To extract the entry of highest priority out of the queue `Q` and get its key `k` and,
+possibly, its priority value `v`, call one of:
 
 ```julia
 k = dequeue!(Q)
 k, v = pop!(Q)
+k, v = dequeue_pair!(Q)
 ```
 
-Methods [`dequeue_pair!`](@ref) and [`dequeue_node!`](@ref) also extract the root node out
-of a priority queue and return it as a `Pair` or as as a node of the type used by the queue.
+Like `pop!`, [`dequeue_pair!`](@ref) extracts the root entry out of a priority queue
+and return it as a key-value `Pair`.
 
-To just examine the node of highest priority, call one of:
+To just examine the entry of highest priority, call one of:
 
 ```julia
 k, v = peek(Q)
 k, v = first(Q)
 ```
 
-Like the `dequeue!` method, the `peek` method may also be called with a type argument.
-
 A priority queue `Q` behaves like a dictionary:
 
 ```julia
-length(Q)         # yields number of nodes
-isempty(Q)        # yields whether priority queue is empty
-empty!(Q)         # empties priority queue
-keytype(Q)        # yields key type `K`
-valtype(Q)        # yields value type `V`
-Q[v]              # yields the value of key `k`
-get(Q, k, def)    # query value at key, with default
-Q[k] = v          # set value `v` of key `k`
-push!(Q, k => v)  # idem.
-haskey(Q, k)      # yields whether key `k` exists
-delete!(Q, k)     # delete node at key `k`
+length(Q)              # get number of entries
+isempty(Q)             # whether priority queue is empty
+empty!(Q)              # make priority queue empty
+keytype(Q)             # get key type `K`
+valtype(Q)             # get value type `V`
+Q[v]                   # get the value of key `k`
+get(Q, k, def)         # query value at key, with default
+getkey(Q, k, def)      # query key corresponding to `k` with default
+Q[k] = v               # set value `v` of key `k`
+push!(Q, k => v)       # idem.
+haskey(Q, k)           # whether key `k` exists
+delete!(Q, k)          # delete entry at key `k`
+Base.Order.Ordering(Q) # get order `o` of priority queue `Q`
 ```
 
 Note that the syntax `Q[k]` throws an exception if key `k` does not exists in `Q`.
@@ -123,34 +132,10 @@ Finally, there are different ways to iterate on the (unordered) contents of a pr
 `Q`:
 
 ```julia
-keys(Q)                  # yields iterator over keys
-vals(Q)                  # yields iterator over values
-for (k,v) in Q; ...; end # loop over key-value pairs
+for k in keys(Q); ...; end   # loop over keys
+for v in values(Q); ...; end # loop over values
+for (k,v) in Q; ...; end     # loop over key-value pairs
 ```
 
-Note that these iterators yield nodes in their storage order which is not necessarily that
+Note that these iterators yield entries in their storage order which is not necessarily that
 of their priority. The order is however the same for these iterators.
-
-
-## Priority order
-
-How are ordered the nodes is completely customizable by specializing the
-[`QuickHeaps.lt`](@ref) function with the following signature:
-
-```julia
-QuickHeaps.lt(o::OrderingType, x::T, y::T) where {T<:NodeType}
-```
-
-which shall yield whether node `x` has (strictly) higher priority than node `y` in the queue
-and where `OrderingType` and `NodeType <: [QuickHeaps.AbstractNode](@ref)` are the
-respective types of the ordering and of the nodes of the priority queue.
-
-For the default node type, `QuickHeaps.Node{K,V}`, the implementation is:
-
-```julia
-QuickHeaps.lt(o::Ordering, x::T, y::T) where {T<:QuickHeaps.Node} =
-    Base.lt(o, QuickHeaps.get_val(x), QuickHeaps.get_val(y))
-```
-
-where [`QuickHeaps.get_val(x)`](@ref QuickHeaps.get_val) yields the value of node `x`. In
-other words, nodes are sorted by their value according to ordering `o`.

@@ -19,11 +19,11 @@ In `QuickHeaps`, a binary heap is created by the [`BinaryHeap`](@ref) constructo
 h = BinaryHeap{T}(o = TotalMin)
 ```
 
-where `T` is the type of the values stored by the heap and `o::Ordering` is the ordering
-rule for sorting values. The default `TotalMin` ordering yields a *min-heap* whose root
-entry is the smallest one. With `o = TotalMax`, a *max-heap* is created. A min-heap (resp. a
-max-heap) sorts its values in increasing (resp. decreasing) order, followed by `NaN` then
-`missing` values.
+where `T` is the type of the values stored by the heap and `o::Base.Order.Ordering` is the
+ordering rule for sorting values. The default `TotalMin` ordering yields a *min-heap* whose
+root entry is the smallest one. With `o = TotalMax`, a *max-heap* is created. A min-heap
+(resp. a max-heap) sorts its values in increasing (resp. decreasing) order, followed by
+`NaN` then `missing` values.
 
 For floating-point values, orderings `FastMin` or `FastMax` may be used, respectively,
 instead of `TotalMin` or `TotalMax` for (slightly) faster sorting of the heap. However,
@@ -83,6 +83,8 @@ delete!(h, i)
 Call `empty!(h)` to delete all the values of the binary heap `h` and `isempty(h)` to query
 whether `h` is empty.
 
+Call `Base.Order.Ordering(h)` to retrieve the order `o` of the binary heap `h`.
+
 !!! note
     Operations that modify the heap, like deletion by `delete!(h,i)`, insertion by `h[i] =
     x`, pushing by `push!(h,x)`, and extracting by `pop!(h)` are of numerical complexity
@@ -112,10 +114,11 @@ which yields `h`.
 ## Customize binary heaps
 
 The behavior of the binary heap types provided by `QuickHeaps` can be tweaked by using a
-particular instance of the ordering `o::Ordering` and by specializing the `Base.lt` method
-called as `Base.lt(o,x,y)` to decide whether value `x` occurs before value `y` according to
-ordering `o`. In the implementation of binary heaps by the `QuickHeaps` package, `x` and `y`
-are always both of type `T`, the type of the values stored by the heap.
+particular instance of the ordering `o::Baae.Order.Ordering` and by specializing the
+`Base.lt` method called as `Base.Order.lt(o,x,y)` to decide whether value `x` occurs before
+value `y` according to ordering `o`. In the implementation of binary heaps by the
+`QuickHeaps` package, `x` and `y` are always both of type `T`, the type of the values stored
+by the heap.
 
 If this is not sufficient, a custom binary heap type may be created that inherits from
 `AbstractBinaryHeap{T,O}` with `T` the type of the values stored by the heap and `O` the
@@ -127,7 +130,6 @@ for an instance `h` of the custom heap type, say `CustomBinaryHeap`:
 - `Base.empty!(h::CustomBinaryHeap)` delete all values in `h`;
 - [`QuickHeaps.storage`](@ref)`(h::CustomBinaryHeap)` yields the array backing the storage
   of values;
-- [`QuickHeaps.ordering`](@ref)`(h::CustomBinaryHeap)`] yields the ordering of the values;
 - [`QuickHeaps.unsafe_grow!`](@ref)`(h::CustomBinaryHeap, n::Integer)` to grow the size of the
   object backing the storage of `h` to have `n` elements;
 - [`QuickHeaps.unsafe_shrink!`](@ref)`(h::CustomBinaryHeap, n::Integer)` to shrink the size
@@ -165,31 +167,32 @@ queue](https://en.wikipedia.org/wiki/Priority_queue) with keys of type `K` and v
 type `V` as follows:
 
 ```julia
-struct MyNode{K,V}
+struct Node{K,V}
    key::K
    val::V
 end
-QuickHeaps.lt(o::Base.Order.Ordering, a::T, b::T) where {T<:MyNode} =
-    QuickHeaps.lt(o, a.val, b.val)
-Q = FastBinaryHeap{MyNode}()
+Base.Order.lt(o::Base.Order.Ordering, a::T, b::T) where {T<:Node} =
+    Base.Order.lt(o, a.val, b.val)
+Q = FastBinaryHeap{Node{K,V}}()
 ```
 
-A structure `QuickHeaps.Node` similar to `MyNode` above and with the same specialization of
-`QuickHeaps.lt` is provided (but not exported) by `QuickHeaps`, so a simplified version of
-the above example is:
-
+Another possibility is to use `key => val` pairs as entries and provide an ordering wrapper
+to compare against values of pairs:
 ```julia
-using QuickHeaps: Node
-Q = FastBinaryHeap{Node}()
+struct ByValue{O<:Base.Order.Ordering} <: Base.Order.Ordering
+   order::O
+end
+Base.Order.lt(o::ByValue, (_,a)::Pair, (_,b)::Pair) = Base.Order.lt(o.order, a, b)
+Q = FastBinaryHeap{Pair{K,V}}(ByValue(Forward))
 ```
 
-This simple priority queue is a binary heap of nodes storing key-value pairs sorted
-according to their values and indexed as a vector. This is useful if you are mainly
-interested in accessing the *root node*. Such a priority queue is faster than
-`DataStructures.PriorityQueue` but it provides no means to access a node by its key (`Q` is
-indexed by an integer linear index which depends on the position of the node in the heap,
-hence, on its value not on its key) nor to ensure that keys are unique (an auxiliary array,
-dictionary, or set must be used for that). The `QuickHeaps` package provides more advanced
-[priority queues](@ref Priority-queues) which are sorted by value but indexed by
-key. [`QuickHeaps.PriorityQueue`](@ref) and [`QuickHeaps.FastPriorityQueue`](@ref) are
-concrete implementations of these priority queues.
+These simple priority queues are binary heaps of key-value entries sorted according to their
+values and indexed as a vector. This is useful if you are mainly interested in accessing the
+*root entry*. Such simple priority queues are faster than `DataStructures.PriorityQueue` but
+provide no means to access an entry by its key (`Q` is indexed by an integer linear index
+which depends on the position of the entry in the heap, hence, on its value not on its key)
+nor to ensure that keys are unique (an auxiliary array, dictionary, or set must be used for
+that). The `QuickHeaps` package provides more advanced [priority queues](@ref
+Priority-queues) which are sorted by value but indexed by key.
+[`QuickHeaps.PriorityQueue`](@ref) and [`QuickHeaps.FastPriorityQueue`](@ref) are concrete
+implementations of these priority queues.

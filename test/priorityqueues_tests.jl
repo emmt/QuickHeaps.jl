@@ -153,7 +153,7 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     end
     @test isempty(B)
 
-    # Check that `pop!` and `dequeue_pair!` extracts nodes in order and maintains the
+    # Check that `pop!` and `dequeue_pair!` extracts entries in order and maintains the
     # binary-heap structure.
     B = @inferred copy(A)
     prev = (isa(o, ReverseOrdering) ? typemax : typemin)(V)
@@ -242,6 +242,9 @@ end
     let normalize_indices = QuickHeaps.normalize_indices
         @test normalize_indices(-17) === -17
         @test normalize_indices(0x09) === 9
+        #@test normalize_indices(()) === ()
+        #@test normalize_indices((CartesianIndex(),)) === ()
+        #@test normalize_indices(CartesianIndex()) === ()
         @test normalize_indices(CartesianIndex(-1)) === (-1,)
         @test normalize_indices(CartesianIndex(-1,2)) === (-1,2)
         @test normalize_indices(CartesianIndex(-1,-2,-3)) === (-1,-2,-3)

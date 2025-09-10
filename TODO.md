@@ -7,7 +7,8 @@
 - Implement `pushpop!` and `heapreplace!` (see
   https://en.wikipedia.org/wiki/Binary_heap).
 
-- Provide aliases `MinHeap`, `MaxHeap`, `FastMinHeap`, and `FastMaxHeap`.
+- Constructor `PriorityQueue(o=default_ordering(), pairs::Pairs{K,V}...)` idem with a
+  dictionary.
 
 - Add a switch to automatically cope with NaN's.
 

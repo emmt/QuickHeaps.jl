@@ -46,7 +46,7 @@ these should only weakly matter for the end-user.
 
 - Pass all tests with [`Aqua.jl`](https://github.com/JuliaTesting/Aqua.jl).
 
-- New `TotalMin` and `TotalMax` now implement a [*total
+- New `TotalMin` and `TotalMax` orders implement a [*total
   order*](https://en.wikipedia.org/wiki/Total_order) where values are respectively sorted in
   increasing and decreasing order followed by `NaN` then `missing` values.
 
@@ -61,11 +61,11 @@ these should only weakly matter for the end-user.
 - Syntax `peek(T::Type, pq::AbstractPriorityQueue)` is deprecated in favor of `peek(pq,T)`
   to specify the type `T` of the returned object.
 
-- The default ordering is `QuickHeaps.FastMin` for all structures. It behaves like `isless`
+- The default ordering is `QuickHeaps.TotalMin` for all structures. It behaves like `isless`
   which implements the default ordered of most sorting algorithms in Julia: NaN's are
   considered as being greater than any other floating-point value, and `missing` to be
   greater than anything else. However, by using non-branching bitwise operators instead of
-  logical operators, `QuickHeaps.FastMin` is much faster than `isless` while being nearly as
+  logical operators, `QuickHeaps.TotalMin` is much faster than `isless` while being nearly as
   fast as `<`.
 
 - Methods `append!` and `prepend` are purposely not supported by binary heaps.

@@ -8,7 +8,7 @@ are more flexible and usually faster than those provided by
 ## Table of contents
 
 ```@contents
-Pages = ["install.md", "binaryheaps.md", "priorityqueues.md", "nodes.md", "customize.md", "library.md"]
+Pages = ["install.md", "binaryheaps.md", "priorityqueues.md", "customize.md", "library.md"]
 ```
 
 ## Index of types and methods

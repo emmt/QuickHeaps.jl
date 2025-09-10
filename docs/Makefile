@@ -5,7 +5,6 @@ SOURCES = \
     src/index.md \
     src/install.md \
     src/library.md \
-    src/nodes.md \
     src/priorityqueues.md
 
 default: build/index.html

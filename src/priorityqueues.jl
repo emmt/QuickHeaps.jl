@@ -52,10 +52,6 @@ Base.show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
     print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(V),
           "} with ", length(pq), " entry(s)")
 
-node_type(pq::AbstractPriorityQueue) = node_type(typeof(pq))
-node_type(::Type{<:PriorityQueue{K,V}}) where {K,V} = Pair{K,V}
-node_type(::Type{<:FastPriorityQueue{V}}) where {V} = Pair{Int,V}
-
 Base.Order.Ordering(pq::Union{PriorityQueue,FastPriorityQueue}) = getfield(pq, :order)
 
 # Implement abstract dictionary API for priority queues. NOTE `keytype` and `valtype` are
@@ -206,18 +202,11 @@ Base.push!(pq::AbstractPriorityQueue, x::Pair) = enqueue!(pq, x)
     pq[key...] = val
     setindex!(pq, val, key...) -> pq
     enqueue!(pq, key, val) -> pq
-    enqueue!(pq, key=>val) -> pq
-    push!(pq, key=>val) -> pq
+    enqueue!(pq, key => val) -> pq
+    push!(pq, key => val) -> pq
 
 Set the value `val` stored by the priority queue `pq` at index `key` automatically
 maintaining the partial ordering of `pq`.
-
-If `x` is an object which has a key and a value retrievable by
-[`QuickHeaps.get_key(x)`](@ref QuickHeaps.get_key) and [`QuickHeaps.get_val(x)`](@ref
-QuickHeaps.get_val), then the following calls are other possibilities:
-
-    enqueue!(pq, x) -> pq
-    push!(pq, x) -> pq
 
 """
 enqueue!(pq::AbstractPriorityQueue, key, val) = setindex!(pq, val, key)

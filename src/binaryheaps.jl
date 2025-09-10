@@ -3,9 +3,9 @@
 
 Build an empty binary heap whose values have type `T` and with ordering specified by `o`.
 
-The method [`QuickHeaps.lt(o,x::T,y::T)`](@ref QuickHeaps.lt) is called to determine the
-order of values `x` and `y` in the heap. The default ordering, [`TotalMin`](@ref), yields a
-*min-heap* object; with [`TotalMax`](@ref) ordering, a *max-heap* object is returned.
+The method `Base.Order.lt(o,x::T,y::T)` is called to determine the order of values `x` and
+`y` in the heap. The default ordering, [`TotalMin`](@ref), yields a *min-heap* object; with
+[`TotalMax`](@ref) ordering, a *max-heap* object is returned.
 
 An optional vector `vals` storing the initial values of the binary heap can be specified.
 These values in `vals` need not be ordered, the `BinaryHeap` constructor automatically takes
