@@ -312,26 +312,18 @@ normalize_indices(key::CartesianIndex) = Tuple(key)::Tuple{Vararg{Int}}
 # For a tuple of integers and/or Cartesian indices, enter a recursive build of the result as
 # a tuple of Int's.
 @inline normalize_indices(key::Tuple{Vararg{Union{Integer,CartesianIndex}}}) =
-    normalize_indices((), key)::Tuple{Vararg{Int}}
-#
-# Terminate the recursion.
-@inline normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{}) = inds
-#
-# Skip empty Cartesian indices.
-@inline normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{CartesianIndex{0}, Vararg}) =
-    normalize_indices(inds, tail(key))
-#
-# Append Cartesian indices.
-@inline normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{CartesianIndex, Vararg}) =
-    normalize_indices((inds..., Tuple(first(key))...), tail(key))
-#
+    _normalize_indices((), key)::Tuple{Vararg{Int}}
+# Skip 0-dimensional Cartesian index.
+@inline _normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{CartesianIndex{0}, Vararg}) =
+    _normalize_indices(inds, tail(key))
+# Append Cartesian index.
+@inline _normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{CartesianIndex, Vararg}) =
+    _normalize_indices((inds..., Tuple(first(key))...), tail(key))
 # Append single index.
-@inline normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{Integer, Vararg}) =
-    normalize_indices((inds..., Int(first(key))::Int), tail(key))
-#
-# Error catcher.
-@noinline normalize_indices(key) = throw_argument_error(
-    "invalid fast key of type ", typeof(key))
+@inline _normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{Integer, Vararg}) =
+    _normalize_indices((inds..., Int(first(key))::Int), tail(key))
+# Terminate the recursion.
+@inline _normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{}) = inds
 
 """
     QuickHeaps.heap_index(pq, key) -> i::Int
