@@ -29,7 +29,7 @@ Documentation is available for different versions of `QuickHeaps`:
 
 - [last release][doc-stable];
 
-- [development version][doc-stable].
+- [development version][doc-dev].
 
 
 ## Speed up and strengthen sorting algorithms
