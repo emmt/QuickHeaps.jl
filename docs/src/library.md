@@ -54,5 +54,4 @@ QuickHeaps.is_one_based_unit_range
 QuickHeaps.linear_index
 QuickHeaps.storage
 QuickHeaps.setroot!
-QuickHeaps.typename
 ```

@@ -94,18 +94,6 @@ end
 has_bad_values(A::AbstractArray{<:Integer}) = false
 has_bad_values(A::AbstractArray{<:AbstractFloat}) = has_bad_values(A, isnan)
 
-"""
-    QuickHeaps.typename(x)
-    QuickHeaps.typename(typeof(x))
-
-yield a short string describing the type of object `x`.
-
-"""
-typename(x::Any) = typename(typeof(x))
-typename(T::DataType) = string(nameof(T))
-typename(::Type{<:AbstractBinaryHeap}) = "binary heap"
-typename(::Type{<:AbstractPriorityQueue}) = "priority queue"
-
 for (func, type) in ((:throw_argument_error, :ArgumentError),
                      (:throw_dimension_mismatch, :DimensionMismatch),)
     @eval begin

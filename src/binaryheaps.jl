@@ -1,3 +1,5 @@
+const EMPTY_BINARY_HEAP_ERROR = ArgumentError("binary heap is empty")
+
 """
     h = BinaryHeap{T}([o::Base.Order.Ordering = TotalMin,][ vals::AbstractVector])
 
@@ -103,7 +105,7 @@ Base.first(h::AbstractBinaryHeap) = peek(h)
 
 # NOTE `QuickHeaps.peek` is `Base.peek` if this symbol is defined in base Julia.
 function peek(h::AbstractBinaryHeap)
-    isempty(h) && throw_argument_error(typename(h), " is empty")
+    isempty(h) && throw(EMPTY_BINARY_HEAP_ERROR)
     return @inbounds storage(h)[1]
 end
 
@@ -112,7 +114,7 @@ Base.empty!(h::BinaryHeap) = (empty!(storage(h)); h)
 
 function Base.pop!(h::AbstractBinaryHeap)
     n = length(h)
-    n ≥ 1 || throw_argument_error(typename(h), " is empty")
+    n ≥ 1 || throw(EMPTY_BINARY_HEAP_ERROR)
     A = storage(h)
     x = @inbounds A[1]
     if n > 1
@@ -154,7 +156,7 @@ setroot!(h::AbstractBinaryHeap, x) = setroot!(h, as(eltype(h), x))
 
 function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h)
-    n ≥ 1 || throw_argument_error(typename(h), " is empty")
+    n ≥ 1 || throw(EMPTY_BINARY_HEAP_ERROR)
     unsafe_heapify_down!(h.order, storage(h), 1, x, n)
     return h
 end

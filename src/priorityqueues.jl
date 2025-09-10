@@ -1,3 +1,5 @@
+const EMPTY_PRIORITY_QUEUE_ERROR = ArgumentError("priority queue is empty")
+
 """
     PriorityQueue{K,V}(o=TotalMin)
 
@@ -45,11 +47,11 @@ Base.copy(pq::FastPriorityQueue) =
     _FastPriorityQueue(pq.order, copy(pq.pairs), copy(pq.index))
 
 Base.show(io::IO, ::MIME"text/plain", pq::PriorityQueue{K,V}) where {K,V} =
-    print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(K),
+    print(io, "priority queue of type ", nameof(typeof(pq)), "{", nameof(K),
           ",", nameof(V), "} with ", length(pq), " entry(s)")
 
 Base.show(io::IO, ::MIME"text/plain", pq::FastPriorityQueue{V}) where {V} =
-    print(io, typename(pq), " of type ", nameof(typeof(pq)), "{", nameof(V),
+    print(io, "fast priority queue of  of type ", nameof(typeof(pq)), "{", nameof(V),
           "} with ", length(pq), " entry(s)")
 
 Base.Order.Ordering(pq::Union{PriorityQueue,FastPriorityQueue}) = getfield(pq, :order)
@@ -105,7 +107,7 @@ Base.first(pq::AbstractPriorityQueue) = peek(pq)
 
 # NOTE `QuickHeaps.peek` is `Base.peek` if this symbol is defined in base Julia.
 function peek(pq::AbstractPriorityQueue)
-    isempty(pq) && throw_argument_error(typename(pq), " is empty")
+    isempty(pq) && throw(EMPTY_PRIORITY_QUEUE_ERROR)
     return @inbounds pq.pairs[1]
 end
 
@@ -177,7 +179,7 @@ Also see [`dequeue!`](@ref).
 function dequeue_pair!(pq::AbstractPriorityQueue)
     # The code is almost the same as pop! for a binary heap.
     n = length(pq)
-    n > 0 || throw_argument_error(typename(pq), " is empty")
+    n > 0 || throw(EMPTY_PRIORITY_QUEUE_ERROR)
     A = pq.pairs
     x = @inbounds A[1] # get root entry
     if n > 1

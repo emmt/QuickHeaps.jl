@@ -51,7 +51,6 @@ using TypeUtils: @public
 @public is_one_based_unit_range
 @public linear_index
 @public storage
-@public typename
 
 # The `peek` method appeared in Julia 1.5.
 @static if isdefined(Base, :peek)

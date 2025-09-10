@@ -63,11 +63,6 @@ end
         @test QuickHeaps.in_range(5, R) == false
     end
 
-    let x = nothing
-        @test QuickHeaps.typename(x) isa String
-        @test QuickHeaps.typename(x) == QuickHeaps.typename(typeof(x))
-    end
-
     @test QuickHeaps.has_bad_values(1:2) == false
     @test QuickHeaps.has_bad_values([1.0,2.0]) == false
     @test QuickHeaps.has_bad_values([1.0,2.0,NaN]) == true
