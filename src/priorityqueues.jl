@@ -310,12 +310,9 @@ normalize_indices(key::Integer) = Int(key)::Int
 normalize_indices(key::CartesianIndex) = Tuple(key)::Tuple{Vararg{Int}}
 #
 # For a tuple of integers and/or Cartesian indices, enter a recursive build of the result as
-# a non-empty tuple of Int's.
-@inline function normalize_indices(key::Tuple{Vararg{Union{Integer,CartesianIndex}}})
-    inds = normalize_indices((), key)::Tuple{Vararg{Int}}
-    isempty(inds) && throw(ArgumentError("empty list of indices is not a valid fast key"))
-    return inds
-end
+# a tuple of Int's.
+@inline normalize_indices(key::Tuple{Vararg{Union{Integer,CartesianIndex}}}) =
+    normalize_indices((), key)::Tuple{Vararg{Int}}
 #
 # Terminate the recursion.
 @inline normalize_indices(inds::Tuple{Vararg{Int}}, key::Tuple{}) = inds

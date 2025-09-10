@@ -242,9 +242,9 @@ end
     let normalize_indices = QuickHeaps.normalize_indices
         @test normalize_indices(-17) === -17
         @test normalize_indices(0x09) === 9
-        #@test normalize_indices(()) === ()
-        #@test normalize_indices((CartesianIndex(),)) === ()
-        #@test normalize_indices(CartesianIndex()) === ()
+        @test normalize_indices(()) === ()
+        @test normalize_indices(CartesianIndex()) === ()
+        @test normalize_indices((CartesianIndex(),)) === ()
         @test normalize_indices(CartesianIndex(-1)) === (-1,)
         @test normalize_indices(CartesianIndex(-1,2)) === (-1,2)
         @test normalize_indices(CartesianIndex(-1,-2,-3)) === (-1,-2,-3)
@@ -265,6 +265,8 @@ end
 end
 
 @testset "Fast priority queues  " begin
+    # 0-dimensional fast priority queue is not supported
+    @test_throws ArgumentError FastPriorityQueue{Float32}()
     @test QuickHeaps.default_ordering(FastPriorityQueue) === TotalMin
     V, dims = Float32, (2,3,4)
     n = prod(dims)
