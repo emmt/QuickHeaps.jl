@@ -2,10 +2,10 @@ module TestingBinaryHeaps
 
 using Test
 
-using Base.Order: Ordering, Forward, Reverse
+using Base.Order: Ordering, Forward, Reverse, lt
 
 using QuickHeaps
-using QuickHeaps: ordering, storage, lt
+using QuickHeaps: storage
 
 orientation(::Any) = 0
 orientation(h::AbstractBinaryHeap) = orientation(typeof(h))
@@ -138,11 +138,11 @@ end
         @test isheap(h1) && isheap(h1; check=true) && isheap(h1; check=false)
         @test_throws ArgumentError peek(h1)
         @test_throws ArgumentError pop!(h1)
-        @test ordering(h1) === expected_ordering
+        @test Ordering(h1) === expected_ordering
 
         # Start with given array without specifying type.
         h2 = (o === nil ? B(copy(A)) : T <: Integer ? B(o, copy(A)) : B(copy(A), o))
-        @test ordering(h2) === expected_ordering
+        @test Ordering(h2) === expected_ordering
         @test eltype(h2) == T
         @test IndexStyle(h2) == IndexLinear()
         @test length(h2) == n
@@ -153,7 +153,7 @@ end
 
         # Start with given array and specifying the same element type.
         h3 = (o === nil ? B{T}(copy(A)) : T <: Integer ? B{T}(o, copy(A)) : B{T}(copy(A), o))
-        @test ordering(h3) === expected_ordering
+        @test Ordering(h3) === expected_ordering
         @test eltype(h3) == T
         @test IndexStyle(h3) == IndexLinear()
         @test length(h3) == n
@@ -164,7 +164,7 @@ end
 
         # Start with given array and specifying another element type.
         h4 = (o === nil ? B{S}(A) : S <: Integer ? B{S}(A, o) : B{S}(o, A))
-        @test ordering(h4) === expected_ordering
+        @test Ordering(h4) === expected_ordering
         @test eltype(h4) == S
         @test IndexStyle(h4) == IndexLinear()
         @test length(h4) == n
@@ -204,7 +204,7 @@ end
             @test isheap(h1; check=true)
         end
         @test same_entries(x1, A)
-        @test is_sorted(ordering(h1), x1)
+        @test is_sorted(Ordering(h1), x1)
         resize!(h1) # shrink internal buffer
 
         # Empty heap by deleting entries in somewhat random order.

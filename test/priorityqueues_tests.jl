@@ -7,13 +7,12 @@ using Random
 using Base: @propagate_inbounds,
     IteratorEltype, HasEltype,
     IteratorSize, HasLength
-using Base.Order: ReverseOrdering, Reverse
+using Base.Order: Ordering, Forward, ReverseOrdering, Reverse, lt
 
 using QuickHeaps
-using QuickHeaps:
-    AbstractPriorityQueue, PriorityQueue, FastPriorityQueue,
-    AbstractNode, get_key, get_val,
-    index, nodes, ordering, in_range, heap_index, lt
+
+pass(::Test.Pass) = true
+pass(::Test.Result) = false
 
 function test_queue!(A::AbstractPriorityQueue{K,V},
                      key_list::AbstractVector{K},
@@ -22,16 +21,14 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     axes(val_list) == axes(key_list) || error("incompatible indices")
     n = length(key_list)
     axes(key_list) == (1:n,) || error("non-standard indices")
-    o = ordering(A)
-
-    # Dummy private function used to "label" the tests.
-    check(flag::Bool, comment) = flag
+    o = Ordering(A)
 
     # Checks keytype, etc.
     @test keytype(A) == K
     @test keytype(typeof(A)) == K
     @test IteratorSize(keys(A)) == HasLength()
     @test IteratorSize(typeof(keys(A))) == HasLength()
+    @test length(keys(A)) == length(A)
     @test IteratorEltype(keys(A)) == HasEltype()
     @test IteratorEltype(typeof(keys(A))) == HasEltype()
     @test eltype(keys(A)) == K
@@ -42,208 +39,215 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     @test valtype(typeof(A)) == V
     @test IteratorSize(values(A)) == HasLength()
     @test IteratorSize(typeof(values(A))) == HasLength()
+    @test length(values(A)) == length(A)
     @test IteratorEltype(values(A)) == HasEltype()
     @test IteratorEltype(typeof(values(A))) == HasEltype()
     @test eltype(values(A)) == V
     @test eltype(typeof(values(A))) == V
 
-    # Check that `enqueue!` maintains the binary-heap structure.
+    # Check that `enqueue!`, `push!`, and `setindex!` maintain the binary-heap
+    # structure.
+    @test isempty(A)
     R = Dict{K,V}() # reference dictionary
-    test_1 = true
-    test_2 = true
     for (k, v) in zip(key_list, val_list)
-        enqueue!(A, k, v)
-        test_1 &= isheap(o, nodes(A))
-        test_2 &= !haskey(R, k) # unique key?
+        # Track pushed pairs.
         R[k] = v
+        n = length(R) # to alternate between the equivalent methods
+        if (n % 4) == 1
+            pass(@test (@inferred enqueue!(A, k, v)) === A) || break
+        elseif (n % 4) == 2
+            pass(@test (@inferred enqueue!(A, k => v)) === A) || break
+        elseif (n % 4) == 3
+            pass(@test (@inferred push!(A, k => v)) === A) || break
+        else
+            pass(@test (@inferred setindex!(A, v, k)) === A) || break
+        end
+        pass(@test length(A) == length(R)) || break
+
+        # Check that the key=>val content is correct and that `iterate`, `values` and `keys`
+        # iterate correctly and keep the same order.
+        ps = @inferred collect(A)
+        pass(@test ps isa Vector{Pair{K,V}}) || break
+        pass(@test length(ps) == length(A)) || break
+
+        ks = @inferred collect(keys(A))
+        pass(@test ks isa Vector{K}) || break
+        pass(@test length(ks) == length(A)) || break
+        pass(@test ks == [k for (k,v) in ps]) || break
+        pass(@test sort(ks) == sort(collect(keys(R)))) || break
+
+        vs = @inferred collect(values(A))
+        pass(@test vs isa Vector{V}) || break
+        pass(@test length(vs) == length(A)) || break
+        pass(@test vs == [v for (k,v) in ps]) || break
+        pass(@test sort(vs) == sort(collect(values(R)))) || break
+
+        # Values must form a heap.
+        pass(@test isheap(vs, o)) || break
     end
-    @test check(test_1, "binary-heap structure after `enqueue!`")
-    @test check(test_2, "unique keys after `enqueue!`")
-    @test length(A) == n
 
     # Check `first`, `peek`, `keys`, and `values`.
     k, v = first(A)
     @test v == (isa(o, ReverseOrdering) ? maximum : minimum)(values(A))
     @test v == first(values(A))
     @test k == first(keys(A))
-    x = @inferred peek(A, AbstractNode)
-    @test (@test_deprecated peek(AbstractNode, A)) === x
-    @test x isa AbstractNode
-    @test k == get_key(x)
-    @test v == get_val(x)
-    y = @inferred peek(A)
-    @test y isa Pair{typeof(k),typeof(v)}
-    @test first(y) == k
-    @test last(y) == v
+    x = @inferred peek(A)
+    @test x isa Pair
+    @test x == (k => v)
 
-    # Check `getindex` in random order.
-    test_1 = true
-    for i in randperm(n)
+    # Check `getindex`, `get`, and `getkey` in random order.
+    for i in randperm(length(key_list))
         k = key_list[i]
-        test_1 &= (haskey(A,k) && A[k] == R[k])
+        pass(@test haskey(A, k)) || break
+        pass(@test A[k] == R[k]) || break
+        pass(@test get(A, k, undef) == R[k]) || break
+        pass(@test getkey(A, k, undef) == k) || break
     end
-    @test check(test_1, "`getindex` in random order")
-
-    # Test that `keys` and `values` yield all elements in the same order as
-    # `iterate`.
-    test_1 = true
-    test_2 = true
-    for (k,v,kv) in zip(keys(A), values(A), A)
-        test_1 &= (k == kv.first)
-        test_2 &= (v == kv.second)
-    end
-    @test check(test_1, "keys in heap order")
-    @test check(test_2, "values in heap order")
 
     # Check `copy`.
-    B = copy(A)
+    B = @inferred copy(A)
     @test typeof(B) === typeof(A)
     @test length(B) == length(A)
-    @test nodes(A) == nodes(B)
-    @test index(A) == index(B)
-    S = Set(keys(B))
-    @test length(S) == length(B) # keys are unique?
-    test_1 = true
-    for k in S
-        test_1 &= (haskey(A, k) && haskey(B, k) && A[k] == B[k])
-    end
-    @test check(test_1, "`copy` yields same nodes")
-
-    # Check `haskey`, `get`, and `getkey`.
-    test_1 = true
-    test_2 = true
-    test_3 = true
-    for key in keys(B)
-        test_1 &= haskey(B, key)
-        test_2 &= get(B,key,undef) === B[key]
-        test_3 &= getkey(B,key,undef) === key
-    end
-    @test check(test_1, "`haskey(pq,key)` yields true for all existing keys")
-    @test check(test_2, "`get(pq,key,def)` yields key priority for all existing keys")
-    @test check(test_2, "`getkey(pq,key,def)` yields key for all existing keys")
+    @test collect(A) == collect(B) # same pairs
+    @test collect(keys(A)) == collect(keys(B)) # same keys
+    @test collect(values(A)) == collect(values(B)) # same values
+    @test A.index == B.index # same heap to index
 
     # Check `delete!` and result of addressing a non-existing key.
-    for key in (length(B) - 3, length(B)>>1, 2)
-        delete!(B, key)
+    for key in (undef, Int)
         @test !haskey(B, key)
-        @test get(B, key, undef) === undef
-        @test_throws ArgumentError B[key]
+        @test delete!(B, key) === B
+        @test get(B, key, missing) === missing
+        @test_throws KeyError B[key]
     end
 
     # Check `isempty`, `empty!`, etc.
-    empty!(B)
+    @test (@inferred empty!(B)) === B
     @test isempty(B)
     @test length(B) == 0
-    @test length(A) == n # no side effects on A
+    @test length(A) == length(R) # no side effects on A
 
     # Check `setindex!` in heap order.
     length(B) > 1 && empty!(B)
-    test_1 = true
-    test_2 = true
-    for i in randperm(n)
+    for i in randperm(length(key_list))
         k, v = key_list[i], val_list[i]
         B[k] = v
-        test_1 &= isheap(o, nodes(B))
-        test_2 &= (haskey(B, k) && B[k] == R[k])
+        pass(@test haskey(B, k)) || break
+        pass(@test B[k] == R[k]) || break
+        pass(@test isheap(collect(values(B)), o)) || break
     end
-    @test check(test_1, "heap structure preserved by `setindex!`")
-    @test check(test_2, "same value for key after `setindex!`")
     @test length(B) == length(A)
-    test_1 = true
-    test_2 = true
-    for i in randperm(n)
+    for i in randperm(length(key_list))
         k = key_list[i]
-        test_1 &= haskey(B, k)
-        test_2 &= B[k] == R[k]
+        pass(@test haskey(B, k)) || break
+        pass(@test B[k] == R[k]) || break
     end
-    @test check(test_1, "no missing keys in random order")
-    @test check(test_2, "same values in random order")
 
     # Check that `delete!` maintains the binary-heap structure.
-    test_1 = true
-    test_2 = true
-    test_3 = true
-    for i in randperm(n)
+    for i in randperm(length(key_list))
         k = key_list[i]
-        test_1 &= haskey(B, k)
-        delete!(B, k)
-        test_2 &= isheap(o, nodes(B))
-        test_3 &= !haskey(B, k)
+        pass(@test haskey(B, k)) || break
+        pass(@test delete!(B, k) === B) || break
+        pass(@test !haskey(B, k)) || break
+        pass(@test isheap(collect(values(B)), o)) || break
     end
-    @test check(test_1, "keys exist before `delete!`")
-    @test check(test_2, "heap structure preserved by `delete!`")
-    @test check(test_3, "keys do not exist after `delete!`")
     @test isempty(B)
 
-    # Check that `pop!`, `dequeue_pair!`, and `dequeue_node!`, extracts nodes
-    # in order and maintains the binary-heap structure.
-    B = copy(A)
-    test_0 = true
-    test_1 = true
-    test_2 = true
-    test_3 = true
+    # Check that `pop!` and `dequeue_pair!` extracts nodes in order and maintains the
+    # binary-heap structure.
+    B = @inferred copy(A)
     prev = (isa(o, ReverseOrdering) ? typemax : typemin)(V)
-    for i in 1:n
-        if (i % 3) == 1
-            x = pop!(B)
-            test_0 &= (x isa Pair)
-            k, v = x
-        elseif (i % 3) == 2
-            x = dequeue_pair!(B)
-            test_0 &= (x isa Pair)
-            k, v = x
+    for i in 1:length(B)
+        local x
+        if isodd(i % 2) == 1
+            x = @inferred pop!(B)
+            pass(@test x isa Pair) || break
         else
-            x = dequeue_node!(B)
-            test_1 &= (x isa AbstractNode)
-            k, v = x
+            x = @inferred dequeue_pair!(B)
+            pass(@test x isa Pair) || break
         end
         k, v = x
-        test_2 &= isheap(o, nodes(B))
-        test_3 &= !lt(o, v, prev)
+        pass(@test isheap(collect(values(B)), o)) || break
+        pass(@test !lt(o, v, prev)) || break
         prev = v
     end
-    @test check(test_0, "`pop!` and `dequeue_pair!` yield pairs")
-    @test check(test_1, "`dequeue_node!` yield nodes")
-    @test check(test_2, "heap structure preserved by `pop!`")
-    @test check(test_3, "`pop!` yields keys in order")
     @test isempty(B)
 
     # Tests for fast priority queues.
     if isa(A, FastPriorityQueue)
-        cartesian_index = CartesianIndices(index(A))
-        linear_index = LinearIndices(index(A))
-        test_1 = true
-        test_2 = true
-        test_3 = true
-        test_4 = true
-        test_5 = true
-        test_6 = true
-        test_7 = true
-        test_8 = true
-        for i in randperm(n)
-            k = key_list[i]
-            c = cartesian_index[k]
-            inds = c.I
-            test_1 &= haskey(A, c)
-            test_2 &= haskey(A, inds)
-            test_3 &= (A[k] == A[c])
-            test_4 &= (A[k] == A[inds...])
-            v = A[k]
-            test_5 &= !haskey(delete!(A, c), k)
-            A[c] = v
-            test_6 &= (haskey(A, k) && A[k] == v)
-            test_7 &= !haskey(delete!(A, inds), k)
-            A[inds...] = v
-            test_8 &= (haskey(A, k) && A[k] == v)
+        empty!(A)
+        for (k,v) in zip(key_list, val_list)
+            A[k] = v
         end
-        @test check(test_1, "`haskey` with Cartesian index")
-        @test check(test_2, "`haskey` with multi-dimensional index")
-        @test check(test_3, "`getindex` with Cartesian index")
-        @test check(test_4, "`getindex` with multi-dimensional index")
-        @test check(test_5, "`delete!` with Cartesian index")
-        @test check(test_6, "`setindex!` with Cartesian index")
-        @test check(test_7, "`delete!` with multi-dimensional index")
-        @test check(test_8, "`setindex!` with multi-dimensional index")
+        cartesian_index = CartesianIndices(A.index)
+        linear_index = LinearIndices(A.index)
+        N = ndims(cartesian_index)
+        for i in randperm(length(key_list))
+            k = key_list[i]
+            v = val_list[i]
+            c = cartesian_index[k]
+            inds = Tuple(c)
+            inds1 = (CartesianIndex(),
+                     inds[1:end-1]...,
+                     CartesianIndex(),
+                     CartesianIndex(inds[end]))
+            inds2 = map(CartesianIndex, inds)
+            pass(@test haskey(A, c)) || break
+            pass(@test A[c] == v) || break
+            pass(@test A[inds...] == v) || break
+            pass(@test A[inds1...] == v) || break
+            pass(@test A[inds2...] == v) || break
+            pass(@test get(A, k, undef) == v) || break
+            pass(@test get(A, c, undef) == v) || break
+            pass(@test getkey(A, k, undef) == k) || break
+            pass(@test getkey(A, c, undef) == k) || break
+            pass(@test delete!(A, c) === A) || break
+            pass(@test !haskey(A, k)) || break
+            pass(@test !haskey(A, c)) || break
+            pass(@test get(A, k, undef) === undef) || break
+            pass(@test get(A, c, undef) === undef) || break
+            pass(@test getkey(A, k, undef) === undef) || break
+            pass(@test getkey(A, c, undef) === undef) || break
+            A[c] = v
+            pass(@test get(A, k, undef) == v) || break
+            pass(@test getkey(A, k, undef) == k) || break
+            pass(@test !haskey(delete!(A, c), k)) || break
+            A[inds...] = v
+            pass(@test get(A, k, undef) == v) || break
+            pass(@test getkey(A, k, undef) == k) || break
+            pass(@test !haskey(delete!(A, c), k)) || break
+            A[inds1...] = v
+            pass(@test get(A, k, undef) == v) || break
+            pass(@test getkey(A, k, undef) == k) || break
+            pass(@test !haskey(delete!(A, c), k)) || break
+            A[inds2...] = v
+            pass(@test get(A, k, undef) == v) || break
+            pass(@test getkey(A, k, undef) == k) || break
+        end
+        i_first = first(linear_index)
+        i_last = last(linear_index)
+        @test !haskey(A, i_first - 1)
+        @test !haskey(A, i_last  + 1)
+        i_first = first(cartesian_index)
+        i_last = last(cartesian_index)
+        for d in 1:N
+            s = CartesianIndex(ntuple(i -> i == d, N))
+            pass(@test !haskey(A, i_first - s)) || break
+            pass(@test !haskey(A, i_last  + s)) || break
+        end
+    end
+end
+
+@testset "Indexing utilities    " begin
+    let normalize_indices = QuickHeaps.normalize_indices
+        @test normalize_indices(-17) === -17
+        @test normalize_indices(0x09) === 9
+        @test normalize_indices(CartesianIndex(-1)) === (-1,)
+        @test normalize_indices(CartesianIndex(-1,2)) === (-1,2)
+        @test normalize_indices(CartesianIndex(-1,-2,-3)) === (-1,-2,-3)
+        @test normalize_indices((0,0x01,-2,)) === (0,1,-2)
+        @test normalize_indices((0,CartesianIndex(1,2),0x03,CartesianIndex())) === (0,1,2,3)
+        @test normalize_indices((0x00,CartesianIndex(),-1,CartesianIndex(-2),CartesianIndex(),0x03,CartesianIndex(-4,5))) === (0,-1,-2,3,-4,5)
     end
 end
 

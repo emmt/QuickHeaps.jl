@@ -49,6 +49,8 @@ This method may be specialized for custom binary heap types.
 """
 storage(h::AbstractBinaryHeap) = getfield(h, :data)
 
+Base.Order.Ordering(h::Union{BinaryHeap,FastBinaryHeap}) = getfield(h, :order)
+
 Base.length(h::FastBinaryHeap) = getfield(h, :count)
 Base.length(h::BinaryHeap) = length(storage(h))
 Base.size(h::AbstractBinaryHeap) = (length(h),)
@@ -84,7 +86,7 @@ end
     @boundscheck checkbounds(h, i)
     A = storage(h)
     y = @inbounds A[i] # replaced value
-    o = ordering(h)
+    o = h.order
     if lt(o, y, x)
         # Heap structure _above_ replaced entry will remain valid, down-heapify to fix the
         # heap structure at and _below_ the entry.
@@ -117,7 +119,7 @@ function Base.pop!(h::AbstractBinaryHeap)
         # Peek the last value and down-heapify starting at the root of the binary heap to
         # insert it.
         y = @inbounds A[n]
-        unsafe_heapify_down!(ordering(h), A, 1, y, n - 1)
+        unsafe_heapify_down!(h.order, A, 1, y, n - 1)
     end
     unsafe_shrink!(h, n - 1)
     return x
@@ -129,7 +131,7 @@ end
 Base.push!(h::AbstractBinaryHeap, x) = push!(h, as(eltype(h), x))
 function Base.push!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h) + 1
-    unsafe_heapify_up!(ordering(h), unsafe_grow!(h, n), n, x)
+    unsafe_heapify_up!(h.order, unsafe_grow!(h, n), n, x)
     return h
 end
 Base.push!(h::AbstractBinaryHeap, x, y) = push!(push!(h, x), y)
@@ -153,7 +155,7 @@ setroot!(h::AbstractBinaryHeap, x) = setroot!(h, as(eltype(h), x))
 function setroot!(h::AbstractBinaryHeap{T}, x::T) where {T}
     n = length(h)
     n ≥ 1 || throw_argument_error(typename(h), " is empty")
-    unsafe_heapify_down!(ordering(h), storage(h), 1, x, n)
+    unsafe_heapify_down!(h.order, storage(h), 1, x, n)
     return h
 end
 
@@ -166,7 +168,7 @@ function Base.delete!(h::AbstractBinaryHeap, i::Int)
         # Replace the deleted value by the last value in the heap and up-/down-heapify to
         # restore the binary heap structure.
         A = storage(h)
-        o = ordering(h)
+        o = h.order
         x = @inbounds A[n] # value to replace deleted value
         y = @inbounds A[i] # deleted value
         if lt(o, y, x)
@@ -233,7 +235,7 @@ specified in any order.
 
 """
 function heapify!(h::AbstractBinaryHeap)
-    heapify!(ordering(h), storage(h), length(h))
+    heapify!(h.order, storage(h), length(h))
     return h
 end
 
@@ -290,7 +292,7 @@ end
 
 isheap(h::AbstractBinaryHeap; check::Bool = false) =
     if check
-        isheap(ordering(h), storage(h), length(h))
+        isheap(h.order, storage(h), length(h))
     else
         true
     end

@@ -74,26 +74,6 @@ const FastMaxOrdering = typeof(FastMax)
 @doc @doc(FastMax) FastMaxOrdering
 
 """
-    QuickHeaps.AbstractNode{K,V}
-
-is the super-type of nodes with a key of type `K` and a value of type `V`. Nodes can be used
-in binary heaps and priority queues to represent key-value pairs and specific ordering rules
-may be imposed by specializing the `QuickHeaps.lt` function which, for abstract nodes, is by
-default:
-
-    QuickHeaps.lt(o::Base.Order.Ordering, x::T, y::T) where {T<:QuickHeaps.AbstractNode} =
-        Base.Order.lt(o, QuickHeaps.get_val(x), QuickHeaps.get_val(y))
-
-"""
-abstract type AbstractNode{K,V} end
-
-struct Node{K,V} <: AbstractNode{K,V}
-    key::K
-    val::V
-    Node{K,V}(key, val) where {K,V} = new{K,V}(key, val)
-end
-
-"""
     QuickHeaps.AbstractBinaryHeap{T,O}
 
 is the super-type of binary heaps in `QuickHeaps` whose values have type `T` and whose
@@ -128,6 +108,8 @@ case, `O(log(n))` in the worst case, with `n = length(h)` the number of values i
 `h`. Retrieving a given value with `peek(h)`, `first(h)`, or `h[i]` is always of complexity
 `O(1)`.
 
+Call `Base.Order.Ordering(h)` to retrieve the ordering object `o` for the binary heap `h`.
+
 """
 abstract type AbstractBinaryHeap{T,O<:Ordering} <: AbstractVector{T} end
 
@@ -154,60 +136,66 @@ end
     QuickHeaps.AbstractPriorityQueue{K,V,O}
 
 is the super type of priority queues with ordering of type `O<:Base.Order.Ordering` and
-storing nodes associating a key of type `K` with a priority value of type `V`.
+storing keys of type `K` associated priority values of type `V`.
 
 Package `QuickHeaps` provides two concrete types of priority queues: [`PriorityQueue`](@ref)
 for any kind of keys and [`FastPriorityQueue`](@ref) for which keys are analogous to array
 indices.
 
 Priority queues behave like dictionaries with the additional feature of automatically
-maintaining an ordered structure according to the priority queue ordering and the node
-values. For a priority queue `pq`, retrieving the *root* node (i.e., the one of highest
-priority) without removing it costs `O(1)` and is done by:
+maintaining an ordered structure according to the priority queue ordering and the entry
+values. For a priority queue `pq`, retrieving the *root* entry, that is the pair `key =>
+val` of highest priority, without removing it costs `O(1)` and is done by:
 
-    peek(pq, T=Pair) -> T(key, val)
+    peek(pq) -> (key => val)
 
-with `T` the type of the expected result. Retrieving the value of a node given its `key` has
-also an `O(1)` complexity and is done by one of:
+Retrieving the value of an entry given its `key` has also an `O(1)` complexity and is done
+by one of:
 
     pq[key...] -> val
     getindex(pq, key...) -> val
     get(pq, key, def) -> val_at_key_or_def
 
 Changing the content of the priority queue has a complexity of `O(log(n))` with `n =
-length(pq)` the number of nodes in the queue. This includes removing the node at `key`
-by:
+length(pq)` the number of queued entries. This includes removing the entry at `key` by:
 
     delete!(pq, key) -> pq
 
-or removing the root node by:
+removing the root entry by:
 
-    pop!(pq)          # -> root node as a `key=>val` pair
-    dequeue!(pq)      # -> key of root node
-    dequeue_pair!(pq) # -> root node as a `key=>val` pair
-    dequeue_node!(pq) # -> root node as stored in priority queue
+    pop!(pq)          # -> root entry as a `key=>val` pair
+    dequeue!(pq)      # -> key of root entry
+    dequeue_pair!(pq) # -> root entry as a `key=>val` pair
 
-or setting a node `x` with a given `key` and value `val` by one of:
+or setting/changing an entry with a given `key` and value `val` by one of:
 
     pq[key] = val
-    enqueue!(pq, key, val)
     enqueue!(pq, key => val)
     push!(pq, key => val)
-    push!(pq, (key, val))
-    push!(pq, x) # x is a node with a key and a value
+
+Call `Base.Order.Ordering(pq)` to retrieve the ordering object `o` for the priority queue
+`pq`.
 
 """
 abstract type AbstractPriorityQueue{K,V,O<:Ordering} <: AbstractDict{K,V} end
 
-struct PriorityQueue{K,V,O,T} <: AbstractPriorityQueue{K,V,O}
+struct PriorityQueue{K,V,O} <: AbstractPriorityQueue{K,V,O}
     order::O
-    nodes::Vector{T}   # heap of nodes
-    index::Dict{K,Int} # key -> heap index mapping
+    pairs::Vector{Pair{K,V}} # heap of entries
+    index::Dict{K,Int}       # key to heap index mapping
 end
 
-struct FastPriorityQueue{V,N,O,
-                         T<:AbstractNode{Int,V}} <: AbstractPriorityQueue{Int,V,O}
+struct FastPriorityQueue{V,N,O} <: AbstractPriorityQueue{Int,V,O}
     order::O
-    nodes::Vector{T}    # heap of nodes
-    index::Array{Int,N} # key -> heap index mapping
+    pairs::Vector{Pair{Int,V}} # heap of entries
+    index::Array{Int,N}        # key to heap index mapping
+
+    # The following private inner constructor yields an object that may alias its arguments.
+    global _FastPriorityQueue
+    function _FastPriorityQueue(order::O,
+                                pairs::AbstractVector{Pair{Int,V}},
+                                index::AbstractArray{Int,N}) where {V,N,O}
+        N ≥ 1 || throw(ArgumentError("number of dimensions must be at least 1"))
+        return new{V,N,O}(order, pairs, index)
+    end
 end

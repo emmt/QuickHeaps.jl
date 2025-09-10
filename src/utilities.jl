@@ -1,20 +1,3 @@
-"""
-    QuickHeaps.lt(o::Ordering, x::T, y::T)
-
-Return whether `x` is less than `y` according to ordering `o`.
-
-`QuickHeaps.lt` is called by `QuickHeaps` to build ordered structures like binary heaps and
-priority queues. For `T <: QuickHeaps.AbstractNode`, `QuickHeaps.lt` compares the values of
-the nodes `x` and `y`; otherwise, `QuickHeaps.lt` calls `Base.Order.lt` to compare values.
-
-""" lt
-
-# Call Base.Order.lt by default.
-lt(o::Ordering, x::T, y::T) where {T} = Base.Order.lt(o, x, y)
-
-# Nodes are sorted according to their values.
-lt(o::Ordering, x::T, y::T) where {T<:AbstractNode} = lt(o, get_val(x), get_val(y))
-
 # In order to perform fast sorting (taking care of NaN's), we extend the `Base.Order.lt`
 # function for specialized ordering types.
 Base.Order.lt(::FastMinOrdering, x, y) = x < y
@@ -37,18 +20,6 @@ for func in (:total_min, :total_max)
         $func(::Any, ::Missing) = true
     end
 end
-
-"""
-    QuickHeaps.ordering(A) -> o
-
-Return the object `o` specifying the ordering of the values in the object `A`, a binary heap
-or a priority queue.
-
-This method may be specialized for custom types.
-
-"""
-ordering(h::AbstractBinaryHeap) = getfield(h, :order)
-ordering(pq::AbstractPriorityQueue) = getfield(pq, :order)
 
 """
     QuickHeaps.default_ordering(A)
@@ -100,7 +71,7 @@ yields whether `i` is a valid linear index of array `A`.
 yields whether `i` is in the range `R`.
 
 """
-in_range(i::Integer, len::Integer) = ((i % UInt) - 1 < (len % UInt))
+in_range(i::Integer, len::Integer) = ((i % UInt) - 1 < (len % UInt)) # FIXME remove
 in_range(i::Integer, A::Array) = in_range(i, length(A))
 in_range(i::Integer, R::OneTo) = in_range(i, length(R))
 in_range(i::Integer, R::AbstractUnitRange{<:Integer}) = (i ∈ R)

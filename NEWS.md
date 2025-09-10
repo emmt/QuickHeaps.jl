@@ -3,15 +3,20 @@
 ## Unreleased
 
 This new version uses better [*total order*](https://en.wikipedia.org/wiki/Total_order) by
-default. As a consequence, there are a few breaking changes but these should only weakly
-matter for the end-user.
+default and replaces nodes by pairs. As a consequence, there are a few breaking changes but
+these should only weakly matter for the end-user.
 
 ### Breaking changes
+
+- `Node{K,V}` and `AbstractNode{K,V}` have been suppressed. Nodes of type
+  `AbstractNode{K,V}` are replaced by pairs of type `Pair{K,V}`. As a result, the node type
+  is no longer an optional argument in priority queues constructors and `dequeue_node!` has
+  been suppressed (call `dequeue_pair!` instead).
 
 - Default ordering for binary heaps and priority queues is always `TotalMin` instead of
   `Base.Order.Forward` or `FastMin` (depending on the kind of the ordered structure). With
   `TotalMin`, values are sorted in increasing order followed by `NaN` then `missing` values.
-  Compared to `FastMin`, `TotalMin` is a bit slower (on floating-point values) but
+  Compared to `FastMin`, `TotalMin` is barely slower (on floating-point values) but
   implements a [*total min order*](https://en.wikipedia.org/wiki/Total_order) while
   `FastMin` leaves the order of `NaN` values undefined and fails on `missing` values.
   `TotalMin` yields the same order as `Base.Order.Forward` which is the default order in
@@ -27,17 +32,15 @@ matter for the end-user.
   are respectively equivalent to `FastMin` and `FastMax` but are not recommended, for
   reasons given above.
 
-- For a custom priority queue `pq` inheriting from `QuickHeaps.AbstractPriorityQueue`, the
-  2-argument method `QuickHeaps.enqueue!(pq,key=>val)` have to be specialized instead of the
-  3-argument method `QuickHeaps.enqueue!(pq,key,val)`. This change is to simplify avoiding
-  ambiguities.
-
 - `Base.Order.Ordering`, `Base.Order.ForwardOrdering`, `Base.Order.ReverseOrdering`,
   `Base.Order.Forward`, and `Base.Order.Reverse` are no longer exported by `QuickHeaps`.
 
 - Deprecated and non-exported method `QuickHeaps.to_eltype(A, x)` has been suppressed, it
   was equivalent to `as(eltype(A), x)` using the
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
+
+- `getindex` throws `KeyError` (was `ArgumentError`) for non-existing keys in priority
+  queues.
 
 ### Added
 
@@ -46,6 +49,9 @@ matter for the end-user.
 - New `TotalMin` and `TotalMax` now implement a [*total
   order*](https://en.wikipedia.org/wiki/Total_order) where values are respectively sorted in
   increasing and decreasing order followed by `NaN` then `missing` values.
+
+- Fast priority queues of type `FastPriorityQueue` can be directly indexed as
+  multidimensional arrays.
 
 ### Changed
 
@@ -72,6 +78,14 @@ matter for the end-user.
   `FastBinaryHeaps`) which leaves undefined the order of `NaN` and `missing` values. This
   new default implements the same order as `Base.Order.Forward` (the former default for
   other ordered structures) but is about twice faster.
+
+### Removed
+
+- `AbstractNode` and `Node` types and related API have been suppressed.
+
+- Many non-exported but documented functions have been suppressed: `storage`, `ordering`,
+  `index`, `in_range`, `nodes`.
+
 
 ## Version 0.2.3 (2025-09-17)
 
