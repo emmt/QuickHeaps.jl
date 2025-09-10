@@ -48,7 +48,6 @@ or of priority queue. End-users probably not have to worry about these.
 
 ```@docs
 QuickHeaps.has_bad_values
-QuickHeaps.has_standard_linear_indexing
 QuickHeaps.heap_index
 QuickHeaps.linear_index
 QuickHeaps.storage

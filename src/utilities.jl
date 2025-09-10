@@ -36,14 +36,12 @@ default_ordering(::Type{<:AbstractBinaryHeap}) = TotalMin
 default_ordering(::Type{<:FastBinaryHeap}) = TotalMin
 default_ordering(::Type{<:AbstractPriorityQueue}) = TotalMin
 
-"""
-    QuickHeaps.has_standard_linear_indexing(A)
-
-yields whether array `A` implements standard linear indexing (1-based).
-
-"""
-has_standard_linear_indexing(A::Array) = true
-has_standard_linear_indexing(A::AbstractArray) =
+# Yield whether `A` has linear indexing style and 1-based indices.
+has_standard_indexing(A::Array) = true
+if isdefined(Base, :Memory)
+    has_standard_indexing(A::Memory) = true
+end
+has_standard_indexing(A::AbstractArray) =
     IndexStyle(A) === IndexLinear() && firstindex(A) == 1
 
 """

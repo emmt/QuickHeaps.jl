@@ -418,7 +418,7 @@ heap of size `n`.
 
 """
 function check_heap_storage(A::AbstractArray)
-    has_standard_linear_indexing(A) || throw(ArgumentError(
+    has_standard_indexing(A) || throw(ArgumentError(
         "array storing a binary heap must have 1-based linear indexing"))
     nothing
 end

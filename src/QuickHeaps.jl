@@ -46,7 +46,6 @@ using TypeUtils: @public
 @public TotalMinOrdering
 @public default_ordering
 @public has_bad_values
-@public has_standard_linear_indexing
 @public heap_index
 @public linear_index
 @public storage

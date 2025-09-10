@@ -31,8 +31,11 @@ end
 
 @testset "Utilities             " begin
     let A = rand(Float32, 6)
-        @test QuickHeaps.has_standard_linear_indexing(A) == true
-        @test QuickHeaps.has_standard_linear_indexing(view(A, 2:3:6)) == true
+        @test QuickHeaps.has_standard_indexing(A) == true
+        @test QuickHeaps.has_standard_indexing(view(A, 2:3:6)) == true
+    end
+    if isdefined(Base, :Memory)
+        @test QuickHeaps.has_standard_indexing(Memory{Float32}(undef, 6)) == true
     end
 
     @test QuickHeaps.in_range(0, 3) == false
