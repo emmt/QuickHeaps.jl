@@ -35,11 +35,6 @@ end
         @test QuickHeaps.has_standard_linear_indexing(view(A, 2:3:6)) == true
     end
 
-    @test QuickHeaps.is_one_based_unit_range(axes(rand(3), 1)) == true
-    @test QuickHeaps.is_one_based_unit_range(1:4) == true
-    @test QuickHeaps.is_one_based_unit_range(2:4) == false
-    @test QuickHeaps.is_one_based_unit_range(1:2:5) == false
-
     @test QuickHeaps.in_range(0, 3) == false
     @test QuickHeaps.in_range(1, 3) == true
     @test QuickHeaps.in_range(3, 3) == true

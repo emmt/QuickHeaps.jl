@@ -50,7 +50,6 @@ or of priority queue. End-users probably not have to worry about these.
 QuickHeaps.has_bad_values
 QuickHeaps.has_standard_linear_indexing
 QuickHeaps.heap_index
-QuickHeaps.is_one_based_unit_range
 QuickHeaps.linear_index
 QuickHeaps.storage
 QuickHeaps.setroot!

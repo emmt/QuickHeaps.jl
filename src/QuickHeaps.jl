@@ -48,7 +48,6 @@ using TypeUtils: @public
 @public has_bad_values
 @public has_standard_linear_indexing
 @public heap_index
-@public is_one_based_unit_range
 @public linear_index
 @public storage
 

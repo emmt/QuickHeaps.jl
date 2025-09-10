@@ -44,18 +44,7 @@ yields whether array `A` implements standard linear indexing (1-based).
 """
 has_standard_linear_indexing(A::Array) = true
 has_standard_linear_indexing(A::AbstractArray) =
-    is_one_based_unit_range(eachindex(A))
-
-"""
-    QuickHeaps.is_one_based_unit_range(itr)
-
-yields whether iterator `itr` is a 1-based unit range.
-
-"""
-is_one_based_unit_range(itr) = false
-is_one_based_unit_range(itr::Base.OneTo) = true
-is_one_based_unit_range(itr::AbstractUnitRange{T}) where {T} =
-    first(itr) == oneunit(T)
+    IndexStyle(A) === IndexLinear() && firstindex(A) == 1
 
 """
     QuickHeaps.in_range(i, len::Integer)

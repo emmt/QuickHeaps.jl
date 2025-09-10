@@ -39,9 +39,10 @@ these should only weakly matter for the end-user.
   was equivalent to `as(eltype(A), x)` using the
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package.
 
-- Documented but non-exported functions `QuickHeaps.index`, `QuickHeaps.nodes`,
-  `QuickHeaps.ordering`, and `QuickHeaps.typename`, have been suppressed. Call
-  `Base.Order.Ordering(A)` to query the order in binary heap or priority queue `A`.
+- Documented but non-exported functions `QuickHeaps.index`,
+  `QuickHeaps.is_one_based_unit_range`, `QuickHeaps.nodes`, `QuickHeaps.ordering`, and
+  `QuickHeaps.typename`, have been suppressed. Call `Base.Order.Ordering(A)` to query the
+  order in binary heap or priority queue `A`.
 
 - `getindex` throws `KeyError` (was `ArgumentError`) for non-existing keys in priority
   queues.
