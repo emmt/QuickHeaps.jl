@@ -6,10 +6,10 @@ Base.Order.lt(::TotalMaxOrdering, x, y) = total_max(x, y)
 
 # Predicates `total_min(x, y)` and `total_max(x, y)` implements the `lt` function for `TotalMin`
 # and `TotalMax` orderings. They both leave `NaN` followed by `missing` values last.
-total_min(x::T, y::T) where {T<:Number} = (! isnan(x)) & (isnan(y) | (x < y))
+total_min(x::Number, y::Number) = (! isnan(x)) & (isnan(y) | (x < y))
 total_min(x, y) = isless(x, y)
 #
-total_max(x::T, y::T) where {T<:Number} = (! isnan(x)) & (isnan(y) | (y < x))
+total_max(x::Number, y::Number) = (! isnan(x)) & (isnan(y) | (y < x))
 total_max(x, y) = isless(y, x)
 
 for func in (:total_min, :total_max)
