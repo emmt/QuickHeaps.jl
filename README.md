@@ -72,7 +72,7 @@ default in `QuickHeaps`, which yields the same [*total
 order*](https://en.wikipedia.org/wiki/Total_order) as `Base.Order.Forward` but about twice
 faster. `QuickHeaps` also provides `FastMin` order which is a bit faster than `TotalMin` but
 which leaves the order of `NaN` values undefined. For numbers, the implementation of
-`TotalMin` and `FastMin` is pretty simple:
+`TotalMin` is pretty simple:
 
 ```julia
 struct TotalMinOrdering <: Base.Order.Ordering end
@@ -81,7 +81,7 @@ Base.Order.lt(::TotalMin, a::T, b::T) where {T<:Number} =
     (! isnan(a)) & (isnan(b) | (a < b))
 ```
 
-Then just use keyword `order=TotalMin` in calls to Julia sort methods to benefit from a
+One can just use keyword `order=TotalMin` in calls to Julia sort methods to benefit from a
 speed-up factor of almost 2, for free! Other orders to consider are `TotalMax`,
 `reverse(TotalMin)`, and `reverse(TotalMax)`. Before Julia 1.8, replace `reverse(o)` by
 `Base.Order.ReverserOrdering(o)` for order `o`.
@@ -89,7 +89,7 @@ speed-up factor of almost 2, for free! Other orders to consider are `TotalMax`,
 Package [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl) provides
 `DataStructures.FasterForward()` and `DataStructures.FasterReverse()` orders which are the
 same as `QuickHeaps.FastMin` and `QuickHeaps.FastMax`. Hence, fast for floating-point values
-but leaving undefined the order `NaN` values.
+but leaving undefined the order of `NaN` and `missing` values.
 
 
 ### Benchmarking binary heaps
@@ -100,7 +100,7 @@ As an illustration of the above discussion, below is the output of a small bench
 julia --project test/benchmarks.jl
 ```
 
-with Julia 1.11.g on an Intel Core i7-13800H processor:
+with Julia 1.11.6 on an Intel Core i7-13800H processor:
 
 ```
 Timings for "DataStructures" methods (T=Float64, n=1000):

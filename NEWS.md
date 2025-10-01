@@ -11,9 +11,9 @@ these should only weakly matter for the end-user.
 - `Node{K,V}` and `AbstractNode{K,V}` have been suppressed. Nodes of type
   `AbstractNode{K,V}` are replaced by pairs of type `Pair{K,V}`. As a result, the node type
   is no longer an optional argument in priority queues constructors and `dequeue_node!` has
-  been suppressed (call `dequeue_pair!` instead).
+  been suppressed (call `dequeue_pair!` or `pop!` instead).
 
-- Default ordering for binary heaps and priority queues is always `TotalMin` instead of
+- Default order for binary heaps and priority queues is always `TotalMin` instead of
   `Base.Order.Forward` or `FastMin` (depending on the kind of the ordered structure). With
   `TotalMin`, values are sorted in increasing order followed by `NaN` then `missing` values.
   Compared to `FastMin`, `TotalMin` is barely slower (on floating-point values) but
@@ -67,8 +67,8 @@ these should only weakly matter for the end-user.
 - Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
   for non-exported public methods.
 
-- Syntax `peek(T::Type, pq::AbstractPriorityQueue)` is deprecated in favor of `peek(pq,T)`
-  to specify the type `T` of the returned object.
+- `peek(T::Type, pq::AbstractPriorityQueue)` is no longer supported,
+  `peek(pq::AbstractPriorityQueue)` returns the root key-value pair.
 
 - The default ordering is `QuickHeaps.TotalMin` for all structures. It behaves like `isless`
   which implements the default ordered of most sorting algorithms in Julia: NaN's are
