@@ -156,6 +156,10 @@ function test_queue!(A::AbstractPriorityQueue{K,V},
     # Check that `pop!` and `dequeue_pair!` extracts entries in order and maintains the
     # binary-heap structure.
     B = @inferred copy(A)
+    @test !haskey(B, :non_existing_key)
+    @test_throws KeyError pop!(B, :non_existing_key)
+    @test pop!(B, :non_existing_key, π) === π
+    @test delete!(B, :non_existing_key) === B
     prev = (isa(o, ReverseOrdering) ? typemax : typemin)(V)
     for i in 1:length(B)
         local x

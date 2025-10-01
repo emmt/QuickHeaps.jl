@@ -160,6 +160,8 @@ Changing the content of the priority queue has a complexity of `O(log(n))` with 
 length(pq)` the number of queued entries. This includes removing the entry at `key` by:
 
     delete!(pq, key) -> pq
+    pop!(pq, key) -> val
+    pop!(pq, key, def) -> val_or_def
 
 removing the root entry by:
 
@@ -199,3 +201,6 @@ struct FastPriorityQueue{V,N,O} <: AbstractPriorityQueue{Int,V,O}
         return new{V,N,O}(order, pairs, index)
     end
 end
+
+# Private type used to represent unspecified argument or similar.
+struct None end

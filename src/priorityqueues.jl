@@ -74,32 +74,7 @@ for (func, getter) in ((:get, :get_val), (:getkey, :get_key))
 end
 
 function Base.delete!(pq::AbstractPriorityQueue, key)
-    n = length(pq)
-    if n > 0
-        i = heap_index(pq, key)
-        if i > 0
-            A = pq.pairs
-            key = get_key(@inbounds A[i]) # key to be deleted
-            if i < n
-                # NOTE We cannot assume that the deleted entry data be accessible nor valid,
-                #      so we explicitly replace it before deciding in which direction to go
-                #      and re-heapify. Also see `unsafe_enqueue!`.
-                #
-                # Replace the deleted entry in the heap by the last entry.
-                x = @inbounds A[n]
-                @inbounds A[i] = x
-                # Up-/down-heapify to restore the binary heap structure.
-                o = pq.order
-                if i ≤ 1 || lt(o, get_val(@inbounds A[heap_parent(i)]), get_val(x))
-                    unsafe_heapify_down!(pq, i, x, n - 1)
-                else
-                    unsafe_heapify_up!(pq, i, x)
-                end
-            end
-            unsafe_shrink!(pq, n - 1)
-            unsafe_delete_key!(pq, key)
-        end
-    end
+    pop!(pq, key, missing)
     return pq
 end
 
@@ -165,7 +140,7 @@ You may call [`dequeue_pair!(pq)`](@ref dequeue_pair!) to dequeue the root entry
 key-value pair.
 
 """
-dequeue!(pq::AbstractPriorityQueue) = get_key(dequeue_pair!(pq))
+dequeue!(pq::AbstractPriorityQueue) = get_key(pop!(pq))
 
 """
     dequeue_pair!(pq) -> (key => val)
@@ -176,24 +151,56 @@ is the same as `pop!(pq)`.
 Also see [`dequeue!`](@ref).
 
 """
-function dequeue_pair!(pq::AbstractPriorityQueue)
+dequeue_pair!(pq::AbstractPriorityQueue) = pop!(pq)
+
+# Implement `pop!` as for any dictionary.
+function Base.pop!(pq::AbstractPriorityQueue)
     # The code is almost the same as pop! for a binary heap.
     n = length(pq)
     n > 0 || throw(EMPTY_PRIORITY_QUEUE_ERROR)
     A = pq.pairs
-    x = @inbounds A[1] # get root entry
+    A₁ = @inbounds A[1] # get root entry
     if n > 1
         # Peek the last entry and down-heapify starting at the root of the binary heap to
         # insert it.
         unsafe_heapify_down!(pq, 1, (@inbounds A[n]), n - 1)
     end
-    unsafe_delete_key!(pq, get_key(x))
+    unsafe_delete_key!(pq, get_key(A₁))
     unsafe_shrink!(pq, n - 1)
-    return x
+    return A₁
 end
 
-# Implement `pop!` as for any dictionary.
-Base.pop!(pq::AbstractPriorityQueue) = dequeue_pair!(pq)
+function Base.pop!(pq::AbstractPriorityQueue, key)
+    val = Base.pop!(pq, key, None())
+    val isa None && throw(KeyError(key))
+    return vale
+end
+
+function Base.pop!(pq::AbstractPriorityQueue, key, def)
+    ((n = length(pq)) > 0 && (i = heap_index(pq, key)) > 0) || return def
+    A = pq.pairs
+    Aᵢ = @inbounds A[i]
+    key = get_key(Aᵢ) # exact key to be deleted
+    if i < n
+        # NOTE We cannot assume that the deleted entry data be accessible nor valid, so we
+        #      explicitly replace it before deciding in which direction to go and
+        #      re-heapify. Also see `unsafe_enqueue!`.
+        #
+        # Replace the deleted entry in the heap by the last entry.
+        Aₙ = @inbounds A[n]
+        @inbounds A[i] = Aₙ
+        # Up-/down-heapify to restore the binary heap structure.
+        o = pq.order
+        if i ≤ 1 || lt(o, get_val(@inbounds A[heap_parent(i)]), get_val(Aₙ))
+            unsafe_heapify_down!(pq, i, Aₙ, n - 1)
+        else
+            unsafe_heapify_up!(pq, i, Aₙ)
+        end
+    end
+    unsafe_shrink!(pq, n - 1)
+    unsafe_delete_key!(pq, key)
+    return get_val(Aᵢ)
+end
 
 # Implement `push!` for priority queues. NOTE Multi-push is already implemented for any
 # collection; for `AbstractDict`, pushing pair(s) via `setindex!` is also already

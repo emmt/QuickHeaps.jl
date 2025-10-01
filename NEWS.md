@@ -59,6 +59,9 @@ these should only weakly matter for the end-user.
 - Fast priority queues of type `FastPriorityQueue` can be directly indexed as
   multidimensional arrays.
 
+- Priority queues implement `pop!(pq)`, ``pop!(pq, key)`, and `pop!(pq, key, def)` as for
+  dictionaries.
+
 ### Changed
 
 - Use the `@public` macro of the [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package
