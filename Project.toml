@@ -1,7 +1,7 @@
 name = "QuickHeaps"
 uuid = "30b38841-0f52-47f8-a5f8-18d5d4064379"
 authors = ["Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>"]
-version = "0.2.3"
+version = "0.3.0"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
