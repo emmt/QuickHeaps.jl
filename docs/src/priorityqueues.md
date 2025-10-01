@@ -8,7 +8,7 @@ extracting the entry of highest priority are efficient operations.
 Priority queues provided by `QuikHeaps` are similar to dictionaries (or to arrays) with the
 additional feature of maintaining an ordered structure so that getting the entry of highest
 priority costs `O(1)` operations while changing the priority of an entry or pushing an entry
-only costs `O(log(n))` operations with `n` the number of entries in the queue.
+costs at most `O(log(n))` operations with `n` the number of entries in the queue.
 
 
 ## Building priority queues
@@ -28,7 +28,7 @@ Q = PriorityQueue{K,V}(o=TotalMin)
 ```
 
 where type parameters `K` and `V` are the respective types of the keys and of the values
-while optional parameter `o::Ordering` specifies the ordering for deciding the priority of
+while optional parameter `o::Ordering` specifies the order for deciding the priority of
 values.
 
 
@@ -122,7 +122,9 @@ getkey(Q, k, def)      # query key corresponding to `k` with default
 Q[k] = v               # set value `v` of key `k`
 push!(Q, k => v)       # idem.
 haskey(Q, k)           # whether key `k` exists
-delete!(Q, k)          # delete entry at key `k`
+delete!(Q, k)          # delete entry at key `k` and yield `Q`, the queue
+pop!(Q, k)             # delete entry at key `k` and yield `v`, the associated value
+pop!(Q, k, def)        # delete entry at key `k` and yield `v` or yield `def` if `k` does not exist
 Base.Order.Ordering(Q) # get order `o` of priority queue `Q`
 ```
 

@@ -8,10 +8,10 @@ these should only weakly matter for the end-user.
 
 ### Breaking changes
 
-- `Node{K,V}` and `AbstractNode{K,V}` have been suppressed. Nodes of type
-  `AbstractNode{K,V}` are replaced by pairs of type `Pair{K,V}`. As a result, the node type
-  is no longer an optional argument in priority queues constructors and `dequeue_node!` has
-  been suppressed (call `dequeue_pair!` or `pop!` instead).
+- `Node{K,V}` and `AbstractNode{K,V}` have been suppressed and *nodes* have been simply
+  replaced by pairs of type `Pair{K,V}`. As a result, the node type is no longer an optional
+  argument in priority queues constructors and `dequeue_node!` has been suppressed (call
+  `dequeue_pair!` or `pop!` instead).
 
 - Default order for binary heaps and priority queues is always `TotalMin` instead of
   `Base.Order.Forward` or `FastMin` (depending on the kind of the ordered structure). With

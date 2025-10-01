@@ -25,11 +25,11 @@ root entry is the smallest one. With `o = TotalMax`, a *max-heap* is created. A 
 (resp. a max-heap) sorts its values in increasing (resp. decreasing) order, followed by
 `NaN` then `missing` values.
 
-For floating-point values, orderings `FastMin` or `FastMax` may be used, respectively,
-instead of `TotalMin` or `TotalMax` for (slightly) faster sorting of the heap. However,
-`FastMin` and `FastMax` do not define the order of `NaN` values and fail on `missing`
-values. If your data may contain `NaN` or `missing` values, use `TotalMin` or `TotalMax`
-instead of `FastMin` or `FastMax`.
+For floating-point values, `FastMin` or `FastMax` orders may be used, respectively, instead
+of `TotalMin` or `TotalMax` for (slightly) faster sorting of the heap. However, `FastMin`
+and `FastMax` do not define the order of `NaN` values and fail on `missing` values. If your
+data may contain `NaN` or `missing` values, use `TotalMin` or `TotalMax` instead of
+`FastMin` or `FastMax`.
 
 A vector `vals` storing the initial values of the binary heap can be specified:
 
@@ -115,10 +115,10 @@ which yields `h`.
 
 The behavior of the binary heap types provided by `QuickHeaps` can be tweaked by using a
 particular instance of the ordering `o::Baae.Order.Ordering` and by specializing the
-`Base.lt` method called as `Base.Order.lt(o,x,y)` to decide whether value `x` occurs before
-value `y` according to ordering `o`. In the implementation of binary heaps by the
-`QuickHeaps` package, `x` and `y` are always both of type `T`, the type of the values stored
-by the heap.
+`Base.lt` method called as `Base.Order.lt(o,x,y)` to decide whether value `x` strictly
+occurs before value `y` according to ordering `o`. In the implementation of binary heaps by
+the `QuickHeaps` package, `x` and `y` are always both of type `T`, the type of the values
+stored by the heap.
 
 If this is not sufficient, a custom binary heap type may be created that inherits from
 `AbstractBinaryHeap{T,O}` with `T` the type of the values stored by the heap and `O` the
@@ -141,8 +141,8 @@ By default, `Base.resize!(h)` does nothing (except returning its argument) for a
 `h` of a type that inherits from `AbstractBinaryHeap`; but this method may also be
 specialized.
 
-The `QuickHeaps` package provides a number of methods (some unexported) that may be useful
-for implementing new binary heap types:
+The `QuickHeaps` package provides a number of public methods (some un-exported) that may be
+useful for implementing new binary heap types:
 
 - [`QuickHeaps.heapify`](@ref)
 - [`QuickHeaps.heapify!`](@ref)
@@ -152,12 +152,11 @@ for implementing new binary heap types:
 - [`QuickHeaps.unsafe_heapify_down!`](@ref)
 - [`QuickHeaps.unsafe_heapify_up!`](@ref)
 
-
 Note that the `heapify`, `heapify!`, and `isheap` functions which are exported by the
 `QuickHeaps` package have the same behavior but are different than those in the
 [`DataStructures`](https://github.com/JuliaCollections/DataStructures.jl) package. If you
 are using both packages, you'll have to explicitly prefix these methods by the package
-module.
+module, that is `QuickHeaps` or `DataStructures`.
 
 
 ## Simple priority queues
