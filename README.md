@@ -5,7 +5,9 @@
 [![License][license-img]][license-url]
 [![Build Status][github-ci-img]][github-ci-url]
 [![Build Status][appveyor-img]][appveyor-url]
+[![version](https://juliahub.com/docs/General/QuickHeaps/stable/version.svg)](https://juliahub.com/ui/Packages/General/QuickHeaps)
 [![Coverage][codecov-img]][codecov-url]
+[![deps](https://juliahub.com/docs/General/QuickHeaps/stable/deps.svg)](https://juliahub.com/ui/Packages/General/QuickHeaps?t=2)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 `QuickHeaps` is a [Julia][julia-url] package providing versatile [binary
