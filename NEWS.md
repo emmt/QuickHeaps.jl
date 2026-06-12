@@ -1,6 +1,6 @@
 # User visible changes in `QuickHeaps`
 
-## Unreleased
+## Version 0.3.1 (2026-06-12)
 
 ### Fixed
 
