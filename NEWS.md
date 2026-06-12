@@ -2,9 +2,15 @@
 
 ## Unreleased
 
-This new version uses better [*total order*](https://en.wikipedia.org/wiki/Total_order) by
-default and replaces nodes by pairs. As a consequence, there are a few breaking changes but
-these should only weakly matter for the end-user.
+### Fixed
+
+- Bump compatibility for `TypeUtils` version 2.
+
+## Version 0.3.0 (2025-10-01)
+
+This new major version uses better [*total order*](https://en.wikipedia.org/wiki/Total_order)
+by default and replaces nodes by pairs. As a consequence, there are a few breaking changes
+but these should only weakly matter for the end-user.
 
 ### Breaking changes
 
