@@ -414,7 +414,7 @@ const FastIndex = Union{Integer,CartesianIndex}
 
 # For indexing fast priority queues, we first convert the key into a linear
 # index (using the current bounds checking state).
-for keytype in (:Integer, :(FastIndex...))
+for keytype in (:Integer, :(Vararg{FastIndex}))
     @eval begin
         @inline @propagate_inbounds function getindex(pq::FastPriorityQueue,
                                                       key::$keytype)
